@@ -29,7 +29,7 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
 @Resource(name = RestConstants.VERSION_1 + DHISConnectorRestController.DHISCONNECTOR_NAMESPACE
 		+ "/dhisdataelements", supportedClass = DHISDataElement.class, supportedOpenmrsVersions = { "1.8.*",
-				"1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.0.*" })
+				"1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
 public class DHISDataElementsResource extends DataDelegatingCrudResource implements Retrievable {
 
 	public static final String DATAELEMENTS_PATH = "/api/dataElements";

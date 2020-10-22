@@ -430,9 +430,11 @@ function loadMappingToBeDisplayed(mapping) {
 			onReportSelect();
 			onDataSetSelect();
 			if(jq("#create-mapping-action").val() === "edit" || jq("#create-mapping-action").val() === "copy") {
-				jq('#mappingName').attr("disabled", true);
 			    jq('#dataSetSelect').attr("disabled", true);
 			    jq('#reportSelect').attr("disabled", true);
+			}
+			if(jq("#create-mapping-action").val() === "edit"){
+				jq('#mappingName').attr("disabled", true);
 			}
 			jq.when(displayIndicatorsAjax, displayDatasetsAjax).done(function() {
 				for (var i = 0; i < jq('.indicatorContainer').length; i++) {
@@ -561,9 +563,9 @@ jQuery(function () {//self invoked only if the whole page has completely loaded
 		
 		
 		if(selectedMappingToEdit.name !== undefined && selectedMappingToEdit.created !== undefined) {
-			var mappingDisplay = selectedMappingToEdit.name + "[@]" + selectedMappingToEdit.created;
-			
-			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");	
+			var mappingDisplay = selectedMappingToEdit.name + encodeURI("[@]") + selectedMappingToEdit.created;
+
+			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
 			console.log("Loading selected mapping to be edited: " + mappingDisplay);
 			headingForCreateMapping = "Editing: " + selectedMappingToEdit.name;
 			jq("h4").html(headingForCreateMapping);
@@ -571,9 +573,9 @@ jQuery(function () {//self invoked only if the whole page has completely loaded
 			jq('#mappingName').val(selectedMappingToEdit.name);
 			fetchAndLoadMappingToBeDisplayed(mappingDisplay);
 		} else if(selectedMappingToCopy.name !== undefined && selectedMappingToCopy.created !== undefined) {
-			var mappingDisplay = selectedMappingToCopy.name + "[@]" + selectedMappingToCopy.created;
-			
-			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");	
+			var mappingDisplay = selectedMappingToCopy.name + encodeURI("[@]") + selectedMappingToCopy.created;
+
+			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
 			console.log("Loading selected mapping to be copied: " + mappingDisplay);
 			headingForCreateMapping = "Copying: " + selectedMappingToCopy.name;
 			jq("h4").html(headingForCreateMapping);

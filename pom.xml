@@ -5,7 +5,7 @@
 
     <groupId>org.openmrs.module</groupId>
     <artifactId>dhisconnector</artifactId>
-    <version>0.1.5-SNAPSHOT</version>
+    <version>1.5.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>DHIS Connector Module</name>
     <description>Posts data from OpenMRS to DHIS2</description>

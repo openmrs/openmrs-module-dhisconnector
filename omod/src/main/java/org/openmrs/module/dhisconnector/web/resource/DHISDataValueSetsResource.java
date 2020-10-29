@@ -35,7 +35,7 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
 @Resource(name = RestConstants.VERSION_1 + DHISConnectorRestController.DHISCONNECTOR_NAMESPACE
 		+ "/dhisdatavaluesets", supportedClass = DHISDataValueSet.class, supportedOpenmrsVersions = { "1.8.*",
-				"1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.0.*" })
+				"1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
 public class DHISDataValueSetsResource extends DataDelegatingCrudResource implements Retrievable {
 
 	@Override

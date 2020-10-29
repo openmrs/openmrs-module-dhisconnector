@@ -38,13 +38,13 @@ angular.module('manageMappingsApp', []).controller('manageMappingsController', f
 		
 		if(confirm("Are you sure you want to delete selected Mapping(s)?")) {
 			for(i = 0; i < selectedMappings.length;i++) {
-				deleteThisMapping(selectedMappings[i].value);
+				deleteThisMapping(encodeURI(selectedMappings[i].value));
 			}
 		}
 	}
 	
 	$scope.deleteThisSelectedMapping = function(mapping) {
-		var selectedMapping = mapping.name + "[@]" + mapping.created;
+		var selectedMapping = mapping.name + encodeURI("[@]") + mapping.created;
 		
 		deleteThisMapping(selectedMapping);
 	}

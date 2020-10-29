@@ -36,7 +36,7 @@ import java.util.List;
 
 @Resource(name = RestConstants.VERSION_1 + DHISConnectorRestController.DHISCONNECTOR_NAMESPACE
 		+ "/dhisdatasets", supportedClass = DHISDataSet.class, supportedOpenmrsVersions = { "1.8.*", "1.9.*, 1.10.*, 1.11.*",
-		"1.12.*", "2.0.*" })
+		"1.12.*", "2.*" })
 public class DHISDataSetsResource extends DataDelegatingCrudResource implements Retrievable {
 
 	public static final String DATASETS_PATH = "/api/dataSets";

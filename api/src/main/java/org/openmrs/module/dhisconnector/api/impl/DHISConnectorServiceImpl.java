@@ -28,6 +28,7 @@ import java.io.Writer;
 import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -253,6 +254,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		
 		if (StringUtils.isNotBlank(endpoint)) {
 			try {
+				if (endpoint.contains("fields=")) {
+					String stringToEncode = endpoint.split("fields=")[1];
+					if (StringUtils.isNotBlank(stringToEncode)) {
+						String encodedString = URLEncoder.encode(stringToEncode, "UTF-8");
+						endpoint = endpoint.replace(stringToEncode, encodedString);
+					}
+				}
 				URL dhisURL = new URL(url);
 				String host = dhisURL.getHost();
 				int port = dhisURL.getPort();

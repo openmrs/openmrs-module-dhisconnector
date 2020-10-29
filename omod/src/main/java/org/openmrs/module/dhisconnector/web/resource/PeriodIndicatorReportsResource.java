@@ -33,7 +33,7 @@ import java.util.List;
 
 @Resource(name = RestConstants.VERSION_1 + DHISConnectorRestController.DHISCONNECTOR_NAMESPACE
 		+ "/periodindicatorreports", supportedClass = PeriodIndicatorReportDefinition.class, supportedOpenmrsVersions = {
-		"1.8.*", "1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.0.*" })
+		"1.8.*", "1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
 public class PeriodIndicatorReportsResource extends DataDelegatingCrudResource implements Retrievable {
 
 	@Override

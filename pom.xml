@@ -7,7 +7,11 @@
     <version>1.6.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>DHIS Connector Module</name>
-    <description>Posts data from OpenMRS to DHIS2</description>
+    <description>This module posts aggregate data from OpenMRS to DHIS2, and gives implementers a User Interface for an easier-to-set-up OMRS to DHIS2 pipeline, 
+	    that doesn’t need manual code fixes every time there’s a change to reporting indicators. Includes a Mapping Tool UI, 
+	    the ability to automatically send data to DHIS2 right away or on a schedule, 
+	    and to map exports so that you can re-use your mapping work across sites.
+    </description>
     <url>https://wiki.openmrs.org/display/docs/DHIS+Connector+Module</url>
 
     <developers>

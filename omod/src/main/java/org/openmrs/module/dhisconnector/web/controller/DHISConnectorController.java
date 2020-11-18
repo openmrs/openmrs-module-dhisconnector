@@ -79,11 +79,9 @@ public class DHISConnectorController {
 	public void configureServer(ModelMap model) {
 		String url = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_URL);
 		String user = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_USER);
-		String pass = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_PASS);
 
 		model.addAttribute("url", url);
 		model.addAttribute("user", user);
-		model.addAttribute("pass", pass);
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
@@ -113,7 +111,6 @@ public class DHISConnectorController {
 
 			model.addAttribute("url", url);
 			model.addAttribute("user", user);
-			model.addAttribute("pass", pass);
 		} else {
 			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
 					Context.getMessageSourceService().getMessage("dhisconnector.saveFailure"),

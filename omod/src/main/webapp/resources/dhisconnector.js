@@ -96,8 +96,8 @@ function getDataElementsAndCategoryComboOptions() {
         categoryComboOptions = {};
 
 
-        dataElementsOptionsCol.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Data Element Options</h4></div></div></div>');
-        jQuery('#categoryComboOptions').append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Category Options</h4></div></div></div><img id="categoryComboLoader" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>');
+        dataElementsOptionsCol.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Data Elements</h4></div></div></div>');
+        jQuery('#categoryComboOptions').append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Category Option Combinations</h4></div></div></div><img id="categoryComboLoader" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>');
 
 
         for (var i = 0; i < dataElements.length; i++) {
@@ -140,7 +140,7 @@ function onReportSelect() {
     dateElementMappings.html("");
 
     reportIndicators.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Indicators</h4></div></div><div class="reportDimensionCol col-xs"><div class="reportDimension box" style="height:2.8em;"><h4>Dimensions</h4></div></div></div>');
-    dateElementMappings.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Mapped Data Element</h4></div></div><div class="reportDimensionCol col-xs"><div class="reportDimension box" style="height:2.8em;"><h4>Mapped Category</h4></div></div></div>');
+    dateElementMappings.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Mapped Data Element</h4></div></div><div class="reportDimensionCol col-xs"><div class="reportDimension box" style="height:2.8em;"><h4>Mapped Category Option Combination</h4></div></div></div>');
 
     var selectedSchema = reports.filter(function (val) {
         return val.uuid === jQuery('#reportSelect').val();

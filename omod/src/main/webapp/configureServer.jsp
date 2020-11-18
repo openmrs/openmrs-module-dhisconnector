@@ -21,7 +21,7 @@
     </tr>
     <tr>
       <td><spring:message code="dhisconnector.pass"/></td>
-      <td><input name="pass" type="password" size="20" value="${pass}"/></td>
+      <td><input name="pass" placeholder="<hidden>" type="password" size="20"/></td>
     </tr>
     <tr>
       <td/>

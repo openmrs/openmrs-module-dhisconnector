@@ -7,29 +7,28 @@
 	<c:redirect url="../../login.htm" />
 </c:if>
 
-<h3>Setting up OpenMRS reports to automatically report into the configured DHIS2 instance</h3>
+<h3><spring:message code="dhisconnector.automation.heading"/></h3>
 
-NB: Running is contextualised; the module will only run once for each day, week or month only for the previous past period respectively.
-Otherwise you may trigger a re-run which is likewise contextual
+<spring:message code="dhisconnector.automation.description"/>
 <form method="post">
 	<br />
-		<input type="checkbox" name="toogleAutomation" <c:if test="${automationEnabled}">checked="checked"</c:if>>Enable/Disable Automation</input>
+		<input type="checkbox" name="toogleAutomation" <c:if test="${automationEnabled}">checked="checked"</c:if>><spring:message code="dhisconnector.automation.toggleAutomation"/></input>
 	<br />
     <table>
         <thead>
             <tr>
-            	<th>Delete</th>
-            	<th>Run</th>
-                <th>Mapping</th>
-                <th>OpenMRS Location</th>
-                <th>DHIS2 Organization Unit</th>
-                <th>Re/Last Run</th>
+            	<th><spring:message code="dhisconnector.automation.delete"/></th>
+            	<th><spring:message code="dhisconnector.automation.run"/></th>
+                <th><spring:message code="dhisconnector.automation.mapping"/></th>
+                <th><spring:message code="dhisconnector.automation.location"/></th>
+                <th><spring:message code="dhisconnector.automation.orgUnit"/></th>
+                <th><spring:message code="dhisconnector.automation.reRun"/></th>
             </tr>
         </thead>
         <tbody>
             <tr class="evenRow">
-                <td>Add</td>
-                <td>New</td>
+                <td><spring:message code="dhisconnector.automation.add"/></td>
+                <td><spring:message code="dhisconnector.automation.new"/></td>
                 <td>
                     <select name="mapping">
                         <option></option>
@@ -68,7 +67,7 @@ Otherwise you may trigger a re-run which is likewise contextual
            </c:forEach>
         </tbody>
     </table>
-    <input type="submit" value="Submit">
+    <input type="submit" value="<spring:message code='dhisconnector.automation.submit'/>">
 </form>
 
 <c:forEach items="${postResponse}" var="resp">

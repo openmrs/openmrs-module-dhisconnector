@@ -1,7 +1,0 @@
-language: java
-dist: trusty
-jdk:
-  - openjdk8
-script: mvn clean install --batch-mode && mvn test -Pskip-default-test -Pintegration-test
-after_success:
-  - mvn jacoco:report coveralls:report

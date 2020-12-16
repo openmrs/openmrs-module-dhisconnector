@@ -1335,7 +1335,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return null;
 	}
 	
-	// TODO support more period types besides, daily, weekly and monthly
+	// TODO support more period types besides, daily, weekly, monthly and yearly
 	/**
 	 * This now uses last (day, week, month, quarter, year etc), it should take set startDate and
 	 * endDate using periodType and return formated DHIS2 period only if lastRan isn't for returned
@@ -1372,6 +1372,14 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			endDate.set(Calendar.DAY_OF_MONTH, startDate.getActualMaximum(Calendar.DAY_OF_MONTH));
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = new SimpleDateFormat("yyyyMM").format(startDate.getTime());
+		} else if (ReportingPeriodType.Yearly.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyy");
+			startDate.add(Calendar.YEAR, -1);
+			startDate.set(Calendar.DAY_OF_YEAR, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_YEAR, startDate.getActualMaximum(Calendar.DAY_OF_YEAR));
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = new SimpleDateFormat("yyyy").format(startDate.getTime());
 		}
 		return period;
 	}

@@ -10,14 +10,15 @@
  * Copyright (C) OpenMRS, LLC.  All Rights Reserved.
  */
 
-var reports;
-var mappings;
-var locations;
-var weekStartDate;
-var weekEndDate;
-var reportData;
-var dxfJSON;
-var OMRS_WEBSERVICES_BASE_URL = '../..';
+let reports;
+let mappings;
+let locations;
+let weekStartDate;
+let weekEndDate;
+let reportData;
+let dxfJSON;
+let OMRS_WEBSERVICES_BASE_URL = '../..';
+let selectedMapping;
 
 function populateReportsDropdown() {
     // fetch reports
@@ -31,7 +32,6 @@ function populateReportsDropdown() {
         }
 
         jQuery('#reportsSelectContainer').html("");
-
         jQuery('#reportsSelectContainer').append(reportSelect);
 
         jQuery("#reportSelect").hide().fadeIn("slow");
@@ -41,6 +41,7 @@ function populateReportsDropdown() {
 }
 
 function onMappingSelect() {
+    selectedMapping = mappings[jQuery('#mappingSelect').val()];
     // clear the date
     document.getElementById('custom-range-option').checked = false;
     jQuery('#un-recognized-period').html('');
@@ -48,27 +49,20 @@ function onMappingSelect() {
     jQuery('#periodSelector').val("");
     jQuery('#periodSelector').monthpicker('destroy');
     jQuery('#periodSelector').datepicker('destroy');
-
     jQuery('#ui-datepicker-div > table > tbody > tr').die('mousemove');
     jQuery('.ui-datepicker-calendar tr').die('mouseleave');
 
     weekStartDate = null;
     weekEndDate = null;
 
-    // get periodType
-    var selectedPeriodType = mappings.filter(function (v) {
-        return v.created == jQuery('#mappingSelect').val();
-    })[0].periodType;
-
-    if (selectedPeriodType == undefined)
+    if (selectedMapping.periodType === undefined)
         return;
-
-    if (selectedPeriodType === 'Daily') {
+    if (selectedMapping.periodType === 'Daily') {
         // set up daily
         jQuery('#periodSelector').datepicker({
             dateFormat: 'yymmdd'
         });
-    } else if (selectedPeriodType === 'Weekly') {
+    } else if (selectedMapping.periodType === 'Weekly') {
         // set up weekly
         jQuery('#periodSelector').datepicker({
             showOtherMonths: true,
@@ -97,14 +91,14 @@ function onMappingSelect() {
         jQuery('.ui-datepicker-calendar tr').live('mouseleave', function () {
             jQuery(this).find('td a').removeClass('ui-state-hover');
         });
-    } else if (selectedPeriodType === 'Monthly') {
+    } else if (selectedMapping.periodType === 'Monthly') {
         // set up monthly
         jQuery('#periodSelector').monthpicker({
             pattern: 'yyyymm'
         });
     } else {
         // This is unknown
-        var text = 'DHIS period: ' + selectedPeriodType + ', Please type the appropriate value';
+        var text = 'DHIS period: ' + selectedMapping.periodType + ', Please type the appropriate value';
         jQuery('#un-recognized-period').html(text);
         toggleCustomRangeCheckbox(true);
     }
@@ -139,31 +133,22 @@ function getPeriodDates() {
                 endDate: endDate
             };
         }
-
     }
     else {
-
-        // get periodType
-        var selectedPeriodType = mappings.filter(function (v) {
-            return v.created == jQuery('#mappingSelect').val();
-        })[0].periodType;
-
-        if (selectedPeriodType == undefined)
+        if (selectedMapping.periodType === undefined)
             return;
-
-        if (selectedPeriodType === 'Daily') {
+        if (selectedMapping.periodType === 'Daily') {
             var date = jQuery('#periodSelector').datepicker('getDate');
             startDate = date;
             endDate = date;
-        } else if (selectedPeriodType === 'Weekly') {
+        } else if (selectedMapping.periodType === 'Weekly') {
             startDate = weekStartDate;
             endDate = weekEndDate;
-        } else if (selectedPeriodType === 'Monthly') {
+        } else if (selectedMapping.periodType === 'Monthly') {
             var date = jQuery('#periodSelector').monthpicker('getDate');
             startDate = new Date(date.getFullYear(), date.getMonth(), 1);
             endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
         }
-
         return {
             startDate: startDate,
             endDate: endDate
@@ -174,23 +159,16 @@ function getPeriodDates() {
 function populateMappingsDropdown() {
     // fetch mappings
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/mappings", function (data) {
-
-        var mappingSelect = jQuery('<select id="mappingSelect"></select>');
-        mappingSelect.append('<option value="">Select</option>');
-
-        mappingSelect.on('change', onMappingSelect);
-
-        for (var i = 0; i < data.results.length; i++) {
-            mappingSelect.append('<option value="' + data.results[i].created + '">' + data.results[i].name + '</option>');
-        }
-
-        jQuery('#mappingSelectContainer').html("");
-
-        jQuery('#mappingSelectContainer').append(mappingSelect);
-
-        jQuery("#mappingSelect").hide().fadeIn("slow");
-
         mappings = data.results;
+        let mappingSelect = jQuery('<select id="mappingSelect"></select>');
+        mappingSelect.append('<option value="">Select</option>');
+        mappingSelect.on('change', onMappingSelect);
+        for (let i = 0; i < mappings.length; i++) {
+            mappingSelect.append('<option value="' + i + '">' + mappings[i].name + '</option>');
+        }
+        jQuery('#mappingSelectContainer').html("");
+        jQuery('#mappingSelectContainer').append(mappingSelect);
+        jQuery("#mappingSelect").hide().fadeIn("slow");
     });
 }
 
@@ -378,24 +356,24 @@ function displayPostReponse(json) {
 }
 
 function downloadAdx() {
-	if (validateForm()) {
+    if (validateForm()) {
         buildDXFJSON().then(function () {
-        	jQuery.ajax({
-        		type : "GET",
-        		url : "adxGenerator.form",
-        		data: { "dxfDataValueSet": JSON.stringify(dxfJSON) },
-        		datatype: "json",
-        		success : function(activityMonitorData) {
-        			if(activityMonitorData)
-        			 createDownload(activityMonitorData, 'application/xml', '.adx.xml');
-      			}
-        	});
+            jQuery.ajax({
+                type : "GET",
+                url : "adxGenerator.form",
+                data: { "dxfDataValueSet": JSON.stringify(dxfJSON) },
+                datatype: "json",
+                success : function(activityMonitorData) {
+                    if(activityMonitorData)
+                        createDownload(activityMonitorData, 'application/xml', '.adx.xml');
+                }
+            });
         });
-	}
+    }
 }
 
 function sendDataToDHIS() {
-	if (validateForm()) {
+    if (validateForm()) {
         buildDXFJSON().then(function () {
             // post to dhis
             jQuery.ajax({
@@ -414,8 +392,8 @@ function sendDataToDHIS() {
 }
 
 function createDownload(content, contentType, extension) {
-	var dl = document.createElement('a');
-    
+    var dl = document.createElement('a');
+
     dl.setAttribute('href', 'data:' + contentType + ';charset=utf-8,' + encodeURIComponent(content));
     dl.setAttribute('download', slugify(jQuery('#reportSelect option:selected').text()) + '-' + slugify(jQuery('#orgUnitSelect option:selected').text()) + '-' + slugify(jQuery('#periodSelector').val()) + extension);
 
@@ -430,7 +408,7 @@ function createDownload(content, contentType, extension) {
 function generateDXFDownload() {
     if (validateForm()) {
         buildDXFJSON().then(function () {
-        	createDownload(JSON.stringify(dxfJSON), 'application/json', '.dxf.json');
+            createDownload(JSON.stringify(dxfJSON), 'application/json', '.dxf.json');
         });
     }
 }

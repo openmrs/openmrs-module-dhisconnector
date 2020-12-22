@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +40,7 @@ import org.openmrs.module.dhisconnector.Configurations;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
+import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.web.WebConstants;
@@ -64,6 +66,15 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_USER = "dhisconnector.user";
 
 	public static final String GLOBAL_PROPERTY_PASS = "dhisconnector.pass";
+
+	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList(
+			"Daily",
+			"Weekly",
+			"Monthly",
+			"Yearly",
+			"Financial April",
+			"Financial July",
+			"Financial Oct");
 
 	@RequestMapping(value = "/module/dhisconnector/manage", method = RequestMethod.GET)
 	public void manage(ModelMap model) {
@@ -353,13 +364,17 @@ public class DHISConnectorController {
 	}
 
 	private void initialiseAutomation(ModelMap model, boolean automationEnabled, List<String> postResponse) {
+		// Filter the mappings with supported period types
+		List<DHISMapping> supportedMappings = Context.getService(DHISConnectorService.class).getMappings()
+				.stream()
+				.filter(mapping -> SUPPORTED_AUTOMATION_PERIOD_TYPES.contains(mapping.getPeriodType()))
+				.collect(Collectors.toList());
 		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
 
-		model.addAttribute("mappings", Context.getService(DHISConnectorService.class).getMappings());
+		model.addAttribute("mappings", supportedMappings);
 		model.addAttribute("locations", Context.getLocationService().getAllLocations(false));
 		model.addAttribute("orgUnits", orgUnits);
-		model.addAttribute("reportToDataSetMappings",
-				Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
+		model.addAttribute("reportToDataSetMappings", Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
 		model.addAttribute("orgUnitsByIds", getOrgUnitsByName(orgUnits));
 		model.addAttribute("automationEnabled", automationEnabled);
 		model.addAttribute("postResponse", postResponse);

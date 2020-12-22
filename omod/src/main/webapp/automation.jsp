@@ -14,6 +14,9 @@
 	<br />
 		<input type="checkbox" name="toogleAutomation" <c:if test="${automationEnabled}">checked="checked"</c:if>><spring:message code="dhisconnector.automation.toggleAutomation"/></input>
 	<br />
+    <br />
+    <spring:message code="dhisconnector.automation.periodTypeMessage"/>
+    <br />
     <table>
         <thead>
             <tr>

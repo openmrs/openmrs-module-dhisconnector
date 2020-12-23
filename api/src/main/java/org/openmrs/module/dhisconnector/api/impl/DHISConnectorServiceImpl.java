@@ -1382,8 +1382,9 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				period = new SimpleDateFormat("yyyy").format(startDate.getTime());
 		} else if (ReportingPeriodType.FinancialApril.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyy");
+			// Set the start date to year of last Financial April period
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < 3 ? -2 : -1);
 			// Set the start date to 1st of April
-			startDate.add(Calendar.YEAR, -1);
 			startDate.set(Calendar.MONTH, 3);
 			startDate.set(Calendar.DAY_OF_MONTH, 1);
 			setBasicsStartsAndEnds(startDate, endDate);
@@ -1393,6 +1394,20 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			endDate.set(Calendar.DAY_OF_MONTH, 31);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "April";
+		} else if (ReportingPeriodType.FinancialJuly.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyy");
+			// Set the start date to year of last Financial July period
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < 6 ? -2 : -1);
+			// Set the start date to 1st of July
+			startDate.set(Calendar.MONTH, 6);
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			// Set the end date to 30th of June
+			endDate.add(Calendar.YEAR, 1);
+			endDate.set(Calendar.MONTH, 5);
+			endDate.set(Calendar.DAY_OF_MONTH, 30);
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = startDate.get(Calendar.YEAR) + "July";
 		}
 		return period;
 	}

@@ -13,12 +13,13 @@
 let reports;
 let mappings;
 let locations;
-let weekStartDate;
-let weekEndDate;
 let reportData;
 let dxfJSON;
 let OMRS_WEBSERVICES_BASE_URL = '../..';
-let selectedMapping;
+let selectedMapping = null;
+let selectedPeriod = null;
+let selectedStartDate = null;
+let selectedEndDate = null;
 
 function populateReportsDropdown() {
     // fetch reports
@@ -40,68 +41,127 @@ function populateReportsDropdown() {
     });
 }
 
+function hidePeriodPickers(){
+    jQuery('#dailyPicker').hide();
+    jQuery('#weeklyPicker').hide();
+    jQuery('#monthlyPicker').hide();
+    jQuery('#yearlyPicker').hide();
+    jQuery('#customPeriodPicker').hide();
+}
+
 function onMappingSelect() {
-    selectedMapping = mappings[jQuery('#mappingSelect').val()];
-    // clear the date
+    const selectedMappingIndex = parseInt(jQuery('#mappingSelect').val());
+    selectedMapping = mappings[selectedMappingIndex];
     document.getElementById('custom-range-option').checked = false;
-    jQuery('#un-recognized-period').html('');
+    selectedStartDate = null;
+    selectedEndDate = null;
     toggleCustomRangeCheckbox(false);
-    jQuery('#periodSelector').val("");
-    jQuery('#periodSelector').monthpicker('destroy');
-    jQuery('#periodSelector').datepicker('destroy');
+    hidePeriodPickers();
+    switch(selectedMapping.periodType){
+        case 'Daily':
+            initializeDailyPicker();
+            break;
+        case 'Weekly':
+            initializeWeeklyPicker();
+            break;
+        case 'Monthly':
+            initializeMonthlyPicker();
+            break
+        case 'Yearly':
+            initializeYearlyPicker();
+            break;
+        default:
+            jQuery('#customPeriodPicker').show();
+            toggleCustomRangeCheckbox(true);
+    }
+}
+
+function initializeDailyPicker() {
+    const dailyPicker = jQuery('#dailyPicker');
+    dailyPicker.datepicker('destroy');
+    dailyPicker.datepicker({
+        dateFormat: 'yymmdd',
+        onSelect: function (dateText) {
+            selectedPeriod = dateText;
+            const selectedDate = jQuery(this).datepicker('getDate');
+            selectedStartDate = selectedDate;
+            selectedEndDate = selectedDate;
+        }
+    });
+    dailyPicker.show();
+}
+
+function initializeWeeklyPicker(){
+    const weeklyPicker = jQuery('#weeklyPicker');
+    weeklyPicker.datepicker('destroy');
     jQuery('#ui-datepicker-div > table > tbody > tr').die('mousemove');
     jQuery('.ui-datepicker-calendar tr').die('mouseleave');
-
-    weekStartDate = null;
-    weekEndDate = null;
-
-    if (selectedMapping.periodType === undefined)
-        return;
-    if (selectedMapping.periodType === 'Daily') {
-        // set up daily
-        jQuery('#periodSelector').datepicker({
-            dateFormat: 'yymmdd'
-        });
-    } else if (selectedMapping.periodType === 'Weekly') {
-        // set up weekly
-        jQuery('#periodSelector').datepicker({
-            showOtherMonths: true,
-            selectOtherMonths: false,
-            showWeek: true,
-            firstDay: 1,
-            onSelect: function (dateText, inst) {
-                var date = jQuery(this).datepicker('getDate');
-                var week = jQuery.datepicker.iso8601Week(date);
-                if (week < 10) {
-                    var displayWeek = date.getFullYear() + "W0" + week;
-                } else {
-                    var displayWeek = date.getFullYear() + "W" + week;
-                }
-
-                weekStartDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
-                weekEndDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 7)
-
-                jQuery('#periodSelector').val(displayWeek);
+    weeklyPicker.datepicker({
+        showOtherMonths: true,
+        selectOtherMonths: false,
+        showWeek: true,
+        firstDay: 1,
+        onSelect: function () {
+            let date = jQuery(this).datepicker('getDate');
+            let week = jQuery.datepicker.iso8601Week(date);
+            if (week < 10) {
+                selectedPeriod = date.getFullYear() + "W0" + week;
+            } else {
+                selectedPeriod = date.getFullYear() + "W" + week;
             }
-        });
+            selectedStartDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 1);
+            selectedEndDate = new Date(date.getFullYear(), date.getMonth(), date.getDate() - date.getDay() + 7);
+            weeklyPicker.val(selectedPeriod);
+        }
+    });
+    weeklyPicker.show();
+    jQuery('#ui-datepicker-div > table > tbody > tr').live('mousemove', function () {
+        jQuery(this).find('td a').addClass('ui-state-hover');
+    });
+    jQuery('.ui-datepicker-calendar tr').live('mouseleave', function () {
+        jQuery(this).find('td a').removeClass('ui-state-hover');
+    });
+}
 
-        jQuery('#ui-datepicker-div > table > tbody > tr').live('mousemove', function () {
-            jQuery(this).find('td a').addClass('ui-state-hover');
-        });
-        jQuery('.ui-datepicker-calendar tr').live('mouseleave', function () {
-            jQuery(this).find('td a').removeClass('ui-state-hover');
-        });
-    } else if (selectedMapping.periodType === 'Monthly') {
-        // set up monthly
-        jQuery('#periodSelector').monthpicker({
-            pattern: 'yyyymm'
-        });
-    } else {
-        // This is unknown
-        var text = 'DHIS period: ' + selectedMapping.periodType + ', Please type the appropriate value';
-        jQuery('#un-recognized-period').html(text);
-        toggleCustomRangeCheckbox(true);
+function initializeMonthlyPicker() {
+    const monthlyPicker = jQuery('#monthlyPicker');
+    monthlyPicker.attr("max",
+        moment().add(-1, 'months').format("YYYY-MM"));
+    monthlyPicker.show();
+}
+
+function initializeYearlyPicker() {
+    const currentYear = moment().year();
+    const yearlyPicker = jQuery('#yearlyPicker');
+    yearlyPicker.attr("max", currentYear - 1);
+    yearlyPicker.val(currentYear - 1);
+    yearlyPicker.show();
+    handleYearlyPeriodChange();
+}
+
+function handleMonthlyPeriodChange() {
+    const selectedValue = moment(jQuery('#monthlyPicker').val(), "YYYY-MM");
+    selectedStartDate = selectedValue.toDate();
+    selectedEndDate = selectedValue.endOf('month').toDate();
+    selectedPeriod = selectedValue.format('YYYYMM');
+}
+
+function handleYearlyPeriodChange() {
+    const yearlyPicker = jQuery('#yearlyPicker');
+    let selectedYear = yearlyPicker.val();
+    const currentYear = moment().year();
+    // Set back to the maximum possible year if the user entered a wrong value
+    if (selectedYear >= currentYear) {
+        yearlyPicker.val(currentYear - 1);
+        selectedYear = currentYear - 1;
     }
+    selectedPeriod = selectedYear;
+    selectedStartDate = moment(selectedYear, 'YYYY').toDate();
+    selectedEndDate = moment(selectedYear, 'YYYY').endOf('year').toDate();
+}
+
+function handleCustomPeriodChange() {
+    selectedPeriod = jQuery('#customPeriodSelector').val();
 }
 
 function toggleCustomRangeCheckbox(checkDisable) {
@@ -115,44 +175,6 @@ function toggleCustomRangeCheckbox(checkDisable) {
         elem.disabled = false;
         elem.checked = false;
         jQuery('#date-range-section').hide();
-    }
-}
-
-function getPeriodDates() {
-    var startDate, endDate;
-    if(document.getElementById('custom-range-option').checked) {
-        // Do the custom thing.
-        startDate = jQuery('#openmrs-start-date').datepicker('getDate');
-        endDate = jQuery('#openmrs-end-date').datepicker('getDate');
-        if( startDate == '' ||  endDate == '') {
-            alert('Please choose start & end date');
-        }
-        else {
-            return {
-                startDate: startDate,
-                endDate: endDate
-            };
-        }
-    }
-    else {
-        if (selectedMapping.periodType === undefined)
-            return;
-        if (selectedMapping.periodType === 'Daily') {
-            var date = jQuery('#periodSelector').datepicker('getDate');
-            startDate = date;
-            endDate = date;
-        } else if (selectedMapping.periodType === 'Weekly') {
-            startDate = weekStartDate;
-            endDate = weekEndDate;
-        } else if (selectedMapping.periodType === 'Monthly') {
-            var date = jQuery('#periodSelector').monthpicker('getDate');
-            startDate = new Date(date.getFullYear(), date.getMonth(), 1);
-            endDate = new Date(date.getFullYear(), date.getMonth() + 1, 0);
-        }
-        return {
-            startDate: startDate,
-            endDate: endDate
-        }
     }
 }
 
@@ -219,19 +241,21 @@ function populateDHISOrgUnitsDropdown() {
 }
 
 function getReportData() {
-    // http://localhost:8084/openmrs/ws/rest/v1/reportingrest/reportdata/e858e06a-06a0-4f26-9b97-a225089cd526?startDate=2012-10-10&endDate=2012-11-11&location=5c303ee9-ca10-43fc-829f-c9e45bb7748e&v=custom:(dataSets)
     reportData = null;
-
-    var reportGUID = mappings.filter(function (v) {
-        return v.created == jQuery('#mappingSelect').val();
-    })[0].periodIndicatorReportGUID;
-
-    var periodDates = getPeriodDates();
-
+    var reportGUID = selectedMapping.periodIndicatorReportGUID;
     var locationGUID = jQuery('#locationSelect').val();
-
+    let startDate = selectedStartDate;
+    let endDate = selectedEndDate;
+    if(document.getElementById('custom-range-option').checked){
+        startDate = jQuery('#openmrs-start-date').datepicker('getDate');
+        endDate = jQuery('#openmrs-end-date').datepicker('getDate');
+        if( startDate == '' ||  endDate == '') {
+            alert('Please choose start & end date');
+            return;
+        }
+    }
     // fetch report data
-    return jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/reportingrest/reportdata/" + reportGUID + "?startDate=" + jQuery.datepicker.formatDate('yy-mm-dd', periodDates.startDate) + "&endDate=" + jQuery.datepicker.formatDate('yy-mm-dd', periodDates.endDate) + "&location=" + locationGUID + "&v=custom:(dataSets)", function (data) {
+    return jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/reportingrest/reportdata/" + reportGUID + "?startDate=" + moment(startDate).format('YYYY-MM-DD') + "&endDate=" + moment(endDate).format('YYYY-MM-DD') + "&location=" + locationGUID + "&v=custom:(dataSets)", function (data) {
         reportData = data;
     });
 }
@@ -249,9 +273,7 @@ function checkMappingAppliesToReport() {
     // mapping.periodIndicatorReportGUID must equal the UUID of the selected report
     jQuery('#mappingSelect').siblings().remove();
 
-    var mappingReport = mappings.filter(function (v) {
-        return v.created == jQuery('#mappingSelect').val();
-    })[0].periodIndicatorReportGUID;
+    var mappingReport = selectedMapping.periodIndicatorReportGUID;
 
     if (mappingReport == "" || mappingReport == undefined)
         return false;
@@ -277,7 +299,6 @@ function validateForm() {
     ret &= testNotEmpty('#mappingSelect', 'Mapping cannot be empty');
     ret &= testNotEmpty('#locationSelect', 'Location cannot be empty');
     ret &= testNotEmpty('#orgUnitSelect', 'Organisational Unit cannot be empty');
-    ret &= testNotEmpty('#periodSelector', 'Period cannot be empty');
 
     // Make sure mapping applies to report
     ret &= checkMappingAppliesToReport();
@@ -286,11 +307,7 @@ function validateForm() {
 }
 
 function getMappingForIndicator(indicator) {
-    var mapping = mappings.filter(function (v) {
-        return v.created == jQuery('#mappingSelect').val();
-    })[0];
-
-    var element = mapping.elements.filter(function (v) {
+    var element = selectedMapping.elements.filter(function (v) {
         return v.indicator == indicator;
     })[0];
 
@@ -308,15 +325,9 @@ function buildDXFJSON() {
 
     return getReportData().then(function () {
         dxfJSON = {};
-
-        dxfJSON.dataSet = mappings.filter(function (v) {
-            return v.created == jQuery('#mappingSelect').val();
-        })[0].dataSetUID
-
-        dxfJSON.period = jQuery('#periodSelector').val();
-
+        dxfJSON.dataSet = selectedMapping.dataSetUID
+        dxfJSON.period = selectedPeriod;
         dxfJSON.orgUnit = jQuery('#orgUnitSelect').val();
-
         var indicatorValues = reportData.dataSets[0].rows[0];
         var dataValues = [];
 

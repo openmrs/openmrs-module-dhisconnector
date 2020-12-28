@@ -57,7 +57,8 @@ function onMappingSelect() {
     selectedEndDate = null;
     toggleCustomRangeCheckbox(false);
     hidePeriodPickers();
-    switch(selectedMapping.periodType){
+    // Checks whether the period type is a financial year or not
+    switch (selectedMapping.periodType) {
         case 'Daily':
             initializeDailyPicker();
             break;
@@ -68,11 +69,15 @@ function onMappingSelect() {
             initializeMonthlyPicker();
             break
         case 'Yearly':
-            initializeYearlyPicker();
+            initializeYearlyPicker('Jan');
             break;
         default:
-            jQuery('#customPeriodPicker').show();
-            toggleCustomRangeCheckbox(true);
+            if (selectedMapping.periodType.split('Financial').length === 2) {
+                initializeYearlyPicker(selectedMapping.periodType.split('Financial')[1]);
+            } else {
+                jQuery('#customPeriodPicker').show();
+                toggleCustomRangeCheckbox(true);
+            }
     }
 }
 
@@ -130,13 +135,23 @@ function initializeMonthlyPicker() {
     monthlyPicker.show();
 }
 
-function initializeYearlyPicker() {
+function initializeYearlyPicker(month) {
     const currentYear = moment().year();
+    const currentMonth = moment().month();
     const yearlyPicker = jQuery('#yearlyPicker');
-    yearlyPicker.attr("max", currentYear - 1);
-    yearlyPicker.val(currentYear - 1);
+    // Set back to the maximum possible year if the user entered a wrong value
+    if (currentMonth >= moment().month(month).format("M")) {
+        yearlyPicker.attr("max", currentYear - 1);
+        yearlyPicker.val(currentYear - 1);
+    } else {
+        yearlyPicker.attr("max", currentYear - 2);
+        yearlyPicker.val(currentYear - 2);
+    }
+    jQuery("#yearlyPicker").change(function () {
+        handleYearlyPeriodChange(month, this.value);
+    });
     yearlyPicker.show();
-    handleYearlyPeriodChange();
+    handleYearlyPeriodChange(month, currentYear);
 }
 
 function handleMonthlyPeriodChange() {
@@ -146,18 +161,28 @@ function handleMonthlyPeriodChange() {
     selectedPeriod = selectedValue.format('YYYYMM');
 }
 
-function handleYearlyPeriodChange() {
+function handleYearlyPeriodChange(month, selectedYear) {
     const yearlyPicker = jQuery('#yearlyPicker');
-    let selectedYear = yearlyPicker.val();
     const currentYear = moment().year();
+    const currentMonth = moment().month();
     // Set back to the maximum possible year if the user entered a wrong value
     if (selectedYear >= currentYear) {
-        yearlyPicker.val(currentYear - 1);
-        selectedYear = currentYear - 1;
+        if (currentMonth >= moment().month(month).format("M")) {
+            yearlyPicker.val(currentYear - 1);
+            selectedYear = currentYear - 1;
+        } else {
+            yearlyPicker.val(currentYear - 2);
+            selectedYear = currentYear - 2;
+        }
     }
-    selectedPeriod = selectedYear;
-    selectedStartDate = moment(selectedYear, 'YYYY').toDate();
-    selectedEndDate = moment(selectedYear, 'YYYY').endOf('year').toDate();
+    if (month === 'Jan') {
+        selectedPeriod = selectedYear;
+        selectedStartDate = moment(selectedPeriod, 'YYYY').toDate();
+    } else {
+        selectedPeriod = selectedYear + month;
+        selectedStartDate = moment(selectedPeriod, 'YYYYMMM').toDate();
+    }
+    selectedEndDate = moment(selectedStartDate).add(1, 'years').subtract(1, 'days').toDate();
 }
 
 function handleCustomPeriodChange() {

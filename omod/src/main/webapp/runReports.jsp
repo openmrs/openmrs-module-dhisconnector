@@ -50,14 +50,13 @@
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.date"/> Period</th>
+      <th class="runHeader">Period</th>
       <td>
         <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>
         <input type="month" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
                style="display: none"/>
-        <input type="number" id="yearlyPicker" min="1970" onchange="handleYearlyPeriodChange()"
-               style="display: none"/>
+        <input type="number" id="yearlyPicker" min="1970" style="display: none"/>
         <div id="customPeriodPicker" style="display: none">
               <span style="color: red; font-size:small;">
                   The mapped period type is not supported. Please type the appropriate value

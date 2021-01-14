@@ -45,6 +45,8 @@ function hidePeriodPickers(){
     jQuery('#dailyPicker').hide();
     jQuery('#weeklyPicker').hide();
     jQuery('#monthlyPicker').hide();
+    jQuery('#sixMonthlyPicker').hide();
+    jQuery('#sixMonthTypeSelector').hide();
     jQuery('#yearlyPicker').hide();
     jQuery('#customPeriodPicker').hide();
 }
@@ -70,6 +72,9 @@ function onMappingSelect() {
             break
         case 'Yearly':
             initializeYearlyPicker('Jan');
+            break;
+        case 'SixMonthly':
+            initializeSixMonthlyPicker();
             break;
         default:
             if (selectedMapping.periodType.split('Financial').length === 2) {
@@ -135,6 +140,26 @@ function initializeMonthlyPicker() {
     monthlyPicker.show();
 }
 
+function initializeSixMonthlyPicker() {
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const sixMonthly = jQuery('#sixMonthlyPicker');
+    const sixMonthTypeSelector = jQuery('#sixMonthTypeSelector');
+    // Set back to the maximum possible year if the user entered a wrong value
+    if (currentMonth >= 6) {
+        sixMonthly.attr("max", currentYear);
+        sixMonthTypeSelector.children('option[value="Jul"]').hide();
+        sixMonthly.val(currentYear);
+    } else {
+        sixMonthly.attr("max", currentYear - 1);
+        sixMonthTypeSelector.children('option[value="Jul"]').show();
+        sixMonthly.val(currentYear - 1);
+    }
+    sixMonthTypeSelector.show();
+    sixMonthly.show();
+    handleSixMonthlyPeriodChange();
+}
+
 function initializeYearlyPicker(month) {
     const currentYear = moment().year();
     const currentMonth = moment().month();
@@ -159,6 +184,40 @@ function handleMonthlyPeriodChange() {
     selectedStartDate = selectedValue.toDate();
     selectedEndDate = selectedValue.endOf('month').toDate();
     selectedPeriod = selectedValue.format('YYYYMM');
+}
+
+function handleSixMonthlyPeriodChange() {
+    const sixMonthlyPicker = jQuery('#sixMonthlyPicker');
+    let selectedYear = sixMonthlyPicker.val();
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const sixMonthTypeSelector = jQuery('#sixMonthTypeSelector');
+    const selectedSixMonthPeriod = sixMonthTypeSelector.val();
+    // Set back to the maximum possible year if the user entered a wrong value
+    if (selectedYear > currentYear) {
+        sixMonthlyPicker.val(currentYear - 1);
+        selectedYear = currentYear - 1;
+    } else if (selectedYear == currentYear) {
+        if (currentMonth >= 6) {
+            sixMonthTypeSelector.children('option[value="Jul"]').hide();
+        } else {
+            sixMonthlyPicker.val(currentYear - 1);
+            selectedYear = currentYear - 1;
+            sixMonthTypeSelector.children('option[value="Jul"]').show();
+        }
+    } else {
+        sixMonthTypeSelector.children('option[value="Jul"]').show();
+    }
+
+    if(selectedSixMonthPeriod === 'Jan') {
+        selectedPeriod = selectedYear + "S1";
+        selectedStartDate = moment(selectedYear, 'YYYY').toDate();
+        selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
+    } else {
+        selectedPeriod = selectedYear + "S2";
+        selectedStartDate = moment(selectedYear, 'YYYY').add(6, 'months').toDate();
+        selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
+    }
 }
 
 function handleYearlyPeriodChange(month, selectedYear) {

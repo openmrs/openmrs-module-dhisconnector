@@ -1383,45 +1383,61 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		} else if (ReportingPeriodType.FinancialApril.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyy");
 			// Set the start date to year of last Financial April period
-			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < 3 ? -2 : -1);
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < Calendar.APRIL ? -2 : -1);
 			// Set the start date to 1st of April
-			startDate.set(Calendar.MONTH, 3);
+			startDate.set(Calendar.MONTH, Calendar.APRIL);
 			startDate.set(Calendar.DAY_OF_MONTH, 1);
 			setBasicsStartsAndEnds(startDate, endDate);
 			// Set the end date to 31st of March
 			endDate.add(Calendar.YEAR, 1);
-			endDate.set(Calendar.MONTH, 2);
+			endDate.set(Calendar.MONTH, Calendar.MARCH);
 			endDate.set(Calendar.DAY_OF_MONTH, 31);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "April";
 		} else if (ReportingPeriodType.FinancialJuly.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyy");
 			// Set the start date to year of last Financial July period
-			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < 6 ? -2 : -1);
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < Calendar.JULY ? -2 : -1);
 			// Set the start date to 1st of July
-			startDate.set(Calendar.MONTH, 6);
+			startDate.set(Calendar.MONTH, Calendar.JULY);
 			startDate.set(Calendar.DAY_OF_MONTH, 1);
 			setBasicsStartsAndEnds(startDate, endDate);
 			// Set the end date to 30th of June
 			endDate.add(Calendar.YEAR, 1);
-			endDate.set(Calendar.MONTH, 5);
+			endDate.set(Calendar.MONTH, Calendar.JUNE);
 			endDate.set(Calendar.DAY_OF_MONTH, 30);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "July";
 		} else if (ReportingPeriodType.FinancialOct.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyy");
 			// Set the start date to year of last Financial October period
-			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < 9 ? -2 : -1);
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < Calendar.OCTOBER ? -2 : -1);
 			// Set the start date to 1st of October
-			startDate.set(Calendar.MONTH, 9);
+			startDate.set(Calendar.MONTH, Calendar.OCTOBER);
 			startDate.set(Calendar.DAY_OF_MONTH, 1);
 			setBasicsStartsAndEnds(startDate, endDate);
 			// Set the end date to 30th of September
 			endDate.add(Calendar.YEAR, 1);
-			endDate.set(Calendar.MONTH, 8);
+			endDate.set(Calendar.MONTH, Calendar.SEPTEMBER);
 			endDate.set(Calendar.DAY_OF_MONTH, 30);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "Oct";
+		} else if (ReportingPeriodType.SixMonthly.name().equals(periodType)) {
+			// Set the start date to start date of last SixMonthly period
+			if (startDate.get(Calendar.MONTH) < Calendar.JULY) {
+				startDate.add(Calendar.YEAR, -1);
+				startDate.set(Calendar.MONTH, Calendar.JULY);
+				startDate.set(Calendar.DAY_OF_MONTH, 1);
+			} else {
+				startDate.set(Calendar.DAY_OF_YEAR, 1);
+			}
+			setBasicsStartsAndEnds(startDate, endDate);
+			// Set the end date to the last day of SixMonthly period
+			endDate.add(Calendar.MONTH, 5);
+			endDate.set(Calendar.DAY_OF_MONTH, endDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "S" + getHalfYear(lastRan))
+					.equals(endDate.get(Calendar.YEAR) + "S" + getHalfYear(endDate)))
+				period = startDate.get(Calendar.YEAR) + "S" + getHalfYear(startDate);
 		}
 		return period;
 	}
@@ -1432,6 +1448,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		endDate.setTime(startDate.getTime());
 		endDate.set(Calendar.HOUR_OF_DAY, 23);
 		endDate.set(Calendar.MINUTE, 59);
+	}
+
+	/**
+	 * @return the half year number
+	 */
+	private int getHalfYear(Calendar date) {
+		return date.get(Calendar.MONTH) < Calendar.JULY ? 1 : 2;
 	}
 	
 	private String getPostSummary(Object o) {

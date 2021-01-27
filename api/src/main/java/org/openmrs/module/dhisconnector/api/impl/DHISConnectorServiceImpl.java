@@ -1438,6 +1438,22 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "S" + getHalfYear(lastRan))
 					.equals(endDate.get(Calendar.YEAR) + "S" + getHalfYear(endDate)))
 				period = startDate.get(Calendar.YEAR) + "S" + getHalfYear(startDate);
+		} else if (ReportingPeriodType.SixMonthlyApril.name().equals(periodType)) {
+			// Set the start date to start date of last SixMonthlyApril period
+			if ((startDate.get(Calendar.MONTH) < Calendar.OCTOBER) && (startDate.get(Calendar.MONTH) >= Calendar.APRIL)) {
+				startDate.add(Calendar.YEAR, -1);
+				startDate.set(Calendar.MONTH, Calendar.OCTOBER);
+			} else {
+				startDate.set(Calendar.MONTH, Calendar.APRIL);
+			}
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			// Set the end date to the last day of SixMonthlyApril period
+			endDate.add(Calendar.MONTH, 5);
+			endDate.set(Calendar.DAY_OF_MONTH, endDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "S" + getHalfYearApril(lastRan))
+					.equals(endDate.get(Calendar.YEAR) + "S" + getHalfYearApril(endDate)))
+				period = startDate.get(Calendar.YEAR) + "S" + getHalfYearApril(startDate);
 		}
 		return period;
 	}
@@ -1455,6 +1471,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	 */
 	private int getHalfYear(Calendar date) {
 		return date.get(Calendar.MONTH) < Calendar.JULY ? 1 : 2;
+	}
+
+	/**
+	 * @return the half year number from a year starts with April
+	 */
+	private int getHalfYearApril(Calendar date) {
+		return date.get(Calendar.MONTH) < Calendar.OCTOBER && date.get(Calendar.MONTH) >= Calendar.APRIL ? 1 : 2;
 	}
 	
 	private String getPostSummary(Object o) {

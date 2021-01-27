@@ -75,7 +75,8 @@ public class DHISConnectorController {
 			"Financial April",
 			"Financial July",
 			"Financial Oct",
-			"SixMonthly");
+			"SixMonthly",
+			"SixMonthly April");
 
 	@RequestMapping(value = "/module/dhisconnector/manage", method = RequestMethod.GET)
 	public void manage(ModelMap model) {

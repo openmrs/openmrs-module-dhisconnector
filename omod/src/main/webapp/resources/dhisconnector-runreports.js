@@ -76,6 +76,8 @@ function onMappingSelect() {
         case 'SixMonthly':
             initializeSixMonthlyPicker();
             break;
+        case 'SixMonthlyApril':
+            initializeSixMonthlyAprilPicker();
         default:
             if (selectedMapping.periodType.split('Financial').length === 2) {
                 initializeYearlyPicker(selectedMapping.periodType.split('Financial')[1]);
@@ -160,6 +162,26 @@ function initializeSixMonthlyPicker() {
     handleSixMonthlyPeriodChange();
 }
 
+function initializeSixMonthlyAprilPicker() {
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const sixMonthlyApril = jQuery('#sixMonthlyAprilPicker');
+    const sixMonthAprilTypeSelector = jQuery('#sixMonthAprilTypeSelector');
+
+    if (currentMonth >= 9 || currentMonth < 4) {
+        sixMonthlyApril.attr("max", currentYear);
+        sixMonthAprilTypeSelector.children('option[value="Apr"]').hide();
+        sixMonthlyApril.val(currentYear);
+    } else {
+        sixMonthlyApril.attr("max", currentYear - 1);
+        sixMonthAprilTypeSelector.children('option[value="Apr"]').show();
+        sixMonthlyApril.val(currentYear - 1);
+    }
+    sixMonthAprilTypeSelector.show();
+    sixMonthlyApril.show();
+    handleSixMonthlyAprilPeriodChange();
+}
+
 function initializeYearlyPicker(month) {
     const currentYear = moment().year();
     const currentMonth = moment().month();
@@ -216,6 +238,40 @@ function handleSixMonthlyPeriodChange() {
     } else {
         selectedPeriod = selectedYear + "S2";
         selectedStartDate = moment(selectedYear, 'YYYY').add(6, 'months').toDate();
+        selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
+    }
+}
+
+function handleSixMonthlyAprilPeriodChange() {
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const sixMonthlyAprilPicker = jQuery('#sixMonthlyAprilPicker');
+    let selectedYear = sixMonthlyAprilPicker.val();
+    const sixMonthAprilTypeSelector = jQuery('#sixMonthAprilTypeSelector');
+    const selectedSixMonthAprilPeriod = sixMonthAprilTypeSelector.val();
+    // Set back to the maximum possible year if the user entered a wrong value
+    if (selectedYear > currentYear) {
+        sixMonthlyAprilPicker.val(currentYear - 1);
+        selectedYear = currentYear - 1;
+    } else if(selectedYear === currentYear) {
+        if (currentMonth >= 9 || currentMonth < 4) {
+            sixMonthAprilTypeSelector.children('option[value="Apr"]').hide();
+        } else {
+            sixMonthlyAprilPicker.val(currentYear - 1);
+            selectedYear = currentYear - 1;
+            sixMonthAprilTypeSelector.children('option[value="Apr"]').show();
+        }
+    } else {
+        sixMonthTypeSelector.children('option[value="Apr]').show();
+    }
+
+    if (selectedSixMonthAprilPeriod === 'Apr') {
+        selectedPeriod = selectedYear + "S1";
+        selectedStartDate = moment(selectedYear, 'YYYY').add(4, 'months').toDate();
+        selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
+    } else {
+        selectedPeriod = selectedYear + "S2";
+        selectedStartDate = moment(selectedYear, 'YYYY').add(10, 'months').toDate();
         selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
     }
 }

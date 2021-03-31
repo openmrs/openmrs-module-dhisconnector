@@ -62,6 +62,11 @@
           <option value="Jan">Jan - Jun</option>
           <option value="Jul">Jul - Dec</option>
         </select>
+        <input type="number" id="sixMonthlyAprilPicker" min="1970" onchange="handleSixMonthlyAprilPeriodChange()" style="display: none"/>
+        <select id="sixMonthAprilTypeSelector" onchange="handleSixMonthlyAprilPeriodChange()" style="display: none">
+          <option value="Apr">Apr - Sep</option>
+          <option value="Oct">Oct - Mar</option>
+        </select>
         <input type="number" id="yearlyPicker" min="1970" style="display: none"/>
         <div id="customPeriodPicker" style="display: none">
               <span style="color: red; font-size:small;">

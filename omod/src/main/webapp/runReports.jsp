@@ -67,6 +67,15 @@
           <option value="Apr">Apr - Sep</option>
           <option value="Oct">Oct - Mar</option>
         </select>
+        <%--    Quarterly period type year input --%>
+        <input type="number" id="quarterlyPicker" min="1970" onchange="handleQuarterlyPeriodChange()" style="display: none"/>
+        <%--    Quarterly period type quarter selection    --%>
+        <select id="quarterSelection" onchange="handleQuarterlyPeriodChange()" style="display: none">
+          <option value="Q1">Jan - March</option>
+          <option value="Q2">Apr - June</option>
+          <option value="Q3">July - Sep</option>
+          <option value="Q4">Oct - Dec</option>
+        </select>
         <input type="number" id="yearlyPicker" min="1970" style="display: none"/>
         <div id="customPeriodPicker" style="display: none">
               <span style="color: red; font-size:small;">

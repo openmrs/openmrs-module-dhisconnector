@@ -1454,6 +1454,27 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "S" + getHalfYearApril(lastRan))
 					.equals(endDate.get(Calendar.YEAR) + "S" + getHalfYearApril(endDate)))
 				period = startDate.get(Calendar.YEAR) + "S" + getHalfYearApril(startDate);
+		} else if (ReportingPeriodType.Quarterly.name().equals(periodType)) {
+			// Set the correct start date of the last Quarterly period
+			if (startDate.get(Calendar.MONTH) < Calendar.APRIL) {
+				startDate.add(Calendar.YEAR, -1);
+				startDate.set(Calendar.MONTH, Calendar.OCTOBER);
+			} else if (startDate.get(Calendar.MONTH) < Calendar.JULY) {
+				startDate.set(Calendar.MONTH, Calendar.JANUARY);
+			} else if (startDate.get(Calendar.MONTH) < Calendar.OCTOBER) {
+				startDate.set(Calendar.MONTH, Calendar.APRIL);
+			} else {
+				startDate.set(Calendar.MONTH, Calendar.JULY);
+			}
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			// set the end date to the last day of the current period
+			endDate.add(Calendar.MONTH, 2);
+			endDate.set(Calendar.DAY_OF_MONTH, endDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+			if (lastRan == null || !(lastRan.get(Calendar.YEAR) + "Q" + getQuarterNumber(lastRan))
+					.equals(endDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(endDate))) {
+				period = startDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(startDate);
+			}
 		}
 		return period;
 	}
@@ -1478,6 +1499,21 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	 */
 	private int getHalfYearApril(Calendar date) {
 		return date.get(Calendar.MONTH) < Calendar.OCTOBER && date.get(Calendar.MONTH) >= Calendar.APRIL ? 1 : 2;
+	}
+
+	/**
+	 * @return the quarter number
+	 */
+	private int getQuarterNumber(Calendar date) {
+		if (date.get(Calendar.MONTH) < Calendar.APRIL) {
+			return 1;
+		} else if (date.get(Calendar.MONTH) < Calendar.JULY) {
+			return 2;
+		} else if (date.get(Calendar.MONTH) < Calendar.OCTOBER) {
+			return 3;
+		} else {
+			return 4;
+		}
 	}
 	
 	private String getPostSummary(Object o) {

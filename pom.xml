@@ -4,7 +4,7 @@
 
     <groupId>org.openmrs.module</groupId>
     <artifactId>dhisconnector</artifactId>
-    <version>1.5.4-SNAPSHOT</version>
+    <version>1.5.4</version>
     <packaging>pom</packaging>
     <name>DHIS Connector Module</name>
     <description>This module posts aggregate data from OpenMRS to DHIS2, and gives implementers a User Interface for an easier-to-set-up OMRS to DHIS2 pipeline, 
@@ -29,7 +29,7 @@
         <connection>scm:git:git@github.com:openmrs/openmrs-module-dhisconnector.git</connection>
         <developerConnection>scm:git:git@github.com:openmrs/openmrs-module-dhisconnector.git</developerConnection>
         <url>scm:git:git@github.com:openmrs/openmrs-module-dhisconnector.git</url>
-        <tag>HEAD</tag>
+        <tag>1.5.4</tag>
     </scm>
 
     <modules>

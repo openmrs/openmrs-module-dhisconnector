@@ -78,6 +78,10 @@ function onMappingSelect() {
             break;
         case 'SixMonthlyApril':
             initializeSixMonthlyAprilPicker();
+            break;
+        case 'Quarterly':
+            initializeQuarterlyPicker();
+            break;
         default:
             if (selectedMapping.periodType.split('Financial').length === 2) {
                 initializeYearlyPicker(selectedMapping.periodType.split('Financial')[1]);
@@ -182,6 +186,27 @@ function initializeSixMonthlyAprilPicker() {
     handleSixMonthlyAprilPeriodChange();
 }
 
+// Initialize the quarterly picker to the latest possible quarter
+// Make the year picker and quarter selector appear on the display
+function initializeQuarterlyPicker () {
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const quarterlyYearPicker = jQuery("#quarterlyPicker");
+    const quarterSelector = jQuery("#quarterSelection");
+
+    if (currentMonth < 3) {
+        quarterlyYearPicker.attr("max", currentYear -1);
+        quarterlyYearPicker.val(currentYear - 1);
+    } else {
+        quarterlyYearPicker.attr("max", currentYear);
+        quarterlyYearPicker.val(currentYear);
+    }
+
+    quarterlyYearPicker.show();
+    quarterSelector.show();
+    handleQuarterlyPeriodChange();
+}
+
 function initializeYearlyPicker(month) {
     const currentYear = moment().year();
     const currentMonth = moment().month();
@@ -274,6 +299,45 @@ function handleSixMonthlyAprilPeriodChange() {
         selectedStartDate = moment(selectedYear, 'YYYY').add(10, 'months').toDate();
         selectedEndDate = moment(selectedStartDate).add(6, 'months').subtract(1, 'days').toDate();
     }
+}
+
+function handleQuarterlyPeriodChange () {
+    const currentYear = moment().year();
+    const currentMonth = moment().month();
+    const quarterlyYearPicker = jQuery("#quarterlyPicker");
+    let selectedYear = quarterlyYearPicker.val();
+    const quarterSelector = jQuery("#quarterSelection");
+    let selectedQuarter = quarterSelector.val();
+
+    if (currentYear === selectedYear) {
+        if (currentMonth < 3) {
+            quarterlyYearPicker.attr("max", currentYear -1);
+            selectedYear = currentYear - 1;
+            quarterlyYearPicker.val(selectedYear);
+        } else if (currentMonth < 6) {
+            quarterSelector.children('option[value="Q2"]').hide();
+            quarterSelector.children('option[value="Q3"]').hide();
+            quarterSelector.children('option[value="Q4"]').hide();
+        } else if (currentMonth < 9) {
+            quarterSelector.children('option[value="Q3"]').hide();
+            quarterSelector.children('option[value="Q4"]').hide();
+        } else {
+            quarterSelector.children('option[value="Q4"]').hide()
+        }
+    } else if (currentYear < selectedYear) {
+        selectedYear = currentYear;
+        quarterlyYearPicker.val(selectedYear);
+    } else {
+        quarterSelector.children('option[value="Q1"]').show();
+        quarterSelector.children('option[value="Q2"]').show();
+        quarterSelector.children('option[value="Q3"]').show();
+        quarterSelector.children('option[value="Q4"]').show();
+    }
+
+    let quarterNum = selectedQuarter.split("Q");
+    selectedPeriod = selectedYear.toString() + selectedQuarter;
+    selectedStartDate = moment(selectedYear, 'YYYY').add((parseInt(quarterNum[1]) - 1)*3, 'months').toDate();
+    selectedEndDate = moment(selectedStartDate).add(3, 'months').subtract(1, 'days').toDate();
 }
 
 function handleYearlyPeriodChange(month, selectedYear) {

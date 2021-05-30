@@ -806,7 +806,14 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String mappingFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
 		        + File.separator;
 		String mappingName = mapping.getOriginalFilename();
-		
+
+		File mappingsFolder = new File(mappingFolderName);
+		mappingsFolder.mkdirs();
+
+		if (!mappingsFolder.isDirectory()) {
+			return Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.directoryNotCreated");
+		}
+
 		if (mappingName.endsWith(".zip")) {
 			boolean allFailed = true;
 			File tempMappings = new File(tempFolderName + mappingName);

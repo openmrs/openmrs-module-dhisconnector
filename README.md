@@ -1,4 +1,4 @@
-<img src="https://s3-eu-west-1.amazonaws.com/jembi/images/OMRSsig1.jpg" alt="OpenMRS"/>
+<img src="https://talk.openmrs.org/uploads/default/original/2X/f/f1ec579b0398cb04c80a54c56da219b2440fe249.jpg" alt="OpenMRS"/>
 
 # DHIS Connector Module
 
@@ -9,11 +9,11 @@ DXF files can be downloaded instead of posting to DHIS2 directly.
 
 ## Setup
 
-Before you use the DHIS Connector Module, you will need to configure *both* a Period Indicator Report in OpenMRS ([instructions](https://wiki.openmrs.org/pages/viewpage.action?pageId=19300405#BuildingReports(StepByStepGuide)-PeriodIndicatorReportStep-By-Step)) and the corresponding DHIS2 Data Set in DHIS2 ([instructions](http://dhis2.github.io/dhis2-docs/master/en/implementer/html/ch12.html)).
+Before you use the DHIS Connector Module, you will need to configure *both* a Period Indicator Report in OpenMRS ([instructions](https://wiki.openmrs.org/pages/viewpage.action?pageId=19300405#BuildingReports(StepByStepGuide)-PeriodIndicatorReportStep-By-Step)) and the corresponding DHIS2 Data Set in DHIS2 ([instructions](https://docs.dhis2.org/en/use/user-guides/dhis-core-version-236/configuring-the-system/metadata.html#create_data_set)).
 
 ### Installation
 
-First install the [Reporting Rest Module](https://modules.openmrs.org/#/show/121/reportingrest)<sup>†</sup> (you will also need the [Rest Module](https://modules.openmrs.org/#/show/153/webservices-rest) and the [Reporting Module](https://modules.openmrs.org/#/show/119/reporting)). Then download and install the [DHIS Connector Module](https://github.com/jembi/openmrs-module-dhisconnector/releases).
+First install the [Reporting Rest Module](https://modules.openmrs.org/#/show/121/reportingrest)<sup>†</sup> (you will also need the [Rest Module](https://addons.openmrs.org/show/org.openmrs.module.webservices-rest) and the [Reporting Module](https://addons.openmrs.org/show/org.openmrs.module.reporting)). Then download and install the [DHIS Connector Module](https://addons.openmrs.org/show/org.openmrs.module.dhismodule).
 
 † You will actually need to download [this build](https://github.com/psbrandt/openmrs-module-reportingrest/releases/download/1.5.1/reportingrest-1.5.1.omod) of the Reporting Rest Module until [this change](https://github.com/psbrandt/openmrs-module-reportingrest/commit/270a44b45b88bf1ba60d60e90938475d1265f12e) is merged and released.
 
@@ -114,6 +114,18 @@ Once you have selected a value for all the fields, click *Send Data* to post dat
 
 > To post backedup DHIS2 API, run; `bash postDHIS2API.sh` and enter required details
 
+## Automation
+
+To schedule/automate pushing data, click *Automation* link under the *DHIS Connector Module* heading on the OpenMRS Administration page. Select the Period Indicator Report and the corresponding mapping to use.
+
+Since Period Indicator Reports are always run for a specific location, you will also need to select the OpenMRS Location as well as the corresponding DHIS2 Organisation Unit.
+
+You can toggle the automation by activating the tick box.
+
+Once you have selected a value for all the fields, click *Save* to add the report to automation. Automated reports will be ran and pushed automatically by the end of the relevant period.
+
+![](https://user-images.githubusercontent.com/27498587/119811349-9fff1180-bf04-11eb-85d0-d83b337778f4.gif)
+
 ## DHIS2 Backup
 
 Every time a request is sent to the DHIS2 server, the resulting JSON is stored on the file system at `OPENMRS_DIR/dhisconnector/dhis2Backup/`. On Ubuntu, this usually corresponds to `/usr/share/tomcat7/.OpenMRS/dhisconnector/dhis2Backup/`. If the DHIS2 server is no longer reachable, these backed up API values will be used by the DHIS Connector Module.
@@ -139,13 +151,16 @@ Implemented
   - [X] Scroll page when dragging mapping to top and bottom of page if necessary
   - [X] Generation, Downloading & Posting of ADX
   - [x] Automated reporting and posting to DHIS2 using configured mapping
+  - [x] Support Quarterly, SixMonthly, SixMonthlyApril, FinancialApril, FinancialJuly, FinancialOct period types
+
 
 TODO
   - [ ] Support other types of OpenMRS reports
   - [ ] DHIS2 API pagination
   - [ ] Upgrade all dhis endpoints or api to work after 2.20
-  - [ ] Support Quaterly, SixMonthly, SixMonthlyApril, BiMonthly, FinancialApril, FinancialJuly, FinancialOct period types
-  - [ ] Support more period types besides daily, weekly and monthly supported
+  - [ ] Support WeeklySunday, Biweekly, Bimonthly, FinancialNov, SixMonthlyNov, WeeklyWednesday, WeeklyThursday, WeeklySaturday period types
+  - [ ] Add location mapping feature
+  - [ ] Implement role based user access controlling
 
 ## License
 

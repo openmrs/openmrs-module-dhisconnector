@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.openmrs.Location;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
+import org.openmrs.api.db.SerializedObject;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 
 /**
@@ -43,4 +44,8 @@ public interface DHISConnectorDAO {
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);
+
+	void saveSerializedObject(SerializedObject serializedObject);
+
+	SerializedObject getSerializedObjectByUuid(String uuid);
 }

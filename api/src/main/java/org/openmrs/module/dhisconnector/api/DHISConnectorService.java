@@ -12,6 +12,7 @@
 package org.openmrs.module.dhisconnector.api;
 
 import java.util.ArrayList;
+import java.io.IOException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -73,9 +74,9 @@ public interface DHISConnectorService extends OpenmrsService {
 
 	public DHISDataSet getDHISDataSetById(String id);
 
-	public String uploadMappings(MultipartFile mapping);
-	
-	public String[] exportSelectedMappings(String[] selectedMappings);
+	public String importMappingBundle(MultipartFile mapping) throws IOException;
+
+	public String[] exportMapping(String[] mappings) throws IOException;
 	
 	public boolean dhis2BackupExists();
 	

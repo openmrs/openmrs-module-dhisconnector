@@ -21,6 +21,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.db.SerializedObject;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
@@ -123,5 +124,18 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 		sessionFactory.getCurrentSession()
 				.createQuery("delete from LocationToOrgUnitMapping r where r.location = :location")
 				.setParameter("location", location).executeUpdate();
+	}
+
+	@Override
+	public void saveSerializedObject(SerializedObject serializedObject) {
+		sessionFactory.getCurrentSession().save(serializedObject);
+	}
+
+	@Override
+	public SerializedObject getSerializedObjectByUuid(String uuid) {
+		SerializedObject serializedObject = (SerializedObject) sessionFactory.getCurrentSession()
+				.createQuery("from SerializedObject s where s.uuid = :uuid")
+				.setParameter("uuid", uuid).uniqueResult();
+		return serializedObject;
 	}
 }

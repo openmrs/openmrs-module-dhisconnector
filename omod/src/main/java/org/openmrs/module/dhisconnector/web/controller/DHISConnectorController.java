@@ -168,12 +168,12 @@ public class DHISConnectorController {
 
 	@RequestMapping(value = "/module/dhisconnector/uploadMapping", method = RequestMethod.POST)
 	public void uploadMapping(ModelMap model,
-			@RequestParam(value = "mapping", required = false) MultipartFile mapping) {
+			@RequestParam(value = "mapping", required = false) MultipartFile mapping) throws IOException {
 		String successMessage = "";
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).uploadMappings(mapping);
+			String msg = Context.getService(DHISConnectorService.class).importMappingBundle(mapping);
 
 			if (msg.startsWith("Successfully")) {
 				successMessage = msg;
@@ -213,7 +213,7 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						.exportSelectedMappings(selectedMappings);
+						.exportMapping(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
 				String fullPath = exported[1];// contains path to

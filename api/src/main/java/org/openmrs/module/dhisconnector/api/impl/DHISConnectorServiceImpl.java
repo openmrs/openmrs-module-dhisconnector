@@ -30,13 +30,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -82,6 +76,7 @@ import org.codehaus.jackson.map.SerializationConfig;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
+import org.openmrs.module.ModuleFactory;
 import org.openmrs.module.dhisconnector.Configurations;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping.ReportingPeriodType;
@@ -103,6 +98,7 @@ import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMappingElement;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.metadatasharing.api.MetadataService;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetColumn;
 import org.openmrs.module.reporting.dataset.DataSetRow;
@@ -142,7 +138,9 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public static final String DHISCONNECTOR_LOGS_FOLDER = File.separator + "dhisconnector" + File.separator + "logs";
 	
 	public static final String DHISCONNECTOR_MAPPING_FILE_SUFFIX = ".mapping.json";
-	
+
+	public static final String PERIOD_INDICATOR_REPORT_FILE_SUFFIX = ".periodIndicatorReport.json";
+
 	public static final String DHISCONNECTOR_ORGUNIT_RESOURCE = "/api/organisationUnits.json?paging=false&fields=:identifiable,displayName";
 	
 	public static final String DATAVALUESETS_PATH = "/api/dataValueSets";
@@ -897,68 +895,70 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public String[] exportSelectedMappings(String[] selectedMappings) {
+	public String[] exportSelectedMappings(String[] selectedMappings) throws IOException {
 		String[] cleanedSelectedMappings = cleanSelectedMappings(selectedMappings);
 		String msg = "";
 		String[] returnStr = new String[2];
 		String path = null;
-		
-		try {
-			byte[] buffer = new byte[1024];
-			String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
-			        + File.separator;
-			String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-			String suffix = ".mapping.json";
-			String zipFile = tempFolderName + "exported-mappings_" + (new Date()).getTime() + ".zip";
-			
-			(new File(tempFolderName)).mkdirs();
-			
-			FileOutputStream fout = new FileOutputStream(zipFile);
-			ZipOutputStream zout = new ZipOutputStream(fout);
-			File dir = new File(sourceDirectory);
-			
-			if (!dir.isDirectory()) {
-				System.out.println(sourceDirectory + " is not a directory");
-			} else {
-				File[] files = dir.listFiles();
-				String mappings = "";
-				
-				if (files.length == 0) {
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
-				} else {
-					for (int i = 0; i < files.length; i++) {
-						if (files[i].getName().endsWith(suffix)) {
-							FileInputStream fin = new FileInputStream(files[i]);
-							
-							mappings += files[i].getName() + "<:::>";
-							System.out.println("Compressing " + files[i].getName());
-							if (cleanedSelectedMappings.length == 0) {
-								copyToZip(buffer, zout, files, i, fin);
-							} else {
-								if (selectedMappingsIncludes(cleanedSelectedMappings, files[i].getName())) {
-									copyToZip(buffer, zout, files, i, fin);
-								}
-							}
-							msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.success");
-							zout.closeEntry();
-							fin.close();
-						}
-					}
-					if (mappings.split("<:::>").length == 0) {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
-					}
-					path = zipFile;
-				}
-			}
-			zout.close();
-			System.out.println("Zip file has been created!");
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		returnStr[0] = msg;
-		returnStr[1] = path;
-		return returnStr;
+
+		return exportMapping(cleanedSelectedMappings[0]);
+
+//		try {
+//			byte[] buffer = new byte[1024];
+//			String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
+//			        + File.separator;
+//			String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+//			String suffix = ".mapping.json";
+//			String zipFile = tempFolderName + "exported-mappings_" + (new Date()).getTime() + ".zip";
+//
+//			(new File(tempFolderName)).mkdirs();
+//
+//			FileOutputStream fout = new FileOutputStream(zipFile);
+//			ZipOutputStream zout = new ZipOutputStream(fout);
+//			File dir = new File(sourceDirectory);
+//
+//			if (!dir.isDirectory()) {
+//				System.out.println(sourceDirectory + " is not a directory");
+//			} else {
+//				File[] files = dir.listFiles();
+//				String mappings = "";
+//
+//				if (files.length == 0) {
+//					msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
+//				} else {
+//					for (int i = 0; i < files.length; i++) {
+//						if (files[i].getName().endsWith(suffix)) {
+//							FileInputStream fin = new FileInputStream(files[i]);
+//
+//							mappings += files[i].getName() + "<:::>";
+//							System.out.println("Compressing " + files[i].getName());
+//							if (cleanedSelectedMappings.length == 0) {
+//								copyToZip(buffer, zout, files, i, fin);
+//							} else {
+//								if (selectedMappingsIncludes(cleanedSelectedMappings, files[i].getName())) {
+//									copyToZip(buffer, zout, files, i, fin);
+//								}
+//							}
+//							msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.success");
+//							zout.closeEntry();
+//							fin.close();
+//						}
+//					}
+//					if (mappings.split("<:::>").length == 0) {
+//						msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
+//					}
+//					path = zipFile;
+//				}
+//			}
+//			zout.close();
+//			System.out.println("Zip file has been created!");
+//		}
+//		catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		returnStr[0] = msg;
+//		returnStr[1] = path;
+//		return returnStr;
 	}
 	
 	private String[] cleanSelectedMappings(String[] selectedMappings) {
@@ -991,6 +991,88 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		return contains;
+	}
+	
+	@Override
+	public String[] exportMapping(String mapping) throws IOException {
+		mapping += DHISCONNECTOR_MAPPING_FILE_SUFFIX;
+		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
+		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+		(new File(tempDirectory)).mkdirs();
+
+		String[] output = new String[2];
+		String msg = "";
+		String path = "";
+
+		ObjectMapper mapper = new ObjectMapper();
+
+		File mappingsDirectory = new File(sourceDirectory);
+		File[] mappingFiles = mappingsDirectory.listFiles();
+		assert mappingFiles != null;
+		if (doesMappingInclude(mappingFiles, mapping)) {
+			if (ModuleFactory.isModuleStarted("metadatasharing")) {
+				List<File> fileList = new ArrayList<>();
+
+				File mappingFile = new File(sourceDirectory + mapping);
+				DHISMapping mappingObject = mapper.readValue(mappingFile, DHISMapping.class);
+				MetadataService s = Context.getService(MetadataService.class);
+				PeriodIndicatorReportDefinition periodIndicatorReportDefinition =
+						s.getItem(PeriodIndicatorReportDefinition.class, mappingObject.getPeriodIndicatorReportGUID());
+				File periodIndicatorReportFile = new File(
+						tempDirectory +
+								periodIndicatorReportDefinition.getName() +
+								PERIOD_INDICATOR_REPORT_FILE_SUFFIX);
+				mapper.writeValue(periodIndicatorReportFile, periodIndicatorReportDefinition);
+
+				fileList.add(mappingFile);
+				fileList.add(periodIndicatorReportFile);
+
+				path = zipMappingBundle(tempDirectory, fileList);
+				msg = "Successfully bundled the mapping with the metadata";
+			} else {
+				msg = "Error while starting metadatasharing module";
+			}
+		} else {
+			msg = "The requested mapping doesn't exist";
+		}
+
+		output[0] = msg;
+		output[1] = path;
+		System.out.println(msg);
+		System.out.println(path);
+		return output;
+	}
+
+	private boolean doesMappingInclude(File[] filesList, String mapping) {
+		for (File file: filesList) {
+			System.out.println("file name = " + file.getName());
+			System.out.println("mapping name = " + mapping);
+			if (file.getName().equals(mapping)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private String zipMappingBundle (String tempDirectory, List<File> fileList) throws IOException {
+		String path = tempDirectory + "mappingBundle_" + (new Date()).getTime() + ".zip";
+		FileOutputStream fOut = new FileOutputStream(path);
+		ZipOutputStream zOut = new ZipOutputStream(fOut);
+		for (File file: fileList) {
+			FileInputStream fis = new FileInputStream(file);
+			ZipEntry zipEntry = new ZipEntry(file.getName());
+			zOut.putNextEntry(zipEntry);
+
+			byte[] bytes = new byte[1024];
+			int length;
+			while ((length = fis.read(bytes)) >= 0) {
+				zOut.write(bytes, 0 , length);
+			}
+			fis.close();
+		}
+		zOut.close();
+		fOut.close();
+		return path;
 	}
 	
 	@Override

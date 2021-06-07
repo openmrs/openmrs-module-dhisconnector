@@ -45,12 +45,18 @@
         <webservicesRestVersion>2.29.0</webservicesRestVersion>
         <serializationXstreamVersion>0.2.14</serializationXstreamVersion>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <metdatashairngVersion>1.8.0-SNAPSHOT</metdatashairngVersion>
     </properties>
 
     <dependencyManagement>
         <dependencies>
 
             <!-- Begin OpenMRS modules -->
+            <dependency>
+                <groupId>org.openmrs.module</groupId>
+                <artifactId>metadatasharing-api</artifactId>
+                <version>${metdatashairngVersion}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.openmrs.module</groupId>

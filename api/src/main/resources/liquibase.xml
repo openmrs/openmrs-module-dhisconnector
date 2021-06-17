@@ -106,4 +106,37 @@
 			<where>property='dhisreporting.config.dxfToAdxSwitch'</where>
 		</update>
 	</changeSet>
+	<changeSet id="20210617-1813" author="piumal1999">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="dhisconnector_location_to_orgunit"/>
+			</not>
+		</preConditions>
+		<comment>
+			Create dhisconnector_location_to_orgunit table
+		</comment>
+		<createTable tableName="dhisconnector_location_to_orgunit">
+			<column name="id" type="int" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false"/>
+			</column>
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="creator" type="int">
+				<constraints nullable="false"/>
+			</column>
+			<column name="date_created" type="DATETIME">
+				<constraints nullable="false"/>
+			</column>
+			<column name="org_unit_uid" type="text">
+				<constraints nullable="false"/>
+			</column>
+			<column name="location" type="int">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+		<addForeignKeyConstraint constraintName="dhisconnector_location_to_orgunit_location_fk"
+		                         baseTableName="dhisconnector_location_to_orgunit" baseColumnNames="location"
+		                         referencedTableName="location" referencedColumnNames="location_id"/>
+	</changeSet>
 </databaseChangeLog>

@@ -44,6 +44,7 @@ public class AdminList extends AdministrationSectionExt {
 		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 
 		map.put("/module/dhisconnector/configureServer.form", "dhisconnector.configureServer");
+		map.put("/module/dhisconnector/locationMapping.form", "dhisconnector.locationMapping");
 		map.put("/module/dhisconnector/automation.form", "dhisconnector.automation");
 		map.put("/module/dhisconnector/dhis2BackupImport.form", "dhisconnector.dhis2Backup.import");
 		map.put("/module/dhisconnector/dhis2BackupExport.form", "dhisconnector.dhis2Backup.export");

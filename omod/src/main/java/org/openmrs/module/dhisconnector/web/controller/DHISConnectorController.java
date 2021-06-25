@@ -71,6 +71,7 @@ public class DHISConnectorController {
 			"Daily",
 			"Weekly",
 			"Monthly",
+			"BiMonthly",
 			"Yearly",
 			"Financial April",
 			"Financial July",

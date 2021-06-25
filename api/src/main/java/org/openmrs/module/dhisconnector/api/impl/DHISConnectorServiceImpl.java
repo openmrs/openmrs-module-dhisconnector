@@ -1482,6 +1482,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					.equals(endDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(endDate))) {
 				period = startDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(startDate);
 			}
+		} else if (ReportingPeriodType.BiMonthly.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyyMM");
+			startDate.add(Calendar.MONTH, -2);
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.add(Calendar.MONTH, 1);
+			endDate.set(Calendar.DAY_OF_MONTH, endDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = new SimpleDateFormat("yyyyMM").format(startDate.getTime()) + "B";
 		}
 		return period;
 	}

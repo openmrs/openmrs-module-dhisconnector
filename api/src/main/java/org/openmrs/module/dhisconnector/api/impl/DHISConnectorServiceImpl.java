@@ -1371,6 +1371,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "W" + lastRan.get(Calendar.WEEK_OF_YEAR))
 			        .equals(endDate.get(Calendar.YEAR) + "W" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "W" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
+			startDate.add(Calendar.WEEK_OF_YEAR, -2);
+			startDate.set(Calendar.DAY_OF_WEEK, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.add(Calendar.WEEK_OF_YEAR, 1);
+			endDate.set(Calendar.DAY_OF_WEEK, 7);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "BiW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "BiW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "BiW" + startDate.get(Calendar.WEEK_OF_YEAR);
 		} else if (ReportingPeriodType.Monthly.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyyMM");
 			startDate.add(Calendar.MONTH, -1);

@@ -21,12 +21,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.db.DHISConnectorDAO;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * It is a default implementation of {@link DHISReportingDAO}.
+ * It is a default implementation of {@link DHISConnectorDAO}.
  */
 public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	
@@ -87,5 +88,11 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	@Override
 	public List<ReportToDataSetMapping> getAllReportToDataSetMappings() {
 		return sessionFactory.getCurrentSession().createCriteria(ReportToDataSetMapping.class).list();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
+		return sessionFactory.getCurrentSession().createCriteria(LocationToOrgUnitMapping.class).list();
 	}
 }

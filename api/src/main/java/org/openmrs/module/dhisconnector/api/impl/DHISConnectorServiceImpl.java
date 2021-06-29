@@ -83,6 +83,7 @@ import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping.ReportingPeriodType;
 import org.openmrs.module.dhisconnector.adx.AdxDataValue;
@@ -1637,5 +1638,10 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		}
 		
 		return responses;
+	}
+
+	@Override
+	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
+		return getDao().getAllLocationToOrgUnitMappings();
 	}
 }

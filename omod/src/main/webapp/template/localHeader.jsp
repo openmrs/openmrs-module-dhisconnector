@@ -10,7 +10,14 @@
 		href="${pageContext.request.contextPath}/module/dhisconnector/configureServer.form"><spring:message
 				code="dhisconnector.configureServer" /></a>
 	</li>
-	
+
+	<li
+        <c:if test='<%= request.getRequestURI().contains("/locationMapping") %>'>class="active"</c:if>>
+		<a
+        href="${pageContext.request.contextPath}/module/dhisconnector/locationMapping.form"><spring:message
+		        code="dhisconnector.locationMapping" /></a>
+	</li>
+
 	<li
 		<c:if test='<%= request.getRequestURI().contains("/automation") %>'>class="active"</c:if>>
 		<a

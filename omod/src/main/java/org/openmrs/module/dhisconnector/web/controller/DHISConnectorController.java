@@ -467,4 +467,14 @@ public class DHISConnectorController {
 		if (StringUtils.isNotBlank(response))
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
+
+	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.GET)
+	public void showLocationMappings(ModelMap model) {
+		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
+
+		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
+		model.addAttribute("orgUnits", orgUnits);
+		model.addAttribute("locationToOrgUnitMappings", Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings());
+		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+	}
 }

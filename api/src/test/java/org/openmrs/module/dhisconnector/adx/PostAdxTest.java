@@ -64,6 +64,8 @@ public class PostAdxTest {
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("201101"), "Monthly");
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("2011W1"), "Weekly");
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("2011W32"), "Weekly");
+		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("2011BiW1"), "BiWeekly");
+		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("2011BiW32"), "BiWeekly");
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("20110101"), "Daily");
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("2011Q3"), "Quarterly");
 		Assert.assertEquals(DHISPeriodTypeUnit.getPeriodTypeFromIsoString("201101B"), "BiMonthly");

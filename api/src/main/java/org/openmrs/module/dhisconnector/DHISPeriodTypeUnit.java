@@ -87,6 +87,7 @@ package org.openmrs.module.dhisconnector;
 public enum DHISPeriodTypeUnit {
 	DAILY("Daily", "\\b(\\d{4})(\\d{2})(\\d{2})\\b"),
     WEEKLY("Weekly", "\\b(\\d{4})W(\\d[\\d]?)\\b"),
+    BI_WEEKLY("BiWeekly", "\\b(\\d{4})BiW(\\d[\\d]?)\\b"),
     MONTHLY("Monthly", "\\b(\\d{4})[-]?(\\d{2})\\b"),
     BI_MONTHLY("BiMonthly", "\\b(\\d{4})(\\d{2})B\\b"),
     QUARTERLY("Quarterly", "\\b(\\d{4})Q(\\d)\\b"),

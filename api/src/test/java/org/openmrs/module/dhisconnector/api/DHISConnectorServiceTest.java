@@ -7,6 +7,7 @@ import java.util.GregorianCalendar;
 import org.junit.Assert;
 import org.junit.Test;
 import org.openmrs.api.context.Context;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
 
 /**
@@ -74,5 +75,22 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		Assert.assertEquals("20170901", sdf.format(startDate.getTime()));
 		Assert.assertEquals("20170930", sdf.format(endDate.getTime()));
 		Assert.assertNull(period);
+	}
+
+	@Test
+	public void testSaveLocationToOrgUnitMapping() {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = new LocationToOrgUnitMapping();
+		locationToOrgUnitMapping.setOrgUnitUid("abc");
+		locationToOrgUnitMapping.setLocation(Context.getLocationService().getDefaultLocation());
+
+		Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(locationToOrgUnitMapping);
+		Assert.assertEquals(1, Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings().size());
+	}
+
+	@Test
+	public void testDeleteLocationToOrgUnitMappingsByLocation() {
+		Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(
+				Context.getLocationService().getDefaultLocation());
+		Assert.assertEquals(0, Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings().size());
 	}
 }

@@ -15,5 +15,6 @@
 
 <hibernate-configuration>
     <session-factory>
+        <mapping class="org.openmrs.module.dhisconnector.LocationToOrgUnitMapping"/>
      </session-factory>
 </hibernate-configuration>

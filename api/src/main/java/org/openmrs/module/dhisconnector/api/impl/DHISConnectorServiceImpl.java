@@ -1644,4 +1644,14 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
 		return getDao().getAllLocationToOrgUnitMappings();
 	}
+
+	@Override
+	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		getDao().saveLocationToOrgUnitMapping(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
+		getDao().deleteLocationToOrgUnitMappingsByLocation(location);
+	}
 }

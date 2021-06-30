@@ -34,9 +34,11 @@ import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.json.simple.JSONObject;
 import org.openmrs.GlobalProperty;
+import org.openmrs.Location;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
@@ -476,5 +478,32 @@ public class DHISConnectorController {
 		model.addAttribute("orgUnits", orgUnits);
 		model.addAttribute("locationToOrgUnitMappings", Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings());
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
+	public void postLocationMappings(ModelMap model, HttpServletRequest request) {
+		String response = "";
+
+		if (!request.getParameter("locationMappings").isEmpty()){
+			String[] locationMappings = request.getParameter("locationMappings").split(",");
+			for (String pair : locationMappings) {
+				String locationUuid = pair.split("=")[0];
+				String orgUnitUId = pair.split("=")[1];
+				if (StringUtils.isNotBlank(orgUnitUId) && StringUtils.isNotBlank(locationUuid)) {
+					Location location = Context.getLocationService().getLocationByUuid(locationUuid);
+					Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
+					Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
+							new LocationToOrgUnitMapping(location, orgUnitUId)
+					);
+				}
+			}
+			response += " -> Save was successful";
+		}
+
+		model.addAttribute(response);
+
+		showLocationMappings(model);
+		if (StringUtils.isNotBlank(response))
+			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
 }

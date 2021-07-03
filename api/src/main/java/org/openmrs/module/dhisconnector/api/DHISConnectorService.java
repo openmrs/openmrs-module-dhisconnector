@@ -15,6 +15,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
+import org.openmrs.Location;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
@@ -109,5 +110,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	String transformToDHISPeriod(Calendar startDate, Calendar endDate, String periodType, Date lastRun);
 
 	List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings();
+
+	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
+
+	void deleteLocationToOrgUnitMappingsByLocation(Location location);
 
 }

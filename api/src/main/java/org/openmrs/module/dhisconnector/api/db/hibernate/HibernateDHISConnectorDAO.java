@@ -19,6 +19,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
@@ -94,5 +95,18 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	@Override
 	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
 		return sessionFactory.getCurrentSession().createCriteria(LocationToOrgUnitMapping.class).list();
+	}
+
+	@Override
+	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		locationToOrgUnitMapping.setCreator(Context.getAuthenticatedUser());
+		sessionFactory.getCurrentSession().save(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
+		sessionFactory.getCurrentSession()
+				.createQuery("delete from LocationToOrgUnitMapping r where r.location = :location")
+				.setParameter("location", location).executeUpdate();
 	}
 }

@@ -36,6 +36,10 @@ public interface DHISConnectorDAO {
 
 	List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings();
 
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid);
+
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid);
+
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);

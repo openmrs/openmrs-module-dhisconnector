@@ -484,17 +484,19 @@ public class DHISConnectorController {
 	public void postLocationMappings(ModelMap model, HttpServletRequest request) {
 		String response = "";
 
-		if (!request.getParameter("locationMappings").isEmpty()){
+		if (!request.getParameter("locationMappings").isEmpty()) {
 			String[] locationMappings = request.getParameter("locationMappings").split(",");
 			for (String pair : locationMappings) {
 				String locationUuid = pair.split("=")[0];
 				String orgUnitUId = pair.split("=")[1];
-				if (StringUtils.isNotBlank(orgUnitUId) && StringUtils.isNotBlank(locationUuid)) {
+				if (StringUtils.isNotBlank(locationUuid)) {
 					Location location = Context.getLocationService().getLocationByUuid(locationUuid);
 					Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
-					Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
-							new LocationToOrgUnitMapping(location, orgUnitUId)
-					);
+					if (StringUtils.isNotBlank(orgUnitUId)) {
+						Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
+								new LocationToOrgUnitMapping(location, orgUnitUId)
+						);
+					}
 				}
 			}
 			response += " -> Save was successful";

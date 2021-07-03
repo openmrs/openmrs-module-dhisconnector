@@ -19,6 +19,7 @@ import org.openmrs.Location;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
+import org.openmrs.module.dhisconnector.api.model.DHISDataSet;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
@@ -68,7 +69,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	public List<PeriodIndicatorReportDefinition> getReportWithMappings(List<DHISMapping> mappings);
 	
 	public List<DHISOrganisationUnit> getDHISOrgUnits();
-	
+
+	public DHISDataSet getDHISDataSetById(String id);
+
 	public String uploadMappings(MultipartFile mapping);
 	
 	public String[] exportSelectedMappings(String[] selectedMappings);

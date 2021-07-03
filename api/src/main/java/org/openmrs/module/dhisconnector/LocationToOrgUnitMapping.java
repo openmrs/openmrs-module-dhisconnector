@@ -33,11 +33,11 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
     @Column(name = "id", nullable = false)
     private Integer id;
 
-    @Column(name = "org_unit_uid", nullable = false)
+    @Column(name = "org_unit_uid", nullable = true)
     private String orgUnitUid;
 
     @JsonIgnore
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = true)
     @JoinColumn(name = "location")
     private Location location;
 

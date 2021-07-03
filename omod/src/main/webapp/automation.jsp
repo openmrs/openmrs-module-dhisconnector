@@ -23,8 +23,6 @@
             	<th><spring:message code="dhisconnector.automation.delete"/></th>
             	<th><spring:message code="dhisconnector.automation.run"/></th>
                 <th><spring:message code="dhisconnector.automation.mapping"/></th>
-                <th><spring:message code="dhisconnector.automation.location"/></th>
-                <th><spring:message code="dhisconnector.automation.orgUnit"/></th>
                 <th><spring:message code="dhisconnector.automation.reRun"/></th>
             </tr>
         </thead>
@@ -40,22 +38,6 @@
                         </c:forEach>
                     </select>
                 </td>
-                <td>
-                    <select name="location">
-                        <option></option>
-                        <c:forEach items="${locations}" var="location">
-                            <option value="${location.uuid}">${location.name}</option>
-                        </c:forEach>
-                    </select>
-                </td>
-                <td>
-                    <select name="orgUnit">
-                        <option></option>
-                        <c:forEach items="${orgUnits}" var="orgUnit">
-                            <option value="${orgUnit.id}">${orgUnit.name}</option>
-                        </c:forEach>
-                    </select>
-                </td>
                 <td></td>
             </tr>
             <c:forEach items="${reportToDataSetMappings}" var="mpg">
@@ -63,8 +45,6 @@
                     <td><input type="checkbox" name="mappingIds" value="${mpg.id}"/></td>
                     <td><input type="checkbox" name="runs" value="${mpg.uuid}"/></td>
                     <td>${fn:substringBefore(mpg.mapping, '.')}</td>
-                    <td>${mpg.location.name}</td>
-                    <td>${orgUnitsByIds[mpg.orgUnitUid]}</td>
                     <td><c:if test="${not empty mpg.lastRun}"><input type="checkbox" name="reRuns" value="${mpg.uuid}"/></c:if> ${mpg.lastRun}</td>
                 </tr>
            </c:forEach>

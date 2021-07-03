@@ -786,7 +786,28 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		
 		return orgUnits;
 	}
-	
+
+	@Override
+	public DHISDataSet getDHISDataSetById(String id) {
+		DHISDataSet dataSet = new DHISDataSet();
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonResponse = new String();
+		JsonNode node;
+
+		jsonResponse = getDataFromDHISEndpoint(DATASETS_PATH+"/"+id);
+
+		try {
+			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			node = mapper.readTree(jsonResponse);
+			dataSet = mapper.readValue(node.toString(), DHISDataSet.class);
+		}
+		catch (Exception ex) {
+			System.out.print(ex.getMessage());
+		}
+
+		return dataSet;
+	}
+
 	private boolean mappingsHasGUID(List<DHISMapping> mappings, String GUID) {
 		if (mappings == null)
 			return false;
@@ -1306,38 +1327,46 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public String runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping) {
+	public List<String> runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping) {
+		List<String> responseString = new ArrayList<>();
 		if (reportToDatasetMapping != null) {
 			Calendar startDate = Calendar.getInstance(Context.getLocale());
 			Calendar endDate = Calendar.getInstance(Context.getLocale());
 			DHISMapping mapping = getMapping(reportToDatasetMapping.getMapping());
 			
 			if (mapping != null) {
-				Location location = reportToDatasetMapping.getLocation();
+				DHISDataSet dataSet = getDHISDataSetById(mapping.getDataSetUID());
 				String periodType = mapping.getPeriodType();
 				PeriodIndicatorReportDefinition ranReportDef = (PeriodIndicatorReportDefinition) Context
-				        .getService(ReportDefinitionService.class)
-				        .getDefinitionByUuid(mapping.getPeriodIndicatorReportGUID());
-				String orgUnitUid = reportToDatasetMapping.getOrgUnitUid();
+						.getService(ReportDefinitionService.class)
+						.getDefinitionByUuid(mapping.getPeriodIndicatorReportGUID());
 				Date lastRun = reportToDatasetMapping.getLastRun();
-				if (location != null && ranReportDef != null) {
-					String period = transformToDHISPeriod(startDate, endDate, periodType, lastRun);
-					
-					if (StringUtils.isNotBlank(period)) {
-						Report ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(),
-						    location);
-						if (ranReport != null) {
-							Object response = sendReportDataToDHIS(ranReport, mapping, period, orgUnitUid);
-							
-							if (response != null) {
-								reportToDatasetMapping.setLastRun(endDate.getTime());
-								saveReportToDataSetMapping(reportToDatasetMapping);
-								
-								return getPostSummary(response);
+				String period = transformToDHISPeriod(startDate, endDate, periodType, lastRun);
+
+				List<DHISOrganisationUnit> orgs = dataSet.getOrganisationUnits();
+				for (DHISOrganisationUnit takenOrgUnit: orgs){
+					String orgUnitUid = takenOrgUnit.getId();
+					LocationToOrgUnitMapping locationToOrgUnitMapping = Context.getService(DHISConnectorService.class)
+							.getLocationToOrgUnitMappingByOrgUnitUid(orgUnitUid);
+
+					if (locationToOrgUnitMapping != null && ranReportDef != null) {
+						Location location = locationToOrgUnitMapping.getLocation();
+						if (StringUtils.isNotBlank(period)) {
+							Report ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(), location);
+							if (ranReport != null) {
+								Object response = sendReportDataToDHIS(ranReport, mapping, period, orgUnitUid);
+
+								if (response != null) {
+									reportToDatasetMapping.setLastRun(endDate.getTime());
+									saveReportToDataSetMapping(reportToDatasetMapping);
+
+									responseString.add(location.getName() + " => " + getPostSummary(response));
+								}
 							}
 						}
 					}
 				}
+				return responseString;
 			}
 		}
 		return null;
@@ -1674,16 +1703,16 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public String runAllAutomatedReportsAndPostToDHIS() {
-		String responses = "";
+	public ArrayList<List<String>> runAllAutomatedReportsAndPostToDHIS() {
+		ArrayList<List<String>> responses = new ArrayList<>();
 		List<ReportToDataSetMapping> mps = getAllReportToDataSetMappings();
 		
 		if (mps != null) {
 			for (ReportToDataSetMapping m : mps) {
-				String resp = runAndPushReportToDHIS(m);
+				List<String> resp = runAndPushReportToDHIS(m);
 				
-				if (StringUtils.isNotBlank(resp))
-					responses += " => " + resp;
+				if (!resp.isEmpty())
+					responses.add(resp);
 			}
 		}
 		

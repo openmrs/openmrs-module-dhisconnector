@@ -58,16 +58,7 @@
 			<column name="mapping" type="text">
 				<constraints nullable="false" />
 			</column>
-			<column name="org_unit_uid" type="text">
-				<constraints nullable="false" />
-			</column>
-			<column name="location" type="int">
-				<constraints nullable="false" />
-			</column>
 		</createTable>
-		<addForeignKeyConstraint constraintName="dhisconnector_report_to_dataset_location_fk"
-			baseTableName="dhisconnector_report_to_dataset" baseColumnNames="location"
-			referencedTableName="location" referencedColumnNames="location_id" />
 	</changeSet>
 	<changeSet id="20171128-2333" author="k-joseph">
         <preConditions onFail="MARK_RAN">

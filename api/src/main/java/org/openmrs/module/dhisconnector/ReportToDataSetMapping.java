@@ -61,10 +61,8 @@ public class ReportToDataSetMapping extends BaseOpenmrsObject {
 	public ReportToDataSetMapping() {
 	}
 	
-	public ReportToDataSetMapping(String mapping, Location location, String orgUnitId) {
+	public ReportToDataSetMapping(String mapping) {
 		setMapping(mapping);
-		setLocation(location);
-		setOrgUnitUid(orgUnitId);
 	}
 	
 	public Integer getId() {

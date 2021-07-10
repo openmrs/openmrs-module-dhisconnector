@@ -1365,19 +1365,37 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = sdf.format(startDate.getTime());
 		} else if (ReportingPeriodType.Weekly.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.MONDAY);
+			endDate.setFirstDayOfWeek(Calendar.MONDAY);
+			lastRan.setFirstDayOfWeek(Calendar.MONDAY);
 			startDate.add(Calendar.WEEK_OF_YEAR, -1);
-			startDate.set(Calendar.DAY_OF_WEEK, 1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 			setBasicsStartsAndEnds(startDate, endDate);
-			endDate.set(Calendar.DAY_OF_WEEK, 7);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "W" + lastRan.get(Calendar.WEEK_OF_YEAR))
 			        .equals(endDate.get(Calendar.YEAR) + "W" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "W" + startDate.get(Calendar.WEEK_OF_YEAR);
-		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
-			startDate.add(Calendar.WEEK_OF_YEAR, -2);
-			startDate.set(Calendar.DAY_OF_WEEK, 1);
+		} else if (ReportingPeriodType.WeeklySunday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.SUNDAY);
+			endDate.setFirstDayOfWeek(Calendar.SUNDAY);
+			lastRan.setFirstDayOfWeek(Calendar.SUNDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, startDate.get(Calendar.DAY_OF_WEEK) < Calendar.SUNDAY ? -2 : -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 			setBasicsStartsAndEnds(startDate, endDate);
 			endDate.add(Calendar.WEEK_OF_YEAR, 1);
-			endDate.set(Calendar.DAY_OF_WEEK, 7);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "SunW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "SunW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "SunW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.MONDAY);
+			endDate.setFirstDayOfWeek(Calendar.MONDAY);
+			lastRan.setFirstDayOfWeek(Calendar.MONDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -2);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.add(Calendar.WEEK_OF_YEAR, 1);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "BiW" + lastRan.get(Calendar.WEEK_OF_YEAR))
 					.equals(endDate.get(Calendar.YEAR) + "BiW" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "BiW" + startDate.get(Calendar.WEEK_OF_YEAR);

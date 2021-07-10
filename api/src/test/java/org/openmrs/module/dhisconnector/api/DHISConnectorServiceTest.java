@@ -42,9 +42,9 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		
 		//test weekly, date now at 2017/nov/30
 		period = Context.getService(DHISConnectorService.class).transformToDHISPeriod(startDate, endDate, "Weekly", null);
-		Assert.assertEquals("20171119", sdf.format(startDate.getTime()));
-		Assert.assertEquals("20171125", sdf.format(endDate.getTime()));
-		Assert.assertEquals(period, "2017W47");
+		Assert.assertEquals("20171120", sdf.format(startDate.getTime()));
+		Assert.assertEquals("20171126", sdf.format(endDate.getTime()));
+		Assert.assertEquals(period, "2017W48");
 		
 		//test monthly, date now at 2017/nov/25
 		period = Context.getService(DHISConnectorService.class).transformToDHISPeriod(startDate, endDate, "Monthly", null);
@@ -63,9 +63,9 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		//test weekly with lastRun, date now at 2017/oct/30
 		startDate = (Calendar) endDate.clone();
 		period = Context.getService(DHISConnectorService.class).transformToDHISPeriod(startDate, endDate, "Weekly",
-		    new GregorianCalendar(2017, 9, 24).getTime());
-		Assert.assertEquals("20171022", sdf.format(startDate.getTime()));
-		Assert.assertEquals("20171028", sdf.format(endDate.getTime()));
+		    new GregorianCalendar(2017, 9, 25).getTime());
+		Assert.assertEquals("20171023", sdf.format(startDate.getTime()));
+		Assert.assertEquals("20171029", sdf.format(endDate.getTime()));
 		Assert.assertNull(period);
 		
 		//test monthly with lastRun, date now at 2017/oct/07

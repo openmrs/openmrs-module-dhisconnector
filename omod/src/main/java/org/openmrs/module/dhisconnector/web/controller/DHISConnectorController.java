@@ -72,6 +72,7 @@ public class DHISConnectorController {
 	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList(
 			"Daily",
 			"Weekly",
+			"WeeklySunday",
 			"BiWeekly",
 			"Monthly",
 			"BiMonthly",

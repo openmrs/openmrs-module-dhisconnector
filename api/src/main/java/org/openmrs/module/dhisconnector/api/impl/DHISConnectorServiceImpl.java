@@ -1489,6 +1489,20 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			endDate.set(Calendar.DAY_OF_MONTH, 30);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "Oct";
+		} else if (ReportingPeriodType.FinancialNov.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyy");
+			// Set the start date to year of last Financial November period
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < Calendar.NOVEMBER ? -2 : -1);
+			// Set the start date to 1st of November
+			startDate.set(Calendar.MONTH, Calendar.NOVEMBER);
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			// Set the end date to 31st of October
+			endDate.add(Calendar.YEAR, 1);
+			endDate.set(Calendar.MONTH, Calendar.OCTOBER);
+			endDate.set(Calendar.DAY_OF_MONTH, 31);
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = startDate.get(Calendar.YEAR) + "Nov";
 		} else if (ReportingPeriodType.SixMonthly.name().equals(periodType)) {
 			// Set the start date to start date of last SixMonthly period
 			if (startDate.get(Calendar.MONTH) < Calendar.JULY) {

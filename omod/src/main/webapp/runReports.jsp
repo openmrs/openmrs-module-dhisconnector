@@ -32,21 +32,10 @@
     </tr>
     <tr>
       <th class="runHeader"><spring:message code="dhisconnector.location"/></th>
+    </tr>
+    <tr>
       <td>
-        <table>
-          <thead>
-          <tr>
-            <th class="runHeader">OpenMRS Location</th>
-            <th class="runHeader">DHIS Organisation Unit</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td><span id="locationSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span></td>
-            <td><span id="orgUnitSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span></td>
-          </tr>
-          </tbody>
-        </table>
+        <div id="locationsList">Select a Mapping to choose the Locations</div>
       </td>
     </tr>
     <tr>

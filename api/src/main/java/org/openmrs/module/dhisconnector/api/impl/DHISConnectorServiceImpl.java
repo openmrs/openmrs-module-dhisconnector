@@ -1379,14 +1379,24 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			startDate.setFirstDayOfWeek(Calendar.SUNDAY);
 			endDate.setFirstDayOfWeek(Calendar.SUNDAY);
 			lastRan.setFirstDayOfWeek(Calendar.SUNDAY);
-			startDate.add(Calendar.WEEK_OF_YEAR, startDate.get(Calendar.DAY_OF_WEEK) < Calendar.SUNDAY ? -2 : -1);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
 			startDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 			setBasicsStartsAndEnds(startDate, endDate);
-			endDate.add(Calendar.WEEK_OF_YEAR, 1);
 			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "SunW" + lastRan.get(Calendar.WEEK_OF_YEAR))
 					.equals(endDate.get(Calendar.YEAR) + "SunW" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "SunW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklyWednesday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			endDate.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			lastRan.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "WedW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "WedW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "WedW" + startDate.get(Calendar.WEEK_OF_YEAR);
 		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
 			startDate.setFirstDayOfWeek(Calendar.MONDAY);
 			endDate.setFirstDayOfWeek(Calendar.MONDAY);

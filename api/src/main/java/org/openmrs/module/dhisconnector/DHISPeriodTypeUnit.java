@@ -88,6 +88,7 @@ public enum DHISPeriodTypeUnit {
 	DAILY("Daily", "\\b(\\d{4})(\\d{2})(\\d{2})\\b"),
     WEEKLY("Weekly", "\\b(\\d{4})W(\\d[\\d]?)\\b"),
     WEEKLY_SUNDAY("WeeklySunday", "\\b(\\d{4})SunW(\\d[\\d]?)\\b"),
+    WEEKLY_WEDNESDAY("WeeklyWednesday", "\\b(\\d{4})WedW(\\d[\\d]?)\\b"),
     BI_WEEKLY("BiWeekly", "\\b(\\d{4})BiW(\\d[\\d]?)\\b"),
     MONTHLY("Monthly", "\\b(\\d{4})[-]?(\\d{2})\\b"),
     BI_MONTHLY("BiMonthly", "\\b(\\d{4})(\\d{2})B\\b"),

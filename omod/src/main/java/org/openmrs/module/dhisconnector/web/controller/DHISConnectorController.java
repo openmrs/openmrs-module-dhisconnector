@@ -73,6 +73,7 @@ public class DHISConnectorController {
 			"Daily",
 			"Weekly",
 			"WeeklySunday",
+			"WeeklyWednesday",
 			"BiWeekly",
 			"Monthly",
 			"BiMonthly",

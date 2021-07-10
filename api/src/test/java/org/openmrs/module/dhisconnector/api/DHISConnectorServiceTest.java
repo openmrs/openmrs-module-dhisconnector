@@ -51,6 +51,13 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		Assert.assertEquals("20171108", sdf.format(startDate.getTime()));
 		Assert.assertEquals("20171114", sdf.format(endDate.getTime()));
 		Assert.assertEquals(period, "2017WedW46");
+
+		//test weekly thursday, date now at 2017/nov/14
+		startDate = (Calendar) endDate.clone();
+		period = Context.getService(DHISConnectorService.class).transformToDHISPeriod(startDate, endDate, "WeeklyThursday", null);
+		Assert.assertEquals("20171102", sdf.format(startDate.getTime()));
+		Assert.assertEquals("20171108", sdf.format(endDate.getTime()));
+		Assert.assertEquals(period, "2017ThuW45");
 		
 		//test monthly, date now at 2017/nov/08
 		period = Context.getService(DHISConnectorService.class).transformToDHISPeriod(startDate, endDate, "Monthly", null);

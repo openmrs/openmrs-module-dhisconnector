@@ -1408,6 +1408,17 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "ThuW" + lastRan.get(Calendar.WEEK_OF_YEAR))
 					.equals(endDate.get(Calendar.YEAR) + "ThuW" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "ThuW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklySaturday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.SATURDAY);
+			endDate.setFirstDayOfWeek(Calendar.SATURDAY);
+			lastRan.setFirstDayOfWeek(Calendar.SATURDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "SatW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "SatW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "SatW" + startDate.get(Calendar.WEEK_OF_YEAR);
 		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
 			startDate.setFirstDayOfWeek(Calendar.MONDAY);
 			endDate.setFirstDayOfWeek(Calendar.MONDAY);

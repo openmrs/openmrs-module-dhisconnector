@@ -15,7 +15,7 @@ function fetchLocationMappings() {
 	jQuery("td[id^='location_']").each(function() {
 		let locationUuid = this.attributes.name.value;
 		if (jQuery("[name='orgUnitOf_"+locationUuid+"']").val() != jQuery("[name='savedOrgUnitUuidOf_"+locationUuid+"']").val()){
-			locationMappings = locationMappings + locationUuid + "=" + jQuery("[name='orgUnitOf_"+locationUuid+"']").val() + ",";
+			locationMappings = locationMappings + locationUuid + "=" + jQuery("[name='orgUnitOf_"+locationUuid+"']")[0].value + ",";
 		}
 	})
 	jQuery("input[name='locationMappings']").val(locationMappings);

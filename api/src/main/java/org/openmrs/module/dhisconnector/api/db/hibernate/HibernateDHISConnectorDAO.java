@@ -98,6 +98,21 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	}
 
 	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.uuid = :uuid").setParameter("uuid", uuid).uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.orgUnitUid = :orgUnitUid")
+				.setParameter("orgUnitUid", orgUnitUid).uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
 	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
 		locationToOrgUnitMapping.setCreator(Context.getAuthenticatedUser());
 		sessionFactory.getCurrentSession().save(locationToOrgUnitMapping);

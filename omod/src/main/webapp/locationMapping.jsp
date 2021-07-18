@@ -36,7 +36,7 @@
                 <input name="savedOrgUnitUuidOf_${location.uuid}" type="hidden" value="${savedOrgUnitUuid}">
                 <td>
                     <select name="orgUnitOf_${location.uuid}">
-                        <option></option>
+                        <option value=" "> </option>
                         <c:forEach items="${orgUnits}" var="orgUnit">
                             <c:set value="" var="isSelected"/>
                             <c:if test="${orgUnit.id == savedOrgUnitUuid}">

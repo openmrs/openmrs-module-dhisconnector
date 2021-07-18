@@ -6,15 +6,20 @@ import java.util.GregorianCalendar;
 
 import org.junit.Assert;
 import org.junit.Test;
+import org.mockito.Mock;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
+
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
 
 /**
  * Created by k-joseph on 04/07/2017.
  */
 public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
-	
+	@Mock
+	private DHISConnectorService dhisConnectorService;
 	
 	@Test
 	public void testServiceInit() {
@@ -96,6 +101,28 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		Assert.assertEquals("20170901", sdf.format(startDate.getTime()));
 		Assert.assertEquals("20170930", sdf.format(endDate.getTime()));
 		Assert.assertNull(period);
+	}
+
+	@Test
+	public void testGetLocationToOrgUnitMappingByUuid() {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = new LocationToOrgUnitMapping();
+		doReturn(locationToOrgUnitMapping)
+				.when(dhisConnectorService)
+				.getLocationToOrgUnitMappingByUuid(anyString());
+
+		Assert.assertEquals(locationToOrgUnitMapping,
+				dhisConnectorService.getLocationToOrgUnitMappingByUuid("abc"));
+	}
+
+	@Test
+	public void testGetLocationToOrgUnitMappingByLocationByOrgUnitUid() {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = new LocationToOrgUnitMapping();
+		doReturn(locationToOrgUnitMapping)
+				.when(dhisConnectorService)
+				.getLocationToOrgUnitMappingByOrgUnitUid(anyString());
+
+		Assert.assertEquals(locationToOrgUnitMapping,
+				dhisConnectorService.getLocationToOrgUnitMappingByOrgUnitUid("org"));
 	}
 
 	@Test

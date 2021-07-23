@@ -88,6 +88,51 @@
 		</description>
 	</globalProperty>
 
+	<privilege>
+		<name>View Connection</name>
+		<description>Viewing DHIS2 Connection</description>
+	</privilege>
+	<privilege>
+		<name>Manage Connection</name>
+		<description>Edit DHIS2 Connection</description>
+	</privilege>
+	<privilege>
+		<name>View Location Mappings</name>
+		<description>View OpenMRS Location-OrgUnit mappings</description>
+	</privilege>
+	<privilege>
+		<name>Manage Location Mappings</name>
+		<description>Edit/Delete Location-OrgUnit mappings</description>
+	</privilege>
+	<privilege>
+		<name>View Automation</name>
+		<description>View scheduled mappings</description>
+	</privilege>
+	<privilege>
+		<name>Run Automation</name>
+		<description>Run scheduled mappings</description>
+	</privilege>
+	<privilege>
+		<name>Manage Automation</name>
+		<description>Add/Edit/Delete scheduled mappings</description>
+	</privilege>
+	<privilege>
+		<name>Run Reports</name>
+		<description>Base privilege for running the reports</description>
+	</privilege>
+	<privilege>
+		<name>Run failed data</name>
+		<description>Base privilege for pushing the failed data</description>
+	</privilege>
+	<privilege>
+		<name>Manage Mappings</name>
+		<description>Create/Edit Mappings</description>
+	</privilege>
+	<privilege>
+		<name>Import and Export</name>
+		<description>Import and export mappings and DHIS2 API</description>
+	</privilege>
+
 	<!-- Internationalization -->
 	<!-- All message codes should start with ${project.parent.artifactId}. -->
 	<messages>

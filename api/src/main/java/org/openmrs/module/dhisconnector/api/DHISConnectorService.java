@@ -11,6 +11,7 @@
  */
 package org.openmrs.module.dhisconnector.api;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -19,6 +20,7 @@ import org.openmrs.Location;
 import org.openmrs.api.OpenmrsService;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
+import org.openmrs.module.dhisconnector.api.model.DHISDataSet;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
@@ -68,7 +70,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	public List<PeriodIndicatorReportDefinition> getReportWithMappings(List<DHISMapping> mappings);
 	
 	public List<DHISOrganisationUnit> getDHISOrgUnits();
-	
+
+	public DHISDataSet getDHISDataSetById(String id);
+
 	public String uploadMappings(MultipartFile mapping);
 	
 	public String[] exportSelectedMappings(String[] selectedMappings);
@@ -103,9 +107,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	
 	void deleteReportToDataSetMapping(Integer reportToDataSetMappingId);
 	
-	String runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping);
+	List<String> runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping);
 	
-	String runAllAutomatedReportsAndPostToDHIS();
+	ArrayList<List<String>> runAllAutomatedReportsAndPostToDHIS();
 
 	String transformToDHISPeriod(Calendar startDate, Calendar endDate, String periodType, Date lastRun);
 

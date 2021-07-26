@@ -383,34 +383,16 @@ public class DHISConnectorController {
 		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
 
 		model.addAttribute("mappings", supportedMappings);
-		model.addAttribute("locations", Context.getLocationService().getAllLocations(false));
-		model.addAttribute("orgUnits", orgUnits);
 		model.addAttribute("reportToDataSetMappings", Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
-		model.addAttribute("orgUnitsByIds", getOrgUnitsByName(orgUnits));
 		model.addAttribute("automationEnabled", automationEnabled);
 		model.addAttribute("postResponse", postResponse);
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
-	}
-
-	@SuppressWarnings("unchecked")
-	private JSONObject getOrgUnitsByName(List<DHISOrganisationUnit> orgUnits) {
-		JSONObject json = new JSONObject();
-
-		if (orgUnits != null) {
-			for (DHISOrganisationUnit o : orgUnits) {
-				json.put(o.getId(), o.getName());
-			}
-		}
-
-		return json;
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/automation", method = RequestMethod.POST)
 	public void postAutomationPage(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		String mapping = request.getParameter("mapping");
-		String orgUnitUId = request.getParameter("orgUnit");
-		String locationUuid = request.getParameter("location");
 		Configurations configs = new Configurations();
 		List<String> postResponse = new ArrayList<String>();
 		List<String> toBeRan = new ArrayList<String>();
@@ -453,19 +435,17 @@ public class DHISConnectorController {
 						.getReportToDataSetMappingByUuid(s);
 
 				if (r2d != null) {
-					Object resp = Context.getService(DHISConnectorService.class).runAndPushReportToDHIS(r2d);
-					if (resp != null)
-						postResponse.add(resp.toString());
+					List<String> resp = Context.getService(DHISConnectorService.class).runAndPushReportToDHIS(r2d);
+					if (!resp.isEmpty())
+						postResponse.addAll(resp);
 				}
 			}
 		}
 		if (postResponse.size() > 0)
 			response += " -> Run was successful";
 
-		if (StringUtils.isNotBlank(mapping) && StringUtils.isNotBlank(orgUnitUId)
-				&& StringUtils.isNotBlank(locationUuid)) {
-			Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(new ReportToDataSetMapping(
-					mapping, Context.getLocationService().getLocationByUuid(locationUuid), orgUnitUId));
+		if (StringUtils.isNotBlank(mapping)) {
+			Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(new ReportToDataSetMapping(mapping));
 			response += " -> Save was successful";
 		}
 

@@ -12,11 +12,9 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 import org.openmrs.BaseOpenmrsObject;
-import org.openmrs.Location;
 import org.openmrs.User;
 
 /**
@@ -47,24 +45,14 @@ public class ReportToDataSetMapping extends BaseOpenmrsObject {
 	@Column(name = "mapping", nullable = false)
 	private String mapping;
 	
-	@Column(name = "org_unit_uid", nullable = false)
-	private String orgUnitUid;
-	
 	@Column(name = "last_run")
 	private Date lastRun;
-	
-	@JsonIgnore
-	@ManyToOne(optional = false)
-	@JoinColumn(name = "location")
-	private Location location;
 	
 	public ReportToDataSetMapping() {
 	}
 	
-	public ReportToDataSetMapping(String mapping, Location location, String orgUnitId) {
+	public ReportToDataSetMapping(String mapping) {
 		setMapping(mapping);
-		setLocation(location);
-		setOrgUnitUid(orgUnitId);
 	}
 	
 	public Integer getId() {
@@ -73,22 +61,6 @@ public class ReportToDataSetMapping extends BaseOpenmrsObject {
 	
 	public void setId(Integer id) {
 		this.id = id;
-	}
-	
-	public String getOrgUnitUid() {
-		return orgUnitUid;
-	}
-	
-	public void setOrgUnitUid(String orgUnitUid) {
-		this.orgUnitUid = orgUnitUid;
-	}
-	
-	public Location getLocation() {
-		return location;
-	}
-	
-	public void setLocation(Location location) {
-		this.location = location;
 	}
 	
 	public String getMapping() {

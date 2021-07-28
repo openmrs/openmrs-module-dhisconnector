@@ -1,5 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
+<openmrs:require anyPrivilege="View Connection,Manage Connection" otherwise="/login.htm"
+                 redirect="/module/dhisconnector/configureServer.form"/>
 
 <%@ include file="template/localHeader.jsp" %>
 
@@ -19,14 +21,16 @@
       <td><spring:message code="dhisconnector.user"/></td>
       <td><input name="user" type="text" size="20" value="${user}"/></td>
     </tr>
-    <tr>
-      <td><spring:message code="dhisconnector.pass"/></td>
-      <td><input name="pass" placeholder="<hidden>" type="password" size="20"/></td>
-    </tr>
-    <tr>
-      <td/>
-      <td><input name="submit" type="submit" value="<spring:message code="dhisconnector.save" />"/></td>
-    </tr>
+    <openmrs:hasPrivilege privilege="Manage Connection">
+      <tr>
+        <td><spring:message code="dhisconnector.pass"/></td>
+        <td><input name="pass" placeholder="<hidden>" type="password" size="20"/></td>
+      </tr>
+      <tr>
+        <td/>
+        <td><input name="submit" type="submit" value="<spring:message code="dhisconnector.save" />"/></td>
+      </tr>
+    </openmrs:hasPrivilege>
     </tbody>
   </table>
 </form>

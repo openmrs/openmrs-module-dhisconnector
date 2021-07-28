@@ -4,12 +4,13 @@
 		href="${pageContext.request.contextPath}/admin"><spring:message
 				code="admin.title.short" /></a></li>
 
-	<li
-		<c:if test='<%= request.getRequestURI().contains("/configureServer") %>'>class="active"</c:if>>
-		<a
-		href="${pageContext.request.contextPath}/module/dhisconnector/configureServer.form"><spring:message
-				code="dhisconnector.configureServer" /></a>
-	</li>
+	<openmrs:hasPrivilege privilege="View Connection,Manage Connection">
+		<li <c:if test='<%= request.getRequestURI().contains("/configureServer") %>'>class="active"</c:if>>
+			<a href="${pageContext.request.contextPath}/module/dhisconnector/configureServer.form">
+				<spring:message code="dhisconnector.configureServer" />
+			</a>
+		</li>
+	</openmrs:hasPrivilege>
 
 	<li
         <c:if test='<%= request.getRequestURI().contains("/locationMapping") %>'>class="active"</c:if>>

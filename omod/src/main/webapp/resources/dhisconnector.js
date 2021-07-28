@@ -316,7 +316,7 @@ function saveMapping(event) {
 			contentType : "application/json; charset=utf-8",
 			dataType : "json",
 			success : function(data) {
-				window.location = '../../module/dhisconnector/runReports.form';
+				window.location = '../../module/dhisconnector/manageMappings.form';
 			}
 		});
 	} else {

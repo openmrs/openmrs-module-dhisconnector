@@ -100,8 +100,9 @@ public enum DHISPeriodTypeUnit {
     YEARLY("Yearly", "\\b(\\d{4})\\b"),
     FINANCIAL_APRIL("FinancialApril", "\\b(\\d{4})April\\b"),
     FINANCIAL_JULY("FinancialJuly", "\\b(\\d{4})July\\b"),
-    FINANCIAL_OCTOBER("FinancialOct", "\\b(\\d{4})Oct\\b");
-	
+    FINANCIAL_OCTOBER("FinancialOct", "\\b(\\d{4})Oct\\b"),
+    FINANCIAL_NOVEMBER("FinancialNov", "\\b(\\d{4})Nov\\b");
+
 	private final String type;
 	
 	private final String format;

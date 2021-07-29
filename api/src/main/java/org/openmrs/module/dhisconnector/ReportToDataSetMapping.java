@@ -111,6 +111,7 @@ public class ReportToDataSetMapping extends BaseOpenmrsObject {
 	}
 	
 	public enum ReportingPeriodType {
-		Daily, Weekly, WeeklySunday, WeeklyWednesday, WeeklyThursday, WeeklySaturday, BiWeekly, Monthly, BiMonthly, Quarterly, SixMonthly, SixMonthlyApril, Yearly, FinancialApril, FinancialJuly, FinancialOct
+		Daily, Weekly, WeeklySunday, WeeklyWednesday, WeeklyThursday, WeeklySaturday, BiWeekly, Monthly, BiMonthly,
+		Quarterly, SixMonthly, SixMonthlyApril, Yearly, FinancialApril, FinancialJuly, FinancialOct, FinancialNov
 	}
 }

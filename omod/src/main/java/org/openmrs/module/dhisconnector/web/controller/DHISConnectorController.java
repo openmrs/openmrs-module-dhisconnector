@@ -213,7 +213,7 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						.exportSelectedMappings(selectedMappings);
+						.exportMappings(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
 				String fullPath = exported[1];// contains path to

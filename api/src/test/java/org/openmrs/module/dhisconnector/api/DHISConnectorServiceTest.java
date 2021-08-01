@@ -1,15 +1,25 @@
 package org.openmrs.module.dhisconnector.api;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.UUID;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
+import org.openmrs.module.dhisconnector.api.model.DHISMapping;
+import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
+import org.openmrs.module.reporting.report.definition.service.ReportDefinitionService;
 import org.openmrs.test.BaseModuleContextSensitiveTest;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.web.multipart.MultipartFile;
 
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
@@ -153,5 +163,27 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(
 				Context.getLocationService().getDefaultLocation());
 		Assert.assertEquals(0, Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings().size());
+	}
+
+	@Test
+	public void testDHISMappingExport() throws IOException {
+		DHISConnectorService dhisConnectorService = Context.getService(DHISConnectorService.class);
+		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
+
+		DHISMapping mapping = new DHISMapping();
+		mapping.setName("mapping-test-unit");
+		mapping.setCreated(new Date().getTime());
+		PeriodIndicatorReportDefinition reportDefinition = new PeriodIndicatorReportDefinition();
+		UUID pirUuid = UUID.randomUUID();
+		String uuidString = String.valueOf(pirUuid);
+		reportDefinition.setUuid(uuidString);
+		reportDefinition.setName("pir-test-unit");
+		reportDefinitionService.saveDefinition(reportDefinition);
+		mapping.setPeriodIndicatorReportGUID(uuidString);
+		dhisConnectorService.saveMapping(mapping);
+
+		String[] pathToBundle =
+				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()});
+		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
 	}
 }

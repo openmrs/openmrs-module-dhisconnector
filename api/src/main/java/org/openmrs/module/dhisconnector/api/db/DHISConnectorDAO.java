@@ -46,4 +46,6 @@ public interface DHISConnectorDAO {
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);
 
 	SerializedObject getSerializedObjectByUuid(String uuid);
+
+	void saveSerializedObject(SerializedObject serializedObject);
 }

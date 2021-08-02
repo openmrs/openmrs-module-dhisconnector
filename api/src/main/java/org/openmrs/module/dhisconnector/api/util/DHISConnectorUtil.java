@@ -1,29 +1,21 @@
 package org.openmrs.module.dhisconnector.api.util;
 
 import org.apache.commons.io.IOUtils;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.openmrs.api.context.Context;
-import org.openmrs.api.db.SerializedObject;
-import org.openmrs.module.dhisconnector.api.db.DHISConnectorDAO;
-import org.openmrs.module.dhisconnector.api.db.hibernate.HibernateDHISConnectorDAO;
-import org.openmrs.module.dhisconnector.api.model.DHISMapping;
-import org.openmrs.module.reporting.cohort.definition.CohortDefinition;
-import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition;
-import org.openmrs.module.reporting.dataset.definition.DataSetDefinition;
-import org.openmrs.module.reporting.evaluation.parameter.Mapped;
-import org.openmrs.module.reporting.indicator.CohortIndicator;
-import org.openmrs.module.reporting.indicator.dimension.CohortDefinitionDimension;
-import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
-import org.openmrs.module.reporting.report.definition.service.ReportDefinitionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 public class DHISConnectorUtil {
@@ -46,7 +38,9 @@ public class DHISConnectorUtil {
                 while ((length = fis.read(bytes)) >= 0) {
                     zOut.write(bytes, 0, length);
                 }
+                fis.close();
             }
+            zOut.close();
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
@@ -54,6 +48,32 @@ public class DHISConnectorUtil {
             IOUtils.closeQuietly(zOut);
         }
         return path;
+    }
+
+    public static  List<File> unzipMappingBundle (ZipFile zipFile, String tempDirectory) throws IOException {
+        List<File> files = new ArrayList<>();
+        for (Enumeration<? extends ZipEntry> e = zipFile.entries(); e.hasMoreElements();) {
+            ZipEntry zipEntry = e.nextElement();
+            File output = new File(tempDirectory + zipEntry.getName());
+            if (!output.exists()) {
+                output.getParentFile().mkdirs();
+                output.createNewFile();
+            }
+            BufferedInputStream inputStream = null;
+            BufferedOutputStream outputStream = null;
+            try {
+                inputStream = new BufferedInputStream(zipFile.getInputStream(zipEntry));
+                outputStream = new BufferedOutputStream(new FileOutputStream(output));
+                IOUtils.copy(inputStream, outputStream);
+            } catch (IOException exception) {
+                log.error("Unable to unzip the file, caught IO exception", exception);
+            } finally {
+                IOUtils.closeQuietly(outputStream);
+                IOUtils.closeQuietly(inputStream);
+            }
+            files.add(output);
+        }
+        return files;
     }
 
     public static boolean mappingExists(File[] filesList, String mapping) {

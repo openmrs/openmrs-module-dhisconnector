@@ -168,12 +168,12 @@ public class DHISConnectorController {
 
 	@RequestMapping(value = "/module/dhisconnector/uploadMapping", method = RequestMethod.POST)
 	public void uploadMapping(ModelMap model,
-			@RequestParam(value = "mapping", required = false) MultipartFile mapping) {
+			@RequestParam(value = "mapping", required = false) MultipartFile mapping) throws IOException {
 		String successMessage = "";
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).uploadMappings(mapping);
+			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping);
 
 			if (msg.startsWith("Successfully")) {
 				successMessage = msg;

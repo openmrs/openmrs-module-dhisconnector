@@ -11,7 +11,6 @@
  */
 package org.openmrs.module.dhisconnector.api.impl;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -35,7 +34,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
@@ -63,7 +61,6 @@ import javax.xml.transform.stream.StreamResult;
 
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -161,6 +158,8 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public static final String DHISCONNECTOR_MAPPING_FILE_SUFFIX = ".mapping.json";
 
 	public static final String METADATA_FILE_SUFFIX = ".metadata.xml";
+
+	public static final String ZIP_FILE_SUFFIX = ".zip";
 	
 	public static final String DHISCONNECTOR_ORGUNIT_RESOURCE = "/api/organisationUnits.json?paging=false&fields=:identifiable,displayName";
 	
@@ -838,102 +837,50 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return false;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	@Override
-	public String uploadMappings(MultipartFile mapping) {
-		String msg = "";
-		String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-		String mappingFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
-		        + File.separator;
-		String mappingName = mapping.getOriginalFilename();
+	public String importMappings (MultipartFile mappingBundle) throws IOException {
+		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
+		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+		(new File(sourceDirectory)).mkdirs();
+		(new File(tempDirectory)).mkdirs();
+		ObjectMapper mapper = new ObjectMapper();
+		XmlMapper xmlMapper = new XmlMapper();
 
-		File mappingsFolder = new File(mappingFolderName);
-		mappingsFolder.mkdirs();
-
-		if (!mappingsFolder.isDirectory()) {
-			return Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.directoryNotCreated");
-		}
-
-		if (mappingName.endsWith(".zip")) {
-			boolean allFailed = true;
-			File tempMappings = new File(tempFolderName + mappingName);
-			
-			(new File(tempFolderName)).mkdirs();
-			try {
-				mapping.transferTo(tempMappings);
-				
-				try {
-					ZipFile zipfile = new ZipFile(tempMappings);
-					
-					for (Enumeration e = zipfile.entries(); e.hasMoreElements();) {
-						ZipEntry entry = (ZipEntry) e.nextElement();
-						
-						if (entry.isDirectory()) {
-							System.out.println(
-							    "Incorrect file (Can't be a folder instead): " + entry.getName() + " has been ignored");
-						} else if (entry.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
-							File outputFile = new File(mappingFolderName, entry.getName());
-							
-							if (outputFile.exists()) {
-								System.out.println("File: " + outputFile.getName() + " already exists and has been ignored");
-							} else {
-								BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
-								BufferedOutputStream outputStream = new BufferedOutputStream(
-								        new FileOutputStream(outputFile));
-								
-								try {
-									System.out.println("Extracting: " + entry);
-									IOUtils.copy(inputStream, outputStream);
-									allFailed = false;
-								}
-								finally {
-									outputStream.close();
-									inputStream.close();
-								}
-							}
-						} else {
-							System.out.println("Incorrect file: " + entry.getName() + " has been ignored");
-						}
+		if (mappingBundle.getOriginalFilename().endsWith(ZIP_FILE_SUFFIX)) {
+			File tempBundle = new File(tempDirectory + mappingBundle.getOriginalFilename());
+			if (!tempBundle.exists()) {
+				tempBundle.createNewFile();
+			}
+			mappingBundle.transferTo(tempBundle);
+			ZipFile zipFile = new ZipFile(tempBundle);
+			List<File> fileList = DHISConnectorUtil.unzipMappingBundle(zipFile, tempDirectory);
+			for (File f: fileList) {
+				log.info("Processing " + f.getName());
+				if (f.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
+					DHISMapping dhisMapping = mapper.readValue(f, DHISMapping.class);
+					this.saveMapping(dhisMapping);
+				} else if (f.getName().endsWith(METADATA_FILE_SUFFIX)) {
+					SerializedObject serializedObject = xmlMapper.readValue(f, SerializedObject.class);
+					// Check if the system already has an object with the same uuid
+					SerializedObject existing = dao.getSerializedObjectByUuid(serializedObject.getUuid());
+					if (existing != null) {
+						log.info(serializedObject.getName() + " already exists in the system. Ignored");
+						continue;
 					}
-					if (!allFailed) {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.groupSuccess");
-					} else {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.allFailed");
-					}
-					FileUtils.deleteDirectory(new File(tempFolderName));
+					// Set serialized object creator to the current user and date created to the current day
+					serializedObject.setCreator(Context.getAuthenticatedUser());
+					serializedObject.setChangedBy(Context.getAuthenticatedUser());
+					serializedObject.setRetiredBy(null);
+					Date currentDate = new Date();
+					serializedObject.setDateCreated(currentDate);
+					serializedObject.setDateChanged(currentDate);
+					dao.saveSerializedObject(serializedObject);
 				}
-				catch (Exception e) {
-					System.out.println("Error while extracting file:" + mapping.getName() + " ; " + e);
-				}
 			}
-			catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else if (mappingName.endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
-			try {
-				File uploadedMapping = new File(mappingFolderName + mappingName);
-				if (uploadedMapping.exists()) {
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.exists");
-				} else {
-					mapping.transferTo(uploadedMapping);
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.singleSuccess");
-				}
-				
-			}
-			catch (IllegalStateException e) {
-				e.printStackTrace();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+			return "Successfully imported the mapping files";
 		} else {
-			msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.wrongType");
+			return "Unsupported file format";
 		}
-		
-		return msg;
 	}
 
 	@Override

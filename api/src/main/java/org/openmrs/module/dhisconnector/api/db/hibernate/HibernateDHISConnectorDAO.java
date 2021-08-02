@@ -127,6 +127,11 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	}
 
 	@Override
+	public void saveSerializedObject(SerializedObject serializedObject) {
+		sessionFactory.getCurrentSession().save(serializedObject);
+	}
+
+	@Override
 	public SerializedObject getSerializedObjectByUuid(String uuid) {
 		SerializedObject serializedObject = (SerializedObject) sessionFactory.getCurrentSession()
 				.createQuery("from SerializedObject s where s.uuid = :uuid")

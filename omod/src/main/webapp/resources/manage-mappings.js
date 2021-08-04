@@ -25,7 +25,7 @@ angular.module('manageMappingsApp', []).controller('manageMappingsController', f
 		}
 	}
 	
-	$scope.disableMultipleDeletion = function() {
+	$scope.disableMultipleActions = function() {
 		if(jq(".select-this-mapping").is(":checked")) {
 			return false;
 		} else {
@@ -47,6 +47,49 @@ angular.module('manageMappingsApp', []).controller('manageMappingsController', f
 		var selectedMapping = mapping.name + encodeURI("[@]") + mapping.created;
 		
 		deleteThisMapping(selectedMapping);
+	}
+
+	$scope.toggleExportSelected = function (mapping) {
+		let selectedMappings = jq("#selected-mappings-to-export").val();
+		let thisMappingName = mapping.name + "." + mapping.dateTime;
+		if (jq("#" + mapping.name).is(":checked")) {
+			if (selectedMappings === "") {
+				jq("#selected-mappings-to-export").val(thisMappingName);
+			} else {
+				jq("#selected-mappings-to-export").val(selectedMappings + "<:::>" + thisMappingName);
+			}
+		} else {
+			let currentSelected = selectedMappings.split("<:::>");
+			let updatedSelected = "";
+			currentSelected.map(function (mappingName) {
+				if (mappingName !== thisMappingName) {
+					if (updatedSelected === "") {
+						updatedSelected = mappingName;
+					} else {
+						updatedSelected += "<:::>" + mappingName;
+					}
+				}
+			});
+			jq("#selected-mappings-to-export").val(updatedSelected);
+		}
+		console.log(jq("#selected-mappings-to-export").val());
+	}
+
+	$scope.toggleAddAllToExportSelected = function (mappingsArray) {
+		jq("#selected-mappings-to-export").val("");
+		if (jq("#checkAll").is(":checked")) {
+			let updatedSelected = "";
+			mappingsArray.map(function (mapping) {
+				let mappingName = mapping.name + "." + mapping.dateTime;
+				if (updatedSelected === "") {
+					updatedSelected =  mappingName;
+				} else {
+					updatedSelected += "<:::>" + mappingName;
+				}
+			});
+			jq("#selected-mappings-to-export").val(updatedSelected);
+			console.log(updatedSelected);
+		}
 	}
 });
 

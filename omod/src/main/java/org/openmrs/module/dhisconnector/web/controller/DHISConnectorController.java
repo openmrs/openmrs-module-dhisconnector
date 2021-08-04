@@ -160,34 +160,6 @@ public class DHISConnectorController {
 		model.addAttribute("reports", reportsWithMappings);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/uploadMapping", method = RequestMethod.GET)
-	public void showuploadMapping(ModelMap model) {
-		passOnUploadingFeedback(model, "", "");
-		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
-	}
-
-	@RequestMapping(value = "/module/dhisconnector/uploadMapping", method = RequestMethod.POST)
-	public void uploadMapping(ModelMap model,
-			@RequestParam(value = "mapping", required = false) MultipartFile mapping) throws IOException {
-		String successMessage = "";
-		String failedMessage = "";
-
-		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping);
-
-			if (msg.startsWith("Successfully")) {
-				successMessage = msg;
-				failedMessage = "";
-			} else {
-				failedMessage = msg;
-				successMessage = "";
-			}
-		} else {
-			failedMessage = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.mustSelectFile");
-		}
-		passOnUploadingFeedback(model, successMessage, failedMessage);
-	}
-
 	private void passOnUploadingFeedback(ModelMap model, String successMessage, String failedMessage) {
 		model.addAttribute("failureWhileUploading", failedMessage);
 		model.addAttribute("successWhileUploading", successMessage);
@@ -235,7 +207,7 @@ public class DHISConnectorController {
 			passOnExportedFeedback(model, "", msg);
 		}
 		try {
-			response.sendRedirect("/module/dhisconnector/exportMappings");
+			response.sendRedirect("/module/dhisconnector/manageMappings");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -330,6 +302,27 @@ public class DHISConnectorController {
 	@RequestMapping(value = "/module/dhisconnector/manageMappings", method = RequestMethod.GET)
 	public void manageMappings(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/manageMappings", method = RequestMethod.POST)
+	public void manageMappings(ModelMap model, @RequestParam(value = "mapping", required = false) MultipartFile mapping) throws IOException {
+		String successMessage = "";
+		String failedMessage = "";
+
+		if (!mapping.isEmpty()) {
+			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping);
+
+			if (msg.startsWith("Successfully")) {
+				successMessage = msg;
+				failedMessage = "";
+			} else {
+				failedMessage = msg;
+				successMessage = "";
+			}
+		} else {
+			failedMessage = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.mustSelectFile");
+		}
+		passOnUploadingFeedback(model, successMessage, failedMessage);
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/adxGenerator", method = RequestMethod.GET)

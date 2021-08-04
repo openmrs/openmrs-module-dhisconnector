@@ -40,20 +40,6 @@
 	</li>
 	
 	<li
-			<c:if test='<%= request.getRequestURI().contains("/uploadMapping") %>'>class="active"</c:if>>
-		<a
-				href="${pageContext.request.contextPath}/module/dhisconnector/uploadMapping.form"><spring:message
-				code="dhisconnector.uploadMapping" /></a>
-	</li>
-	
-	<li
-			<c:if test='<%= request.getRequestURI().contains("/exportMappings") %>'>class="active"</c:if>>
-		<a
-				href="${pageContext.request.contextPath}/module/dhisconnector/exportMappings.form"><spring:message
-				code="dhisconnector.exportMapping" /></a>
-	</li>
-	
-	<li
 			<c:if test='<%= request.getRequestURI().contains("/createMapping") %>'>class="active"</c:if>>
 		<a
 				href="${pageContext.request.contextPath}/module/dhisconnector/createMapping.form"><spring:message
@@ -73,6 +59,7 @@
 				href="${pageContext.request.contextPath}/module/dhisconnector/runReports.form"><spring:message
 				code="dhisconnector.runReports" /></a>
 	</li>
+
 	<li
 			<c:if test='<%= request.getRequestURI().contains("/failedData") %>'>class="active"</c:if>>
 		<a

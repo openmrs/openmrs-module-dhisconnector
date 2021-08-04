@@ -82,3 +82,11 @@ img.loading-progress-bar-img {
 table, th, td {
     border-spacing: 3px;
 }
+
+.margin-top {
+    margin-top: 1rem;
+}
+
+.inline-block {
+    display: inline-block;
+}

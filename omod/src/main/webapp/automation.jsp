@@ -14,10 +14,13 @@
 <spring:message code="dhisconnector.automation.description"/>
 <form method="post">
 	<br />
-    <input type="checkbox" name="toogleAutomation" <c:if test="${automationEnabled}">checked="checked"</c:if>
+    <input type="checkbox" name="toggleAutomation" <c:if test="${automationEnabled}">checked="checked"</c:if>
            <openmrs:hasPrivilege privilege="Manage Automation" inverse="true">disabled</openmrs:hasPrivilege>>
         <spring:message code="dhisconnector.automation.toggleAutomation"/>
     </input>
+    <openmrs:hasPrivilege privilege="Manage Automation">
+        <input name="saveAutomationToggle" type="submit" value="<spring:message code="dhisconnector.save" />"/>
+    </openmrs:hasPrivilege>
     <br />
     <br />
     <spring:message code="dhisconnector.automation.periodTypeMessage"/>
@@ -72,7 +75,7 @@
         </tbody>
     </table>
     <openmrs:hasPrivilege privilege="Run Automation,Manage Automation">
-        <input type="submit" value="<spring:message code='dhisconnector.automation.submit'/>">
+        <input name="submit" type="submit" value="<spring:message code='dhisconnector.automation.submit'/>">
     </openmrs:hasPrivilege>
 </form>
 

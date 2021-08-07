@@ -1,5 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
+<openmrs:require anyPrivilege="View Location Mappings,Manage Location Mappings" otherwise="/login.htm"
+                 redirect="/module/dhisconnector/locationMapping.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/flexboxgrid.min.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
@@ -35,7 +37,8 @@
                 </c:forEach>
                 <input name="savedOrgUnitUuidOf_${location.uuid}" type="hidden" value="${savedOrgUnitUuid}">
                 <td>
-                    <select name="orgUnitOf_${location.uuid}">
+                    <select name="orgUnitOf_${location.uuid}"
+                            <openmrs:hasPrivilege privilege="Manage Location Mappings" inverse="true">disabled</openmrs:hasPrivilege>>
                         <option value=" "> </option>
                         <c:forEach items="${orgUnits}" var="orgUnit">
                             <c:set value="" var="isSelected"/>
@@ -50,7 +53,9 @@
         </c:forEach>
         </tbody>
     </table>
-    <input type="submit" value="<spring:message code='dhisconnector.save'/>">
+    <openmrs:hasPrivilege privilege="Manage Location Mappings">
+        <input type="submit" value="<spring:message code='dhisconnector.save'/>">
+    </openmrs:hasPrivilege>
 </form>
 
 <%@ include file="/WEB-INF/template/footer.jsp" %>

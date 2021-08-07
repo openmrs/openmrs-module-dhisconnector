@@ -11,12 +11,13 @@
 				code="dhisconnector.configureServer" /></a>
 	</li>
 
-	<li
-        <c:if test='<%= request.getRequestURI().contains("/locationMapping") %>'>class="active"</c:if>>
-		<a
-        href="${pageContext.request.contextPath}/module/dhisconnector/locationMapping.form"><spring:message
-		        code="dhisconnector.locationMapping" /></a>
-	</li>
+	<openmrs:hasPrivilege privilege="View Location Mappings,Manage Location Mappings">
+		<li <c:if test='<%= request.getRequestURI().contains("/locationMapping") %>'>class="active"</c:if>>
+			<a href="${pageContext.request.contextPath}/module/dhisconnector/locationMapping.form">
+				<spring:message code="dhisconnector.locationMapping" />
+			</a>
+		</li>
+	</openmrs:hasPrivilege>
 
 	<li
 		<c:if test='<%= request.getRequestURI().contains("/automation") %>'>class="active"</c:if>>

@@ -121,7 +121,7 @@
 		<description>Base privilege for running the reports</description>
 	</privilege>
 	<privilege>
-		<name>Run failed data</name>
+		<name>Run Failed Data</name>
 		<description>Base privilege for pushing the failed data</description>
 	</privilege>
 	<privilege>

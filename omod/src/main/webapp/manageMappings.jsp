@@ -33,13 +33,15 @@
 	<div class="box">
 		<table>
 			<tr>
-				<th><label><input id="checkAll" type="checkbox" ng-click="toggleAddAllToExportSelected(existingMappings)" ng-model="selectAllMappings"><openmrs:message code="general.select" /></label></th>
+				<th>
+					<input id="checkAll" type="checkbox" ng-click="toggleAddAllToExportSelected(existingMappings)" ng-model="selectAllMappings">
+				</th>
 				<th><openmrs:message code="general.name"/></th>
 				<th><openmrs:message code="dhisconnector.manageMappings.createdOn" /></th>
 				<th style="float: right;"><openmrs:message code="general.action" /></th>
 			</tr>
 			<tr ng-repeat="mapping in existingMappings track by $index" title="<openmrs:message code='dhisconnector.manageMappings.clickToEdit'/> {{mapping.name}}" ng-click="loadMappingEditor(fetchMappingDisplay(mapping))" class="mapping-tr">
-				<td>
+				<td style="padding-left: 4px">
 					<input
 							id="{{mapping.name}}"
 							type="checkbox"
@@ -57,17 +59,25 @@
 				</td>
 			</tr>
 		</table>
-		<div class="margin-top">
-			<form class="inline-block" method="POST" action="exportMappings.form">
-				<input type="hidden" value="" name="selectedMappings" id="selected-mappings-to-export">
-				<input ng-disabled="disableMultipleActions()" type="submit" value='Export Selected'>
-			</form>
-			<input
-					type="button"
-					class="inline-block"
-					value="<openmrs:message code='dhisconnector.manageMappings.deleteSelected'/>"
-					ng-disabled="disableMultipleActions()"
-					ng-click="deleteSelectedMappings()">
+		<div class="margin-top mappings-multiple-actions-grid">
+			<div>
+				<input
+						type="button"
+						value="<openmrs:message code='dhisconnector.manageMappings.deleteSelected'/>"
+						ng-disabled="disableMultipleActions()"
+						ng-click="deleteSelectedMappings()">
+			</div>
+			<div>
+				<form method="POST" action="exportMappings.form">
+					<input type="hidden" value="" name="selectedMappings" id="selected-mappings-to-export">
+					<input ng-disabled="disableMultipleActions()" type="submit" value='Export Selected'>
+					<br>
+					<label ng-hide="disableMultipleActions()">
+						<input type="checkbox" name="dontIncludeMetadata">
+						<span style="font-size: smaller">Do not include report metadata</span>
+					</label>
+				</form>
+			</div>
 		</div>
 	</div>
 </div>

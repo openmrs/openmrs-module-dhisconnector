@@ -182,7 +182,7 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		dhisConnectorService.saveMapping(mapping);
 
 		String[] pathToBundle =
-				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()});
+				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
 		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
 	}
 
@@ -203,7 +203,7 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		dhisConnectorService.saveMapping(mapping);
 
 		String[] pathToBundle =
-				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()});
+				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
 		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
 
 		dhisConnectorService.permanentlyDeleteMapping(mapping);

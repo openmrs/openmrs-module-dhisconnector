@@ -76,7 +76,7 @@ public interface DHISConnectorService extends OpenmrsService {
 
 	public String importMappings(MultipartFile mapping) throws IOException;
 	
-	public String[] exportMappings(String[] selectedMappings) throws IOException;
+	public String[] exportMappings(String[] selectedMappings, boolean shouldIncludeMetadata) throws IOException;
 
 	public boolean dhis2BackupExists();
 	

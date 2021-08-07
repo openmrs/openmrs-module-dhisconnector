@@ -90,3 +90,8 @@ table, th, td {
 .inline-block {
     display: inline-block;
 }
+
+.mappings-multiple-actions-grid {
+    display: grid;
+    grid-template-columns: 100px 300px;
+}

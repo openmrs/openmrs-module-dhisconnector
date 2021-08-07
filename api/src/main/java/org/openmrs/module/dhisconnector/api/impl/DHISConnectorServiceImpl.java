@@ -884,7 +884,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 
 	@Override
-	public String[] exportMappings(String[] mappings) throws IOException {
+	public String[] exportMappings(String[] mappings, boolean shouldIncludeMetadata) throws IOException {
 		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
 		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
 		(new File(tempDirectory)).mkdirs();
@@ -908,8 +908,10 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				File mappingFile = new File(mappingPath);
 				fileList.add(mappingFile);
 				// Extract and store related metadata in the metadataSet
-				Set<SerializedObject> extractedMetadata = extractMetadataFromMapping(mappingPath);
-				metadataSet.addAll(extractedMetadata);
+				if (shouldIncludeMetadata) {
+					Set<SerializedObject> extractedMetadata = extractMetadataFromMapping(mappingPath);
+					metadataSet.addAll(extractedMetadata);
+				}
 			} else {
 				log.error("The requested mapping doesn't exist: " + mapping);
 			}

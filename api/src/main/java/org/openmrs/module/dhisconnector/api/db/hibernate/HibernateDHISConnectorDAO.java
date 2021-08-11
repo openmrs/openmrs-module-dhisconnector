@@ -138,4 +138,11 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 				.setParameter("uuid", uuid).uniqueResult();
 		return serializedObject;
 	}
+
+	@Override
+	public void deleteSerializedObjectByUuid(String uuid) {
+		sessionFactory.getCurrentSession()
+				.createQuery("delete from SerializedObject s where s.uuid = :uuid")
+				.setParameter("uuid", uuid).executeUpdate();
+	}
 }

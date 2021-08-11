@@ -838,7 +838,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public String importMappings (MultipartFile mappingBundle) throws IOException {
+	public String importMappings (MultipartFile mappingBundle, boolean shouldReplaceMetadata) throws IOException {
 		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
 		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
 		(new File(sourceDirectory)).mkdirs();
@@ -864,8 +864,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					// Check if the system already has an object with the same uuid
 					SerializedObject existing = dao.getSerializedObjectByUuid(serializedObject.getUuid());
 					if (existing != null) {
-						log.info(serializedObject.getName() + " already exists in the system. Ignored");
-						continue;
+						if (shouldReplaceMetadata) {
+							log.info("Overriding the existing object with the newly imported object");
+							dao.deleteSerializedObjectByUuid(serializedObject.getUuid());
+						} else {
+							log.info(serializedObject.getName() + " already exists in the system. Ignored");
+							continue;
+						}
 					}
 					// Set serialized object creator to the current user and date created to the current day
 					serializedObject.setCreator(Context.getAuthenticatedUser());

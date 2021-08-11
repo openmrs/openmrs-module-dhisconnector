@@ -305,12 +305,13 @@ public class DHISConnectorController {
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/manageMappings", method = RequestMethod.POST)
-	public void manageMappings(ModelMap model, @RequestParam(value = "mapping", required = false) MultipartFile mapping) throws IOException {
+	public void manageMappings(ModelMap model, @RequestParam(value = "mapping", required = false) MultipartFile mapping,
+							   @RequestParam(value = "shouldReplaceMetadata", required = false) boolean shouldReplaceMetadata) throws IOException {
 		String successMessage = "";
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping);
+			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
 
 			if (msg.startsWith("Successfully")) {
 				successMessage = msg;

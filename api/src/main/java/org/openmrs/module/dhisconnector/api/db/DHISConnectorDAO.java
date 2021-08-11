@@ -48,4 +48,6 @@ public interface DHISConnectorDAO {
 	SerializedObject getSerializedObjectByUuid(String uuid);
 
 	void saveSerializedObject(SerializedObject serializedObject);
+
+	void deleteSerializedObjectByUuid(String uuid);
 }

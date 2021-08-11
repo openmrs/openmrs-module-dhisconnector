@@ -27,6 +27,13 @@
 	<form method="POST" enctype="multipart/form-data">
 		<input type="file" name="mapping">
 		<input type="submit" value='<spring:message code="dhisconnector.upload"/>'>
+		<br />
+		<label style="margin-top: 2rem;">
+			<input type="checkbox" value="on" name="shouldReplaceMetadata">
+			<span style="font-size: smaller">
+				<openmrs:message code="dhisconnector.manageMappings.overrideLabel"/>
+			</span>
+		</label>
 	</form>
 </div>
 

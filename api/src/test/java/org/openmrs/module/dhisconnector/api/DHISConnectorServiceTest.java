@@ -212,7 +212,8 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		File file = new File(pathToBundle[1]);
 		MultipartFile multipartFile =
 				new MockMultipartFile(file.getName(), file.getName(), "zip", Files.readAllBytes(file.toPath()));
-		Assert.assertEquals("Successfully imported the mapping files", dhisConnectorService.importMappings(multipartFile));
+		Assert.assertEquals("Successfully imported the mapping files",
+				dhisConnectorService.importMappings(multipartFile, false));
 		Assert.assertNotNull(dhisConnectorService.getMapping("mapping-test-unit." + mapping.getCreated()));
 		Assert.assertNotNull(reportDefinitionService.getDefinitionByUuid(PIR_UUID));
 	}

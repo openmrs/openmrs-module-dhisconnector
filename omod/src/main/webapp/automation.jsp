@@ -23,60 +23,53 @@
     </openmrs:hasPrivilege>
     <br />
     <br />
-    <spring:message code="dhisconnector.automation.periodTypeMessage"/>
-    <br />
-    <table>
-        <thead>
-            <tr>
-                <openmrs:hasPrivilege privilege="Manage Automation">
-            	    <th><spring:message code="dhisconnector.automation.delete"/></th>
-                </openmrs:hasPrivilege>
-                <openmrs:hasPrivilege privilege="Run Automation">
-            	    <th><spring:message code="dhisconnector.automation.run"/></th>
-                </openmrs:hasPrivilege>
-                <th><spring:message code="dhisconnector.automation.mapping"/></th>
-                <openmrs:hasPrivilege privilege="Run Automation">
-                    <th><spring:message code="dhisconnector.automation.reRun"/></th>
-                </openmrs:hasPrivilege>
-            </tr>
-        </thead>
-        <tbody>
-            <openmrs:hasPrivilege privilege="Manage Automation">
-                <tr class="evenRow">
-                    <td><spring:message code="dhisconnector.automation.add"/></td>
-                    <openmrs:hasPrivilege privilege="Run Automation">
-                        <td><spring:message code="dhisconnector.automation.new"/></td>
-                    </openmrs:hasPrivilege>
-                    <td>
-                        <select name="mapping">
-                            <option></option>
-                            <c:forEach items="${mappings}" var="mapping">
-                                <option value="${mapping.name}.${mapping.created}">${mapping.name}</option>
-                            </c:forEach>
-                        </select>
-                    </td>
-                    <td></td>
-                </tr>
-            </openmrs:hasPrivilege>
-            <c:forEach items="${reportToDataSetMappings}" var="mpg">
-                <tr class="evenRow">
-                    <openmrs:hasPrivilege privilege="Manage Automation">
-                        <td><input type="checkbox" name="mappingIds" value="${mpg.id}"/></td>
-                    </openmrs:hasPrivilege>
-                    <openmrs:hasPrivilege privilege="Run Automation">
-                        <td><input type="checkbox" name="runs" value="${mpg.uuid}"/></td>
-                    </openmrs:hasPrivilege>
-                    <td>${fn:substringBefore(mpg.mapping, '.')}</td>
-                    <openmrs:hasPrivilege privilege="Run Automation">
-                        <td><c:if test="${not empty mpg.lastRun}"><input type="checkbox" name="reRuns" value="${mpg.uuid}"/></c:if> ${mpg.lastRun}</td>
-                    </openmrs:hasPrivilege>
-                </tr>
-           </c:forEach>
-        </tbody>
-    </table>
-    <openmrs:hasPrivilege privilege="Run Automation,Manage Automation">
-        <input name="submit" type="submit" value="<spring:message code='dhisconnector.automation.submit'/>">
+    <openmrs:hasPrivilege privilege="Manage Automation">
+        <span>New mapping</span>
+        <span>
+            <select name="mapping">
+                <option></option>
+                <c:forEach items="${mappings}" var="mapping">
+                    <option value="${mapping.name}.${mapping.created}">${mapping.name}</option>
+                </c:forEach>
+            </select>
+        </span>
+        <input name="addMapping" type="submit" value="<spring:message code="dhisconnector.automation.add" />"/>
     </openmrs:hasPrivilege>
+    <br />
+    <br />
+    <c:if test="${not empty reportToDataSetMappings}">
+        <table>
+            <thead>
+                <tr>
+                    <th></th>
+                    <th><spring:message code="dhisconnector.automation.mapping"/></th>
+                    <th></th>
+                    <th><spring:message code="dhisconnector.automation.lastRun"/></th>
+                </tr>
+            </thead>
+            <tbody>
+                <c:forEach items="${reportToDataSetMappings}" var="mpg">
+                    <tr class="evenRow">
+                        <td>
+                            <openmrs:hasPrivilege privilege="Manage Automation,Run Automation">
+                                <input type="checkbox" name="mappingIds" value="${mpg.uuid}"/>
+                            </openmrs:hasPrivilege>
+                        </td>
+                        <td>${fn:substringBefore(mpg.mapping, '.')}</td>
+                        <td></td>
+                        <td>${mpg.lastRun}</td>
+                    </tr>
+               </c:forEach>
+            </tbody>
+        </table>
+        <br />
+        <openmrs:hasPrivilege privilege="Run Automation">
+            <input name="run" type="submit" value="<spring:message code='dhisconnector.automation.runSelected'/>">
+        </openmrs:hasPrivilege>
+        <openmrs:hasPrivilege privilege="Manage Automation">
+            <input name="delete" type="submit" value="<spring:message code='dhisconnector.automation.delete'/>">
+        </openmrs:hasPrivilege>
+    </c:if>
 </form>
 
 <c:forEach items="${postResponse}" var="resp">

@@ -387,23 +387,15 @@ public class DHISConnectorController {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", params = "submit", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation", params = "run", method = RequestMethod.POST)
 	public void postAutomationPage(ModelMap model, HttpServletRequest request) {
 		String response = "";
-		String mapping = request.getParameter("mapping");
 		Configurations configs = new Configurations();
 		List<String> postResponse = new ArrayList<String>();
 		List<String> toBeRan = new ArrayList<String>();
 
 		if (request.getParameterValues("mappingIds") != null) {
 			for (String s : request.getParameterValues("mappingIds")) {
-				Context.getService(DHISConnectorService.class).deleteReportToDataSetMapping(Integer.parseInt(s));
-			}
-			response += " -> Delete was successful";
-		}
-
-		if (request.getParameterValues("reRuns") != null) {
-			for (String s : request.getParameterValues("reRuns")) {
 				ReportToDataSetMapping r2d = Context.getService(DHISConnectorService.class)
 						.getReportToDataSetMappingByUuid(s);
 
@@ -412,13 +404,6 @@ public class DHISConnectorController {
 					r2d.setLastRun(null);
 					Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(r2d);
 				}
-			}
-		}
-
-		if (request.getParameterValues("runs") != null) {
-			for (String s : request.getParameterValues("runs")) {
-				if (!toBeRan.contains(s))
-					toBeRan.add(s);
 			}
 		}
 
@@ -436,11 +421,6 @@ public class DHISConnectorController {
 		}
 		if (postResponse.size() > 0)
 			response += " -> Run was successful";
-
-		if (StringUtils.isNotBlank(mapping)) {
-			Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(new ReportToDataSetMapping(mapping));
-			response += " -> Save was successful";
-		}
 
 		initialiseAutomation(model, configs.automationEnabled(), postResponse);
 		if (StringUtils.isNotBlank(response))
@@ -461,6 +441,41 @@ public class DHISConnectorController {
 		}
 
 		initialiseAutomation(model, configs.automationEnabled(), new ArrayList<String>());
+		if (StringUtils.isNotBlank(response))
+			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/automation", params = "delete", method = RequestMethod.POST)
+	public void deleteSelectedMappings(ModelMap model, HttpServletRequest request) {
+		String response = "";
+		Configurations configs = new Configurations();
+		List<String> postResponse = new ArrayList<String>();
+
+		if (request.getParameterValues("mappingIds") != null) {
+			for (String s : request.getParameterValues("mappingIds")) {
+				Context.getService(DHISConnectorService.class).deleteReportToDataSetMapping(s);
+			}
+			response += " -> Delete was successful";
+		}
+
+		initialiseAutomation(model, configs.automationEnabled(), postResponse);
+		if (StringUtils.isNotBlank(response))
+			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/automation", params = "addMapping", method = RequestMethod.POST)
+	public void addMappingToAutomation(ModelMap model, HttpServletRequest request) {
+		String response = "";
+		String mapping = request.getParameter("mapping");
+		Configurations configs = new Configurations();
+		List<String> postResponse = new ArrayList<String>();
+
+		if (StringUtils.isNotBlank(mapping)) {
+			Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(new ReportToDataSetMapping(mapping));
+			response += " -> Mapping added successfully";
+		}
+
+		initialiseAutomation(model, configs.automationEnabled(), postResponse);
 		if (StringUtils.isNotBlank(response))
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}

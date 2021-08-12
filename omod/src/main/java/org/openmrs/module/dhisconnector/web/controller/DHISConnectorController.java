@@ -387,18 +387,13 @@ public class DHISConnectorController {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation", params = "submit", method = RequestMethod.POST)
 	public void postAutomationPage(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		String mapping = request.getParameter("mapping");
 		Configurations configs = new Configurations();
 		List<String> postResponse = new ArrayList<String>();
 		List<String> toBeRan = new ArrayList<String>();
-
-		if (request.getParameter("toogleAutomation") != null)
-			configs.toogleAutomation(true);
-		else
-			configs.toogleAutomation(false);
 
 		if (request.getParameterValues("mappingIds") != null) {
 			for (String s : request.getParameterValues("mappingIds")) {
@@ -448,6 +443,24 @@ public class DHISConnectorController {
 		}
 
 		initialiseAutomation(model, configs.automationEnabled(), postResponse);
+		if (StringUtils.isNotBlank(response))
+			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/automation", params = "saveAutomationToggle", method = RequestMethod.POST)
+	public void toggleAutomation(ModelMap model, HttpServletRequest request) {
+		String response = "";
+		Configurations configs = new Configurations();
+
+		if (request.getParameter("toggleAutomation") != null) {
+			configs.toggleAutomation(true);
+			response += " -> Successfully turned on automation";
+		} else {
+			configs.toggleAutomation(false);
+			response += " -> Successfully turned off automation";
+		}
+
+		initialiseAutomation(model, configs.automationEnabled(), new ArrayList<String>());
 		if (StringUtils.isNotBlank(response))
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}

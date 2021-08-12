@@ -32,7 +32,7 @@ public class Configurations {
 		return "true".equals(Context.getAdministrationService().getGlobalProperty(TOGGLE_AUTOMATION));
 	}
 	
-	public void toogleAutomation(boolean onOrOff) {
+	public void toggleAutomation(boolean onOrOff) {
 		GlobalProperty gp = Context.getAdministrationService().getGlobalPropertyObject(TOGGLE_AUTOMATION);
 		
 		gp.setPropertyValue(Boolean.toString(onOrOff));

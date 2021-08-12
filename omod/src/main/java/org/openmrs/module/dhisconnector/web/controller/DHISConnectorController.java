@@ -32,7 +32,6 @@ import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.json.simple.JSONObject;
 import org.openmrs.GlobalProperty;
 import org.openmrs.Location;
 import org.openmrs.api.AdministrationService;
@@ -178,6 +177,11 @@ public class DHISConnectorController {
 
 	@RequestMapping(value = "/module/dhisconnector/exportMappings", method = RequestMethod.POST)
 	public void exportMapping(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
+		boolean shouldIncludeMetadata = true;
+		String dontIncludeParameter = request.getParameter("dontIncludeMetadata");
+		if (dontIncludeParameter != null) {
+			shouldIncludeMetadata = !dontIncludeParameter.equals("on");
+		}
 		String[] selectedMappings = request.getParameter("selectedMappings") != null
 				? request.getParameter("selectedMappings").split("<:::>") : null;
 		String msg = "";
@@ -185,7 +189,7 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						.exportMappings(selectedMappings);
+						.exportMappings(selectedMappings, shouldIncludeMetadata);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
 				String fullPath = exported[1];// contains path to

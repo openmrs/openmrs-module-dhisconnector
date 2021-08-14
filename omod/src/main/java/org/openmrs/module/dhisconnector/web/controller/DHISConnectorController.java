@@ -106,7 +106,7 @@ public class DHISConnectorController {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/configureServer", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "saveConfig", method = RequestMethod.POST)
 	public void saveConfig(ModelMap model, @RequestParam(value = "url", required = true) String url,
 			@RequestParam(value = "user", required = true) String user,
 			@RequestParam(value = "pass", required = true) String pass, WebRequest req) throws ParseException {
@@ -141,6 +141,28 @@ public class DHISConnectorController {
 			model.addAttribute("user", userProperty.getPropertyValue());
 			model.addAttribute("pass", passProperty.getPropertyValue());
 		}
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "testConfig", method = RequestMethod.POST)
+	public void testConfig(ModelMap model, WebRequest req) throws ParseException {
+
+		AdministrationService as = Context.getAdministrationService();
+		String url = as.getGlobalPropertyObject(GLOBAL_PROPERTY_URL).getPropertyValue();
+		String user = as.getGlobalPropertyObject(GLOBAL_PROPERTY_USER).getPropertyValue();
+		String pass = as.getGlobalPropertyObject(GLOBAL_PROPERTY_PASS).getPropertyValue();
+
+		if (Context.getService(DHISConnectorService.class).testDHISServerDetails(url, user, pass)) {
+			req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.connectSuccess"),
+					WebRequest.SCOPE_SESSION);
+		} else {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.connectFailure"),
+					WebRequest.SCOPE_SESSION);
+		}
+
+		model.addAttribute("url", url);
+		model.addAttribute("user", user);
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/runReports", method = RequestMethod.GET)

@@ -26,11 +26,16 @@
         <td><spring:message code="dhisconnector.pass"/></td>
         <td><input name="pass" placeholder="<hidden>" type="password" size="20"/></td>
       </tr>
+    </openmrs:hasPrivilege>
       <tr>
         <td/>
-        <td><input name="submit" type="submit" value="<spring:message code="dhisconnector.save" />"/></td>
+        <td>
+          <openmrs:hasPrivilege privilege="Manage Connection">
+            <input name="saveConfig" type="submit" value="<spring:message code="dhisconnector.save" />"/>
+          </openmrs:hasPrivilege>
+          <input name="testConfig" type="submit" value="<spring:message code="dhisconnector.testConnection" />"/>
+        </td>
       </tr>
-    </openmrs:hasPrivilege>
     </tbody>
   </table>
 </form>

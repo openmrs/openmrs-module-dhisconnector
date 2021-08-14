@@ -106,7 +106,7 @@ public interface DHISConnectorService extends OpenmrsService {
 	
 	void saveReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
 	
-	void deleteReportToDataSetMapping(Integer reportToDataSetMappingId);
+	void deleteReportToDataSetMapping(String reportToDataSetMappingUuid);
 	
 	List<String> runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping);
 	

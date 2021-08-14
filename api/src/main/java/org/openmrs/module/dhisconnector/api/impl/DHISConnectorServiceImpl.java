@@ -1335,8 +1335,8 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public void deleteReportToDataSetMapping(Integer reportToDataSetMappingId) {
-		deleteReportToDataSetMapping(getReportToDataSetMapping(reportToDataSetMappingId));
+	public void deleteReportToDataSetMapping(String reportToDataSetMappingUuid) {
+		deleteReportToDataSetMapping(getReportToDataSetMappingByUuid(reportToDataSetMappingUuid));
 	}
 	
 	@Override

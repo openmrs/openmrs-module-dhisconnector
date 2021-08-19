@@ -112,7 +112,7 @@ Before you can send Period Indicator Report data to DHIS2, a mapping must exist 
 
 To post data to the DHIS2 server or download the data in DXF format, click the *Run Reports* link under the *DHIS Connector Module* heading on the OpenMRS Administration page. Select the Period Indicator Report and the corresponding mapping to use.
 
-Since Period Indicator Reports are always run for a specific location, you will also need to select the OpenMRS Location as well as the corresponding DHIS2 Organisation Unit. But with the automated location feature, it will show the available location mappings when the mapping is selected. You can select the required location-orgunit mappings from the available mappings.
+Since Period Indicator Reports are always run for a specific location, you will also need to select the OpenMRS Location as well as the corresponding DHIS2 Organisation Unit. But with the automated location mapping feature, it will show the available location mappings when the mapping is selected. You can select the required location-orgunit mappings from the available mappings.
 
 The date selector will changed based on the period type of the DHIS2 Data Set.
 
@@ -124,15 +124,17 @@ Once you have selected a value for all the fields, click *Send Data* to post dat
 
 ## Automation
 
-To schedule/automate pushing data, click *Automation* link under the *DHIS Connector Module* heading on the OpenMRS Administration page. Select the Period Indicator Report and the corresponding mapping to use.
+To schedule/automate pushing data, click *Automation* link under the *DHIS Connector Module* heading on the OpenMRS Administration page.
 
-Since Period Indicator Reports are always run for a specific location, you will also need to select the OpenMRS Location as well as the corresponding DHIS2 Organisation Unit.
+To add mappings, choose the mapping from the dropdown lost and click `Add`.
 
-You can toggle the automation by activating the tick box.
+You need to map the relevant OpenMRS Location and DHIS2 Organisation Unit using the Location Mapping UI before scheduling the mappings.
 
-Once you have selected a value for all the fields, click *Save* to add the report to automation. Automated reports will be ran and pushed automatically by the end of the relevant period.
+To push data manually, select the mappings and click `Run Selected`. Available OpenMRS locations and DHIS2 organization units will be mapped automatically. Automated reports will be ran and pushed automatically by the end of the relevant period. 
 
-![](https://user-images.githubusercontent.com/27498587/119811349-9fff1180-bf04-11eb-85d0-d83b337778f4.gif)
+You can toggle the automation by checking/unchecking the tick box and clicking save.
+
+![](https://user-images.githubusercontent.com/27498587/129963942-a0a9e482-f580-4d3c-8f96-7a6bb3d34bb6.gif)
 
 ## DHIS2 Backup
 

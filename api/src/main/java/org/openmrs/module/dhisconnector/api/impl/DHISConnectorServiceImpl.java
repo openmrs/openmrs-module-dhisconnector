@@ -205,7 +205,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				return FileUtils.readFileToString(backupFile);
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return null;
 			}
 		}
@@ -225,7 +225,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return;
 			}
 		}
@@ -242,7 +242,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return;
 			}
 		}
@@ -254,7 +254,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			enpointBackUp.close();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return;
 		}
 		
@@ -304,7 +304,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception ex) {
-				ex.printStackTrace();
+				log.error("Exception", ex);
 				payload = getFromBackUp(endpoint);
 			}
 			finally {
@@ -340,7 +340,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return code != null ? code : "";
 	}
@@ -354,13 +354,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				
 			}
 			catch (JsonParseException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (JsonMappingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		return null;
@@ -378,13 +378,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					return optionCombo.getCategoryCombo();
 			}
 			catch (JsonParseException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (JsonMappingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		return null;
@@ -436,7 +436,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				adx.getGroups().add(group);
 			}
 			catch (DatatypeConfigurationException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			
 		}
@@ -466,7 +466,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			} else if (file.isDirectory()) {
 				for (File f : file.listFiles()) {
@@ -526,7 +526,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					FileUtils.writeStringToFile(datafile, data);
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -579,12 +579,12 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				logPayload(payload);
 			} else {
 				backUpData(endpoint, data, extension);
-				System.out.println("Failed to get entity from dhis2 server, network failure!");
+				log.error("Failed to get entity from dhis2 server, network failure!");
 			}
 		}
 		catch (Exception ex) {
 			backUpData(endpoint, data, extension);
-			ex.printStackTrace();
+			log.error("Exception", ex);
 		}
 		finally {
 			if (client != null) {
@@ -607,7 +607,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			    payload);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 	}
 	
@@ -622,7 +622,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			                                           // endpoint to the URL
 		}
 		catch (MalformedURLException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return false;
 		}
 		
@@ -647,7 +647,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception ex) {
-			ex.printStackTrace();
+			log.error("Exception", ex);
 			success = false;
 		}
 		finally {
@@ -670,7 +670,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return e;
 			}
 		}
@@ -688,7 +688,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			mapper.writeValue(newMappingFile, mapping);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return e;
 		}
 		
@@ -726,7 +726,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return null;
 	}
@@ -759,7 +759,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				mappings.add(mapper.readValue(f, DHISMapping.class));
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		
@@ -798,7 +798,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			        .asList(mapper.readValue(node.get("organisationUnits").toString(), DHISOrganisationUnit[].class));
 		}
 		catch (Exception ex) {
-			System.out.print(ex.getMessage());
+			log.error("Exception", ex);
 		}
 		
 		return orgUnits;
@@ -819,7 +819,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			dataSet = mapper.readValue(node.toString(), DHISDataSet.class);
 		}
 		catch (Exception ex) {
-			System.out.print(ex.getMessage());
+			log.error("Exception", ex);
 		}
 
 		return dataSet;
@@ -1074,15 +1074,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		try {
 			out = new ZipOutputStream(new FileOutputStream(zipFile));
 			
-			System.out.println("Creating : " + zipFile);
+			log.info("Creating : " + zipFile);
 			addDHIS2APIDirectories(dirObj, out, sourceDirectory);
 			out.close();
 		}
 		catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return zipFile;
 	}
@@ -1101,7 +1101,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					FileInputStream in = new FileInputStream(files[i].getAbsolutePath());
 					String entryPath = (new File(sourceDirectory)).toURI().relativize(files[i].toURI()).getPath();
 					
-					System.out.println("Adding: " + entryPath);
+					log.info("Adding: " + entryPath);
 					out.putNextEntry(new ZipEntry(entryPath));
 					
 					int len;
@@ -1112,7 +1112,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					in.close();
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -1171,11 +1171,11 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 			catch (IllegalStateException e) {
 				msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
 				msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		} else {
 			msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
@@ -1233,7 +1233,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			zipIn.close();
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 	}
 	
@@ -1268,7 +1268,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -1291,19 +1291,19 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				return out.toString();
 			}
 			catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (SAXException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (ParserConfigurationException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (TransformerException e) {
-				e.printStackTrace();
+				log.error("Exception" , e);
 			}
 		}
 		return xml;
@@ -1661,7 +1661,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					s += mapper.writeValueAsString((DHISImportSummary) o);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		

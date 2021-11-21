@@ -37,7 +37,7 @@
     </tr>
     <tr>
       <td>
-        <div id="locationsList">Select a Mapping to choose the Locations</div>
+        <div id="locationsList" class="max-content-size">Select a Mapping to choose the Locations</div>
       </td>
     </tr>
     <tr>

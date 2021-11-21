@@ -95,3 +95,7 @@ table, th, td {
     display: grid;
     grid-template-columns: 100px 300px;
 }
+
+.max-content-size {
+    width: max-content;
+}

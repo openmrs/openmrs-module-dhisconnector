@@ -396,17 +396,21 @@ public class DHISConnectorController {
 
 	private void initialiseAutomation(ModelMap model, boolean automationEnabled, List<String> postResponse) {
 		// Filter the mappings with supported period types
-		List<DHISMapping> supportedMappings = Context.getService(DHISConnectorService.class).getMappings()
+		List<DHISMapping> mappings = Context.getService(DHISConnectorService.class).getMappings();
+
+		if (mappings != null) {
+			List<DHISMapping> supportedMappings = Context.getService(DHISConnectorService.class).getMappings()
 				.stream()
 				.filter(mapping -> SUPPORTED_AUTOMATION_PERIOD_TYPES.contains(mapping.getPeriodType()))
 				.collect(Collectors.toList());
-		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
+			List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
 
-		model.addAttribute("mappings", supportedMappings);
-		model.addAttribute("reportToDataSetMappings", Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
-		model.addAttribute("automationEnabled", automationEnabled);
-		model.addAttribute("postResponse", postResponse);
-		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+			model.addAttribute("mappings", supportedMappings);
+			model.addAttribute("reportToDataSetMappings", Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
+			model.addAttribute("automationEnabled", automationEnabled);
+			model.addAttribute("postResponse", postResponse);
+			model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+		}
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/automation", params = "run", method = RequestMethod.POST)

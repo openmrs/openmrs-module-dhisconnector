@@ -87,6 +87,11 @@ package org.openmrs.module.dhisconnector;
 public enum DHISPeriodTypeUnit {
 	DAILY("Daily", "\\b(\\d{4})(\\d{2})(\\d{2})\\b"),
     WEEKLY("Weekly", "\\b(\\d{4})W(\\d[\\d]?)\\b"),
+    WEEKLY_SUNDAY("WeeklySunday", "\\b(\\d{4})SunW(\\d[\\d]?)\\b"),
+    WEEKLY_WEDNESDAY("WeeklyWednesday", "\\b(\\d{4})WedW(\\d[\\d]?)\\b"),
+    WEEKLY_THURSDAY("WeeklyThursday", "\\b(\\d{4})ThuW(\\d[\\d]?)\\b"),
+    WEEKLY_SATURDAY("WeeklySaturday", "\\b(\\d{4})SatW(\\d[\\d]?)\\b"),
+    BI_WEEKLY("BiWeekly", "\\b(\\d{4})BiW(\\d[\\d]?)\\b"),
     MONTHLY("Monthly", "\\b(\\d{4})[-]?(\\d{2})\\b"),
     BI_MONTHLY("BiMonthly", "\\b(\\d{4})(\\d{2})B\\b"),
     QUARTERLY("Quarterly", "\\b(\\d{4})Q(\\d)\\b"),
@@ -95,8 +100,9 @@ public enum DHISPeriodTypeUnit {
     YEARLY("Yearly", "\\b(\\d{4})\\b"),
     FINANCIAL_APRIL("FinancialApril", "\\b(\\d{4})April\\b"),
     FINANCIAL_JULY("FinancialJuly", "\\b(\\d{4})July\\b"),
-    FINANCIAL_OCTOBER("FinancialOct", "\\b(\\d{4})Oct\\b");
-	
+    FINANCIAL_OCTOBER("FinancialOct", "\\b(\\d{4})Oct\\b"),
+    FINANCIAL_NOVEMBER("FinancialNov", "\\b(\\d{4})Nov\\b");
+
 	private final String type;
 	
 	private final String format;

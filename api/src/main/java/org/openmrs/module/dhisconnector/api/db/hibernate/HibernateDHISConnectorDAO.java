@@ -19,14 +19,17 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.Location;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.db.SerializedObject;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.db.DHISConnectorDAO;
 import org.springframework.util.ReflectionUtils;
 
 /**
- * It is a default implementation of {@link DHISReportingDAO}.
+ * It is a default implementation of {@link DHISConnectorDAO}.
  */
 public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	
@@ -87,5 +90,59 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 	@Override
 	public List<ReportToDataSetMapping> getAllReportToDataSetMappings() {
 		return sessionFactory.getCurrentSession().createCriteria(ReportToDataSetMapping.class).list();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
+		return sessionFactory.getCurrentSession().createCriteria(LocationToOrgUnitMapping.class).list();
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.uuid = :uuid").setParameter("uuid", uuid).uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.orgUnitUid = :orgUnitUid")
+				.setParameter("orgUnitUid", orgUnitUid).uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
+	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		locationToOrgUnitMapping.setCreator(Context.getAuthenticatedUser());
+		sessionFactory.getCurrentSession().save(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
+		sessionFactory.getCurrentSession()
+				.createQuery("delete from LocationToOrgUnitMapping r where r.location = :location")
+				.setParameter("location", location).executeUpdate();
+	}
+
+	@Override
+	public void saveSerializedObject(SerializedObject serializedObject) {
+		sessionFactory.getCurrentSession().save(serializedObject);
+	}
+
+	@Override
+	public SerializedObject getSerializedObjectByUuid(String uuid) {
+		SerializedObject serializedObject = (SerializedObject) sessionFactory.getCurrentSession()
+				.createQuery("from SerializedObject s where s.uuid = :uuid")
+				.setParameter("uuid", uuid).uniqueResult();
+		return serializedObject;
+	}
+
+	@Override
+	public void deleteSerializedObjectByUuid(String uuid) {
+		sessionFactory.getCurrentSession()
+				.createQuery("delete from SerializedObject s where s.uuid = :uuid")
+				.setParameter("uuid", uuid).executeUpdate();
 	}
 }

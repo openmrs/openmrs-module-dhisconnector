@@ -4,7 +4,7 @@
     <parent>
         <groupId>org.openmrs.module</groupId>
         <artifactId>dhisconnector</artifactId>
-        <version>1.5.4</version>
+        <version>1.5.5-SNAPSHOT</version>
     </parent>
 
     <artifactId>dhisconnector-api</artifactId>
@@ -49,7 +49,7 @@
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
-            <version>4.5.12</version>
+            <version>4.5.13</version>
             <type>jar</type>
             <exclusions>
                 <exclusion>
@@ -98,6 +98,11 @@
         </dependency>
 
         <!-- End OpenMRS core -->
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
+        </dependency>
 
 		<!-- https://mvnrepository.com/artifact/com.googlecode.json-simple/json-simple -->
 		<dependency>

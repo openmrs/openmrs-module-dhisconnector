@@ -15,10 +15,13 @@ package org.openmrs.module.dhisconnector.api.db;
 
 import java.util.List;
 
+import org.openmrs.Location;
+import org.openmrs.api.db.SerializedObject;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 
 /**
- *  Database methods for {@link DHISReportingService}.
+ *  Database methods for {@link DHISConnectorService}.
  */
 public interface DHISConnectorDAO {
 
@@ -31,4 +34,20 @@ public interface DHISConnectorDAO {
 	void deleteReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
 
 	void saveReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
+
+	List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings();
+
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid);
+
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid);
+
+	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
+
+	void deleteLocationToOrgUnitMappingsByLocation(Location location);
+
+	SerializedObject getSerializedObjectByUuid(String uuid);
+
+	void saveSerializedObject(SerializedObject serializedObject);
+
+	void deleteSerializedObjectByUuid(String uuid);
 }

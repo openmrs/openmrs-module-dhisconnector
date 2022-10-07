@@ -1,5 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
+<openmrs:require privilege="Run Reports" otherwise="/login.htm"
+                 redirect="/module/dhisconnector/runReports.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector-runreports.js"/>
@@ -32,21 +34,10 @@
     </tr>
     <tr>
       <th class="runHeader"><spring:message code="dhisconnector.location"/></th>
+    </tr>
+    <tr>
       <td>
-        <table>
-          <thead>
-          <tr>
-            <th class="runHeader">OpenMRS Location</th>
-            <th class="runHeader">DHIS Organisation Unit</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr>
-            <td><span id="locationSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span></td>
-            <td><span id="orgUnitSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span></td>
-          </tr>
-          </tbody>
-        </table>
+        <div id="locationsList" class="max-content-size">Select a Mapping to choose the Locations</div>
       </td>
     </tr>
     <tr>

@@ -11,13 +11,13 @@
  */
 package org.openmrs.module.dhisconnector.api.impl;
 
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,9 +34,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
@@ -57,8 +59,8 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -81,8 +83,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
+import org.openmrs.api.db.SerializedObject;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping.ReportingPeriodType;
 import org.openmrs.module.dhisconnector.adx.AdxDataValue;
@@ -103,10 +107,16 @@ import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMappingElement;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.util.DHISConnectorUtil;
+import org.openmrs.module.reporting.cohort.definition.CohortDefinition;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetColumn;
 import org.openmrs.module.reporting.dataset.DataSetRow;
+import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.DataSetDefinition;
 import org.openmrs.module.reporting.evaluation.parameter.Mapped;
+import org.openmrs.module.reporting.indicator.CohortIndicator;
+import org.openmrs.module.reporting.indicator.dimension.CohortDefinitionDimension;
 import org.openmrs.module.reporting.report.Report;
 import org.openmrs.module.reporting.report.ReportRequest;
 import org.openmrs.module.reporting.report.ReportRequest.Priority;
@@ -118,6 +128,8 @@ import org.openmrs.module.reporting.report.renderer.RenderingMode;
 import org.openmrs.module.reporting.report.service.ReportService;
 import org.openmrs.module.reporting.web.renderers.DefaultWebRenderer;
 import org.openmrs.util.OpenmrsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.web.multipart.MultipartFile;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
@@ -130,6 +142,8 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	
 	
 	private DHISConnectorDAO dao;
+
+	private static final Logger log = LoggerFactory.getLogger(DHISConnectorServiceImpl.class);
 	
 	public static final String DHISCONNECTOR_MAPPINGS_FOLDER = File.separator + "dhisconnector" + File.separator
 	        + "mappings";
@@ -140,8 +154,12 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public static final String DHISCONNECTOR_TEMP_FOLDER = File.separator + "dhisconnector" + File.separator + "temp";
 	
 	public static final String DHISCONNECTOR_LOGS_FOLDER = File.separator + "dhisconnector" + File.separator + "logs";
-	
+
 	public static final String DHISCONNECTOR_MAPPING_FILE_SUFFIX = ".mapping.json";
+
+	public static final String METADATA_FILE_SUFFIX = ".metadata.xml";
+
+	public static final String ZIP_FILE_SUFFIX = ".zip";
 	
 	public static final String DHISCONNECTOR_ORGUNIT_RESOURCE = "/api/organisationUnits.json?paging=false&fields=:identifiable,displayName";
 	
@@ -187,7 +205,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				return FileUtils.readFileToString(backupFile);
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return null;
 			}
 		}
@@ -207,7 +225,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return;
 			}
 		}
@@ -224,7 +242,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return;
 			}
 		}
@@ -236,7 +254,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			enpointBackUp.close();
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return;
 		}
 		
@@ -286,7 +304,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception ex) {
-				ex.printStackTrace();
+				log.error("Exception", ex);
 				payload = getFromBackUp(endpoint);
 			}
 			finally {
@@ -322,7 +340,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return code != null ? code : "";
 	}
@@ -336,13 +354,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				
 			}
 			catch (JsonParseException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (JsonMappingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		return null;
@@ -360,13 +378,13 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					return optionCombo.getCategoryCombo();
 			}
 			catch (JsonParseException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (JsonMappingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		return null;
@@ -418,7 +436,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				adx.getGroups().add(group);
 			}
 			catch (DatatypeConfigurationException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			
 		}
@@ -448,7 +466,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			} else if (file.isDirectory()) {
 				for (File f : file.listFiles()) {
@@ -508,7 +526,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					FileUtils.writeStringToFile(datafile, data);
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -561,12 +579,12 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				logPayload(payload);
 			} else {
 				backUpData(endpoint, data, extension);
-				System.out.println("Failed to get entity from dhis2 server, network failure!");
+				log.error("Failed to get entity from dhis2 server, network failure!");
 			}
 		}
 		catch (Exception ex) {
 			backUpData(endpoint, data, extension);
-			ex.printStackTrace();
+			log.error("Exception", ex);
 		}
 		finally {
 			if (client != null) {
@@ -589,7 +607,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			    payload);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 	}
 	
@@ -604,7 +622,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			                                           // endpoint to the URL
 		}
 		catch (MalformedURLException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return false;
 		}
 		
@@ -629,7 +647,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception ex) {
-			ex.printStackTrace();
+			log.error("Exception", ex);
 			success = false;
 		}
 		finally {
@@ -652,7 +670,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 				return e;
 			}
 		}
@@ -670,7 +688,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			mapper.writeValue(newMappingFile, mapping);
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 			return e;
 		}
 		
@@ -708,7 +726,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		catch (Exception e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return null;
 	}
@@ -741,7 +759,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				mappings.add(mapper.readValue(f, DHISMapping.class));
 			}
 			catch (Exception e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		
@@ -780,12 +798,33 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			        .asList(mapper.readValue(node.get("organisationUnits").toString(), DHISOrganisationUnit[].class));
 		}
 		catch (Exception ex) {
-			System.out.print(ex.getMessage());
+			log.error("Exception", ex);
 		}
 		
 		return orgUnits;
 	}
-	
+
+	@Override
+	public DHISDataSet getDHISDataSetById(String id) {
+		DHISDataSet dataSet = new DHISDataSet();
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonResponse = new String();
+		JsonNode node;
+
+		jsonResponse = getDataFromDHISEndpoint(DATASETS_PATH+"/"+id);
+
+		try {
+			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			node = mapper.readTree(jsonResponse);
+			dataSet = mapper.readValue(node.toString(), DHISDataSet.class);
+		}
+		catch (Exception ex) {
+			log.error("Exception", ex);
+		}
+
+		return dataSet;
+	}
+
 	private boolean mappingsHasGUID(List<DHISMapping> mappings, String GUID) {
 		if (mappings == null)
 			return false;
@@ -798,192 +837,195 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return false;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	@Override
-	public String uploadMappings(MultipartFile mapping) {
-		String msg = "";
-		String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-		String mappingFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
-		        + File.separator;
-		String mappingName = mapping.getOriginalFilename();
-		
-		if (mappingName.endsWith(".zip")) {
-			boolean allFailed = true;
-			File tempMappings = new File(tempFolderName + mappingName);
-			
-			(new File(tempFolderName)).mkdirs();
-			try {
-				mapping.transferTo(tempMappings);
-				
-				try {
-					ZipFile zipfile = new ZipFile(tempMappings);
-					
-					for (Enumeration e = zipfile.entries(); e.hasMoreElements();) {
-						ZipEntry entry = (ZipEntry) e.nextElement();
-						
-						if (entry.isDirectory()) {
-							System.out.println(
-							    "Incorrect file (Can't be a folder instead): " + entry.getName() + " has been ignored");
-						} else if (entry.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
-							File outputFile = new File(mappingFolderName, entry.getName());
-							
-							if (outputFile.exists()) {
-								System.out.println("File: " + outputFile.getName() + " already exists and has been ignored");
-							} else {
-								BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
-								BufferedOutputStream outputStream = new BufferedOutputStream(
-								        new FileOutputStream(outputFile));
-								
-								try {
-									System.out.println("Extracting: " + entry);
-									IOUtils.copy(inputStream, outputStream);
-									allFailed = false;
-								}
-								finally {
-									outputStream.close();
-									inputStream.close();
-								}
-							}
+	public String importMappings (MultipartFile mappingBundle, boolean shouldReplaceMetadata) throws IOException {
+		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
+		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+		(new File(sourceDirectory)).mkdirs();
+		(new File(tempDirectory)).mkdirs();
+		ObjectMapper mapper = new ObjectMapper();
+		XmlMapper xmlMapper = new XmlMapper();
+
+		if (mappingBundle.getOriginalFilename().endsWith(ZIP_FILE_SUFFIX)) {
+			File tempBundle = new File(tempDirectory + mappingBundle.getOriginalFilename());
+			if (!tempBundle.exists()) {
+				tempBundle.createNewFile();
+			}
+			mappingBundle.transferTo(tempBundle);
+			ZipFile zipFile = new ZipFile(tempBundle);
+			List<File> fileList = DHISConnectorUtil.unzipMappingBundle(zipFile, tempDirectory);
+			for (File f: fileList) {
+				log.info("Processing " + f.getName());
+				if (f.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
+					DHISMapping dhisMapping = mapper.readValue(f, DHISMapping.class);
+					this.saveMapping(dhisMapping);
+				} else if (f.getName().endsWith(METADATA_FILE_SUFFIX)) {
+					SerializedObject serializedObject = xmlMapper.readValue(f, SerializedObject.class);
+					// Check if the system already has an object with the same uuid
+					SerializedObject existing = dao.getSerializedObjectByUuid(serializedObject.getUuid());
+					if (existing != null) {
+						if (shouldReplaceMetadata) {
+							log.info("Overriding the existing object with the newly imported object");
+							dao.deleteSerializedObjectByUuid(serializedObject.getUuid());
 						} else {
-							System.out.println("Incorrect file: " + entry.getName() + " has been ignored");
+							log.info(serializedObject.getName() + " already exists in the system. Ignored");
+							continue;
 						}
 					}
-					if (!allFailed) {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.groupSuccess");
-					} else {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.allFailed");
-					}
-					FileUtils.deleteDirectory(new File(tempFolderName));
+					// Set serialized object creator to the current user and date created to the current day
+					serializedObject.setCreator(Context.getAuthenticatedUser());
+					serializedObject.setChangedBy(Context.getAuthenticatedUser());
+					serializedObject.setRetiredBy(null);
+					Date currentDate = new Date();
+					serializedObject.setDateCreated(currentDate);
+					serializedObject.setDateChanged(currentDate);
+					dao.saveSerializedObject(serializedObject);
 				}
-				catch (Exception e) {
-					System.out.println("Error while extracting file:" + mapping.getName() + " ; " + e);
-				}
 			}
-			catch (FileNotFoundException e) {
-				e.printStackTrace();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
-		} else if (mappingName.endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
-			try {
-				File uploadedMapping = new File(mappingFolderName + mappingName);
-				if (uploadedMapping.exists()) {
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.exists");
-				} else {
-					mapping.transferTo(uploadedMapping);
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.singleSuccess");
-				}
-				
-			}
-			catch (IllegalStateException e) {
-				e.printStackTrace();
-			}
-			catch (IOException e) {
-				e.printStackTrace();
-			}
+			return "Successfully imported the mapping files";
 		} else {
-			msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.wrongType");
+			return "Unsupported file format";
 		}
-		
-		return msg;
 	}
-	
+
 	@Override
-	public String[] exportSelectedMappings(String[] selectedMappings) {
-		String[] cleanedSelectedMappings = cleanSelectedMappings(selectedMappings);
+	public String[] exportMappings(String[] mappings, boolean shouldIncludeMetadata) throws IOException {
+		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
+		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+		(new File(tempDirectory)).mkdirs();
+
+		String[] output = new String[2];
 		String msg = "";
-		String[] returnStr = new String[2];
-		String path = null;
-		
-		try {
-			byte[] buffer = new byte[1024];
-			String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
-			        + File.separator;
-			String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-			String suffix = ".mapping.json";
-			String zipFile = tempFolderName + "exported-mappings_" + (new Date()).getTime() + ".zip";
-			
-			(new File(tempFolderName)).mkdirs();
-			
-			FileOutputStream fout = new FileOutputStream(zipFile);
-			ZipOutputStream zout = new ZipOutputStream(fout);
-			File dir = new File(sourceDirectory);
-			
-			if (!dir.isDirectory()) {
-				System.out.println(sourceDirectory + " is not a directory");
+		String path = "";
+
+		XmlMapper xmlMapper = new XmlMapper();
+		List<File> fileList = new ArrayList<>();
+		Set<SerializedObject> metadataSet = new HashSet<>();
+
+		File mappingsDirectory = new File(sourceDirectory);
+		File[] mappingFiles = mappingsDirectory.listFiles();
+		assert mappingFiles != null;
+		for (String mapping: mappings) {
+			mapping += DHISCONNECTOR_MAPPING_FILE_SUFFIX;
+			if (DHISConnectorUtil.mappingExists(mappingFiles, mapping)) {
+				// Add mapping file into the file list
+				String mappingPath = sourceDirectory + mapping;
+				File mappingFile = new File(mappingPath);
+				fileList.add(mappingFile);
+				// Extract and store related metadata in the metadataSet
+				if (shouldIncludeMetadata) {
+					Set<SerializedObject> extractedMetadata = extractMetadataFromMapping(mappingPath);
+					metadataSet.addAll(extractedMetadata);
+				}
 			} else {
-				File[] files = dir.listFiles();
-				String mappings = "";
-				
-				if (files.length == 0) {
-					msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
-				} else {
-					for (int i = 0; i < files.length; i++) {
-						if (files[i].getName().endsWith(suffix)) {
-							FileInputStream fin = new FileInputStream(files[i]);
-							
-							mappings += files[i].getName() + "<:::>";
-							System.out.println("Compressing " + files[i].getName());
-							if (cleanedSelectedMappings.length == 0) {
-								copyToZip(buffer, zout, files, i, fin);
-							} else {
-								if (selectedMappingsIncludes(cleanedSelectedMappings, files[i].getName())) {
-									copyToZip(buffer, zout, files, i, fin);
-								}
-							}
-							msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.success");
-							zout.closeEntry();
-							fin.close();
-						}
+				log.error("The requested mapping doesn't exist: " + mapping);
+			}
+		}
+
+		// Add metadata array xml into the file list
+		for (SerializedObject metadata: metadataSet) {
+			if (metadata != null) {
+				metadata.setCreator(null);
+				metadata.setChangedBy(null);
+				File metadataFile = new File(tempDirectory + metadata.getName() + METADATA_FILE_SUFFIX);
+				FileWriter fileWriter = new FileWriter(metadataFile);
+				fileWriter.write(xmlMapper.writeValueAsString(metadata));
+				fileWriter.close();
+				fileList.add(metadataFile);
+			}
+		}
+
+		if (fileList.size() > 0) {
+			path = DHISConnectorUtil.zipMappingBundle(tempDirectory, fileList);
+			msg = "Successfully bundled the mapping with the metadata";
+		} else {
+			msg = "Error, no dhis mapping files were found";
+		}
+
+		output[0] = msg;
+		output[1] = path;
+		return output;
+	}
+
+	private Set<SerializedObject> extractMetadataFromMapping(String mappingPath) throws IOException {
+		Set<SerializedObject> metadataSet = new HashSet<>();
+		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
+		ObjectMapper mapper = new ObjectMapper();
+		File mappingFile = new File(mappingPath);
+
+		// Add period indicator report into the metadata set
+		DHISMapping mappingObject = mapper.readValue(mappingFile, DHISMapping.class);
+		SerializedObject serializedReport =
+				dao.getSerializedObjectByUuid(mappingObject.getPeriodIndicatorReportGUID());
+		metadataSet.add(serializedReport);
+
+		PeriodIndicatorReportDefinition periodIndicatorReportDefinition =
+				(PeriodIndicatorReportDefinition)
+						reportDefinitionService.getDefinitionByUuid(mappingObject.getPeriodIndicatorReportGUID());
+
+		// Add indicator data definition into the metadata set
+		CohortIndicatorDataSetDefinition cohortIndicatorDataSetDefinition =
+				periodIndicatorReportDefinition.getIndicatorDataSetDefinition();
+		if (cohortIndicatorDataSetDefinition != null) {
+			metadataSet.add(dao.getSerializedObjectByUuid(cohortIndicatorDataSetDefinition.getUuid()));
+
+			// Add dimensions of the indicator into the metadata set
+			Map<String, Mapped<CohortDefinitionDimension>> dimensions =
+					cohortIndicatorDataSetDefinition.getDimensions();
+			for (String key: dimensions.keySet()) {
+				Mapped<CohortDefinitionDimension> dimension = dimensions.get(key);
+				metadataSet.add(dao.getSerializedObjectByUuid(dimension.getUuidOfMappedOpenmrsObject()));
+				Map<String, Mapped<CohortDefinition>> cohortQueries =
+						dimension.getParameterizable().getCohortDefinitions();
+				for (String cohortKey: cohortQueries.keySet()) {
+					CohortDefinition cohortQuery = cohortQueries.get(cohortKey).getParameterizable();
+					if (cohortQuery != null) {
+						metadataSet.add(dao.getSerializedObjectByUuid(cohortQuery.getUuid()));
 					}
-					if (mappings.split("<:::>").length == 0) {
-						msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
-					}
-					path = zipFile;
 				}
 			}
-			zout.close();
-			System.out.println("Zip file has been created!");
-		}
-		catch (IOException e) {
-			e.printStackTrace();
-		}
-		returnStr[0] = msg;
-		returnStr[1] = path;
-		return returnStr;
-	}
-	
-	private String[] cleanSelectedMappings(String[] selectedMappings) {
-		int r, w;
-		final int n = r = w = selectedMappings.length;
-		while (r > 0) {
-			final String s = selectedMappings[--r];
-			if (!s.equals("null")) {
-				selectedMappings[--w] = s;
+
+			// Add columns metadata into the metadata set
+			List<CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn> columns =
+					cohortIndicatorDataSetDefinition.getColumns();
+			for (CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn column: columns) {
+				CohortIndicator indicator = column.getIndicator().getParameterizable();
+				metadataSet.add(dao.getSerializedObjectByUuid(indicator.getUuid()));
+				// Add cohort definition, denominator, and location filter metadata into the metadata set
+				Mapped<? extends CohortDefinition> indicatorCohort = indicator.getCohortDefinition();
+				if (indicatorCohort != null) {
+					metadataSet.add(dao.getSerializedObjectByUuid(indicatorCohort.getUuidOfMappedOpenmrsObject()));
+				}
+				Mapped<? extends CohortDefinition> indicatorDenominator = indicator.getDenominator();
+				if (indicatorDenominator != null) {
+					metadataSet.add(dao.getSerializedObjectByUuid(indicatorDenominator.getUuidOfMappedOpenmrsObject()));
+				}
+				Mapped<? extends CohortDefinition> indicatorLocationFilter = indicator.getLocationFilter();
+				if (indicatorLocationFilter != null) {
+					metadataSet.add(dao.getSerializedObjectByUuid(
+							indicatorLocationFilter.getUuidOfMappedOpenmrsObject()));
+				}
 			}
 		}
-		return Arrays.copyOfRange(selectedMappings, w, n);
-	}
-	
-	private void copyToZip(byte[] buffer, ZipOutputStream zout, File[] files, int i, FileInputStream fin)
-	        throws IOException {
-		zout.putNextEntry(new ZipEntry(files[i].getName()));
-		int length;
-		while ((length = fin.read(buffer)) > 0) {
-			zout.write(buffer, 0, length);
+
+		// Add cohort definition into the metadata set
+		Mapped<? extends CohortDefinition> cohortDefinition =
+				periodIndicatorReportDefinition.getBaseCohortDefinition();
+		if (cohortDefinition != null) {
+			metadataSet.add(dao.getSerializedObjectByUuid(
+					cohortDefinition.getUuidOfMappedOpenmrsObject()));
 		}
-	}
-	
-	private boolean selectedMappingsIncludes(String[] selectedMappings, String name) {
-		boolean contains = false;
-		
-		for (int i = 0; i < selectedMappings.length; i++) {
-			if ((selectedMappings[i] + DHISCONNECTOR_MAPPING_FILE_SUFFIX).equals(name)) {
-				contains = true;
+
+		// Add data set definitions into the metadata set
+		Map<String, Mapped<? extends DataSetDefinition>> dataSetDefinitions =
+				periodIndicatorReportDefinition.getDataSetDefinitions();
+		if (dataSetDefinitions != null) {
+			for (String key: dataSetDefinitions.keySet()) {
+				DataSetDefinition dataSetDefinition = dataSetDefinitions.get(key).getParameterizable();
+				metadataSet.add(dao.getSerializedObjectByUuid(dataSetDefinition.getUuid()));
 			}
 		}
-		return contains;
+		return metadataSet;
 	}
 	
 	@Override
@@ -1032,15 +1074,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		try {
 			out = new ZipOutputStream(new FileOutputStream(zipFile));
 			
-			System.out.println("Creating : " + zipFile);
+			log.info("Creating : " + zipFile);
 			addDHIS2APIDirectories(dirObj, out, sourceDirectory);
 			out.close();
 		}
 		catch (FileNotFoundException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 		return zipFile;
 	}
@@ -1059,7 +1101,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					FileInputStream in = new FileInputStream(files[i].getAbsolutePath());
 					String entryPath = (new File(sourceDirectory)).toURI().relativize(files[i].toURI()).getPath();
 					
-					System.out.println("Adding: " + entryPath);
+					log.info("Adding: " + entryPath);
 					out.putNextEntry(new ZipEntry(entryPath));
 					
 					int len;
@@ -1070,7 +1112,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					in.close();
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -1129,11 +1171,11 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 			catch (IllegalStateException e) {
 				msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
 				msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		} else {
 			msg = Context.getMessageSourceService().getMessage("dhisconnector.dhis2backup.failure");
@@ -1191,7 +1233,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			zipIn.close();
 		}
 		catch (IOException e) {
-			e.printStackTrace();
+			log.error("Exception", e);
 		}
 	}
 	
@@ -1226,7 +1268,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					}
 				}
 				catch (IOException e) {
-					e.printStackTrace();
+					log.error("Exception", e);
 				}
 			}
 		}
@@ -1249,19 +1291,19 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				return out.toString();
 			}
 			catch (UnsupportedEncodingException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (SAXException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (ParserConfigurationException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 			catch (TransformerException e) {
-				e.printStackTrace();
+				log.error("Exception" , e);
 			}
 		}
 		return xml;
@@ -1293,43 +1335,51 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public void deleteReportToDataSetMapping(Integer reportToDataSetMappingId) {
-		deleteReportToDataSetMapping(getReportToDataSetMapping(reportToDataSetMappingId));
+	public void deleteReportToDataSetMapping(String reportToDataSetMappingUuid) {
+		deleteReportToDataSetMapping(getReportToDataSetMappingByUuid(reportToDataSetMappingUuid));
 	}
 	
 	@Override
-	public String runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping) {
+	public List<String> runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping) {
+		List<String> responseString = new ArrayList<>();
 		if (reportToDatasetMapping != null) {
 			Calendar startDate = Calendar.getInstance(Context.getLocale());
 			Calendar endDate = Calendar.getInstance(Context.getLocale());
 			DHISMapping mapping = getMapping(reportToDatasetMapping.getMapping());
 			
 			if (mapping != null) {
-				Location location = reportToDatasetMapping.getLocation();
+				DHISDataSet dataSet = getDHISDataSetById(mapping.getDataSetUID());
 				String periodType = mapping.getPeriodType();
 				PeriodIndicatorReportDefinition ranReportDef = (PeriodIndicatorReportDefinition) Context
-				        .getService(ReportDefinitionService.class)
-				        .getDefinitionByUuid(mapping.getPeriodIndicatorReportGUID());
-				String orgUnitUid = reportToDatasetMapping.getOrgUnitUid();
+						.getService(ReportDefinitionService.class)
+						.getDefinitionByUuid(mapping.getPeriodIndicatorReportGUID());
 				Date lastRun = reportToDatasetMapping.getLastRun();
-				if (location != null && ranReportDef != null) {
-					String period = transformToDHISPeriod(startDate, endDate, periodType, lastRun);
-					
-					if (StringUtils.isNotBlank(period)) {
-						Report ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(),
-						    location);
-						if (ranReport != null) {
-							Object response = sendReportDataToDHIS(ranReport, mapping, period, orgUnitUid);
-							
-							if (response != null) {
-								reportToDatasetMapping.setLastRun(endDate.getTime());
-								saveReportToDataSetMapping(reportToDatasetMapping);
-								
-								return getPostSummary(response);
+				String period = transformToDHISPeriod(startDate, endDate, periodType, lastRun);
+
+				List<DHISOrganisationUnit> orgs = dataSet.getOrganisationUnits();
+				for (DHISOrganisationUnit takenOrgUnit: orgs){
+					String orgUnitUid = takenOrgUnit.getId();
+					LocationToOrgUnitMapping locationToOrgUnitMapping = Context.getService(DHISConnectorService.class)
+							.getLocationToOrgUnitMappingByOrgUnitUid(orgUnitUid);
+
+					if (locationToOrgUnitMapping != null && ranReportDef != null) {
+						Location location = locationToOrgUnitMapping.getLocation();
+						if (StringUtils.isNotBlank(period)) {
+							Report ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(), location);
+							if (ranReport != null) {
+								Object response = sendReportDataToDHIS(ranReport, mapping, period, orgUnitUid);
+
+								if (response != null) {
+									reportToDatasetMapping.setLastRun(endDate.getTime());
+									saveReportToDataSetMapping(reportToDatasetMapping);
+
+									responseString.add(location.getName() + " => " + getPostSummary(response));
+								}
 							}
 						}
 					}
 				}
+				return responseString;
 			}
 		}
 		return null;
@@ -1357,13 +1407,72 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = sdf.format(startDate.getTime());
 		} else if (ReportingPeriodType.Weekly.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.MONDAY);
+			endDate.setFirstDayOfWeek(Calendar.MONDAY);
+			lastRan.setFirstDayOfWeek(Calendar.MONDAY);
 			startDate.add(Calendar.WEEK_OF_YEAR, -1);
-			startDate.set(Calendar.DAY_OF_WEEK, 1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
 			setBasicsStartsAndEnds(startDate, endDate);
-			endDate.set(Calendar.DAY_OF_WEEK, 7);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
 			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "W" + lastRan.get(Calendar.WEEK_OF_YEAR))
 			        .equals(endDate.get(Calendar.YEAR) + "W" + endDate.get(Calendar.WEEK_OF_YEAR)))
 				period = startDate.get(Calendar.YEAR) + "W" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklySunday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.SUNDAY);
+			endDate.setFirstDayOfWeek(Calendar.SUNDAY);
+			lastRan.setFirstDayOfWeek(Calendar.SUNDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "SunW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "SunW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "SunW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklyWednesday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			endDate.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			lastRan.setFirstDayOfWeek(Calendar.WEDNESDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.TUESDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "WedW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "WedW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "WedW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklyThursday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.THURSDAY);
+			endDate.setFirstDayOfWeek(Calendar.THURSDAY);
+			lastRan.setFirstDayOfWeek(Calendar.THURSDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.THURSDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "ThuW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "ThuW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "ThuW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.WeeklySaturday.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.SATURDAY);
+			endDate.setFirstDayOfWeek(Calendar.SATURDAY);
+			lastRan.setFirstDayOfWeek(Calendar.SATURDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -1);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.SATURDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.FRIDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "SatW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "SatW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "SatW" + startDate.get(Calendar.WEEK_OF_YEAR);
+		} else if (ReportingPeriodType.BiWeekly.name().equals(periodType)) {
+			startDate.setFirstDayOfWeek(Calendar.MONDAY);
+			endDate.setFirstDayOfWeek(Calendar.MONDAY);
+			lastRan.setFirstDayOfWeek(Calendar.MONDAY);
+			startDate.add(Calendar.WEEK_OF_YEAR, -2);
+			startDate.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.add(Calendar.WEEK_OF_YEAR, 1);
+			endDate.set(Calendar.DAY_OF_WEEK, Calendar.SUNDAY);
+			if (lastRun == null || !(lastRan.get(Calendar.YEAR) + "BiW" + lastRan.get(Calendar.WEEK_OF_YEAR))
+					.equals(endDate.get(Calendar.YEAR) + "BiW" + endDate.get(Calendar.WEEK_OF_YEAR)))
+				period = startDate.get(Calendar.YEAR) + "BiW" + startDate.get(Calendar.WEEK_OF_YEAR);
 		} else if (ReportingPeriodType.Monthly.name().equals(periodType)) {
 			sdf = new SimpleDateFormat("yyyyMM");
 			startDate.add(Calendar.MONTH, -1);
@@ -1422,6 +1531,20 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			endDate.set(Calendar.DAY_OF_MONTH, 30);
 			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
 				period = startDate.get(Calendar.YEAR) + "Oct";
+		} else if (ReportingPeriodType.FinancialNov.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyy");
+			// Set the start date to year of last Financial November period
+			startDate.add(Calendar.YEAR, startDate.get(Calendar.MONTH) < Calendar.NOVEMBER ? -2 : -1);
+			// Set the start date to 1st of November
+			startDate.set(Calendar.MONTH, Calendar.NOVEMBER);
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			// Set the end date to 31st of October
+			endDate.add(Calendar.YEAR, 1);
+			endDate.set(Calendar.MONTH, Calendar.OCTOBER);
+			endDate.set(Calendar.DAY_OF_MONTH, 31);
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = startDate.get(Calendar.YEAR) + "Nov";
 		} else if (ReportingPeriodType.SixMonthly.name().equals(periodType)) {
 			// Set the start date to start date of last SixMonthly period
 			if (startDate.get(Calendar.MONTH) < Calendar.JULY) {
@@ -1475,6 +1598,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					.equals(endDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(endDate))) {
 				period = startDate.get(Calendar.YEAR) + "Q" + getQuarterNumber(startDate);
 			}
+		} else if (ReportingPeriodType.BiMonthly.name().equals(periodType)) {
+			sdf = new SimpleDateFormat("yyyyMM");
+			startDate.add(Calendar.MONTH, -2);
+			startDate.set(Calendar.DAY_OF_MONTH, 1);
+			setBasicsStartsAndEnds(startDate, endDate);
+			endDate.add(Calendar.MONTH, 1);
+			endDate.set(Calendar.DAY_OF_MONTH, endDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+			if (lastRun == null || !sdf.format(lastRun).equals(sdf.format(endDate.getTime())))
+				period = new SimpleDateFormat("yyyyMM").format(startDate.getTime()) + "B";
 		}
 		return period;
 	}
@@ -1529,7 +1661,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					s += mapper.writeValueAsString((DHISImportSummary) o);
 			}
 			catch (IOException e) {
-				e.printStackTrace();
+				log.error("Exception", e);
 			}
 		}
 		
@@ -1598,19 +1730,44 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	@Override
-	public String runAllAutomatedReportsAndPostToDHIS() {
-		String responses = "";
+	public ArrayList<List<String>> runAllAutomatedReportsAndPostToDHIS() {
+		ArrayList<List<String>> responses = new ArrayList<>();
 		List<ReportToDataSetMapping> mps = getAllReportToDataSetMappings();
 		
 		if (mps != null) {
 			for (ReportToDataSetMapping m : mps) {
-				String resp = runAndPushReportToDHIS(m);
+				List<String> resp = runAndPushReportToDHIS(m);
 				
-				if (StringUtils.isNotBlank(resp))
-					responses += " => " + resp;
+				if (!resp.isEmpty())
+					responses.add(resp);
 			}
 		}
 		
 		return responses;
+	}
+
+	@Override
+	public List<LocationToOrgUnitMapping> getAllLocationToOrgUnitMappings() {
+		return getDao().getAllLocationToOrgUnitMappings();
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid) {
+		return getDao().getLocationToOrgUnitMappingByUuid(uuid);
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid) {
+		return getDao().getLocationToOrgUnitMappingByOrgUnitUid(orgUnitUid);
+	}
+
+	@Override
+	public void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping) {
+		getDao().saveLocationToOrgUnitMapping(locationToOrgUnitMapping);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
+		getDao().deleteLocationToOrgUnitMappingsByLocation(location);
 	}
 }

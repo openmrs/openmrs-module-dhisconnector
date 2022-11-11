@@ -543,8 +543,11 @@ function slugify(text) {
 }
 
 function displayPostReponse(json) {
-    var reponseRow = jQuery('#responseRow');
-    reponseRow.append('<td><pre><code className="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td>');
+    jQuery('#loadingRow').remove();
+    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td></tr>');
+    jQuery('#tableBody').append(responseRow);
+    responseRow.hide().fadeIn("slow");
+    jQuery('#send').prop('disabled', false);
 
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
@@ -581,8 +584,11 @@ function sendDataToDHIS() {
         selectedLocations.push(availableLocations[this.id])
     })
 
-    jQuery('#responseRow').remove();
-    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th></tr>');
+    jQuery('#send').prop('disabled', true);
+	jQuery('#responseRow').remove();
+    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+    jQuery('#tableBody').append(loadingRow);
+    loadingRow.hide().fadeIn("slow");
     for (let i = 0; i < selectedLocations.length ; i++) {
         if (!(selectedLocations[i].locationId === undefined)){
             buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
@@ -602,8 +608,7 @@ function sendDataToDHIS() {
             });
         }
     }
-    jQuery('#tableBody').append(responseRow);
-    responseRow.hide().fadeIn("slow");
+
 }
 
 function createDownload(content, contentType, extension, orgUnitUid) {

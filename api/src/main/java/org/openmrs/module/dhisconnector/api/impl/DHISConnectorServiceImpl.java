@@ -927,7 +927,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (metadata != null) {
 				metadata.setCreator(null);
 				metadata.setChangedBy(null);
-				File metadataFile = new File(tempDirectory + metadata.getUuid() + METADATA_FILE_SUFFIX);
+				File metadataFile = new File(tempDirectory + metadata.getName().replaceAll("[ /]", "_") + METADATA_FILE_SUFFIX);
 				FileWriter fileWriter = new FileWriter(metadataFile);
 				fileWriter.write(xmlMapper.writeValueAsString(metadata));
 				fileWriter.close();

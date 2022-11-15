@@ -258,12 +258,22 @@ function getDefault() {
     return null;
 }
 
+	function hasWhiteSpace(s) {
+	  return s.indexOf(' ') >= 0;
+	}
+
 function saveMapping(event) {
     var mapping = {};
 
     jQuery('#nameEmptyError').remove();
     if (jQuery('#mappingName').val().length == 0) {
         jQuery('#mappingName').parent().append('<span class="error" id="nameEmptyError">Mapping name cannot be empty.</span>');
+        event.preventDefault();
+        return;
+    }
+    
+    if (hasWhiteSpace(jQuery('#mappingName').val())) {
+        jQuery('#mappingName').parent().append('<span class="error" id="nameEmptyError">Mapping name cannot accept empty space.</span>');
         event.preventDefault();
         return;
     }

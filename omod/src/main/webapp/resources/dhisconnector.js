@@ -80,6 +80,7 @@ function getCategoryComboOptions(dataElementId, requests) {
 }
 
 function getDataElementsAndCategoryComboOptions() {
+
     var def = jQuery.Deferred();
     var requests = [];
 
@@ -94,7 +95,6 @@ function getDataElementsAndCategoryComboOptions() {
         dataElementsOptionsCol.html("");
         jQuery('#categoryComboOptions').html("");
         categoryComboOptions = {};
-
 
         dataElementsOptionsCol.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Data Elements</h4></div></div></div>');
         jQuery('#categoryComboOptions').append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Category Option Combinations</h4></div></div></div><img id="categoryComboLoader" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>');
@@ -283,7 +283,8 @@ function saveMapping(event) {
     mapping.periodType = jQuery('#periodType').html();
     if(jq("#create-mapping-action").val() === "new" || jq("#create-mapping-action").val() === "copy") {
     	mapping.created = Date.now();
-    } else if(jq("#create-mapping-action").val() === "edit") {
+    }
+     else if(jq("#create-mapping-action").val() === "edit") {
     	mapping.created = getUrlParameter("created");
     	mapping.name =getUrlParameter("edit");
     }
@@ -432,7 +433,6 @@ function getUrlParameter(sParam) {
 }
 
 function loadMappingToBeDisplayed(mapping) {
-	console.log(mapping);
 	if(reportsDropDownAjax !== undefined && dataSetsDropDownAjax !== undefined) {
 		jq.when(reportsDropDownAjax, dataSetsDropDownAjax).done(function() {
 			jq("#reportSelect").val(mapping.periodIndicatorReportGUID);
@@ -446,15 +446,16 @@ function loadMappingToBeDisplayed(mapping) {
 			if(jq("#create-mapping-action").val() === "edit"){
 				jq('#mappingName').attr("disabled", true);
 			}
+
 			jq.when(displayIndicatorsAjax, displayDatasetsAjax).done(function() {
 				for (var i = 0; i < jq('.indicatorContainer').length; i++) {
 					var elementsIndex = elementsMatchIndicator(mapping.elements, i);
 					var dataElement = (elementsIndex !== -1 && mapping.elements[elementsIndex] !== undefined) ? fetchElementFromGlobalDataElements(mapping.elements[elementsIndex].dataElement) : undefined;
-
+						
 					if(dataElement !== undefined) {
 						var nom = (dataElement.name) ? dataElement.name : dataElement.dataElement.name;
 
-						jq('.row > .dataElementDragDestination.row-' + i).append('<div class="reportIndicator box" data-uid="' + dataElement.id + '" title="' + nom + '">' + renderMappingsDragablePhrase(nom) + '<span onclick="deleteMapping(this);" class="close">x</span></div>');
+						jq('.row > .dataElementDragDestination.row-' + i).append('<div class="reportIndicator box" data-uid="' + dataElement.dataElement.id + '" title="' + nom + '">' + renderMappingsDragablePhrase(nom) + '<span onclick="deleteMapping(this);" class="close">x</span></div>');
 					}
 			    }
 			});
@@ -502,7 +503,6 @@ function fetchAndLoadMappingToBeDisplayed(mappingDisplay) {
 		success: function(mapping) {
 			if(mapping !== undefined && mapping.name !== undefined && mapping.created !== undefined) {
 				selectedFetchedMappingToLoad = mapping;
-				
 				loadMappingToBeDisplayed(mapping);
 			} else {
 				window.location = "../../module/dhisconnector/createMapping.form";
@@ -576,7 +576,6 @@ jQuery(function () {//self invoked only if the whole page has completely loaded
 			var mappingDisplay = selectedMappingToEdit.name + encodeURI("[@]") + selectedMappingToEdit.created;
 
 			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
-			console.log("Loading selected mapping to be edited: " + mappingDisplay);
 			headingForCreateMapping = "Editing: " + selectedMappingToEdit.name;
 			jq("h4").html(headingForCreateMapping);
 			jq("#create-mapping-action").val("edit");
@@ -586,7 +585,6 @@ jQuery(function () {//self invoked only if the whole page has completely loaded
 			var mappingDisplay = selectedMappingToCopy.name + encodeURI("[@]") + selectedMappingToCopy.created;
 
 			jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
-			console.log("Loading selected mapping to be copied: " + mappingDisplay);
 			headingForCreateMapping = "Copying: " + selectedMappingToCopy.name;
 			jq("h4").html(headingForCreateMapping);
 			jq("#create-mapping-action").val("copy");

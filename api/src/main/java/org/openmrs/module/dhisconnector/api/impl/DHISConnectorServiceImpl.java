@@ -811,7 +811,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String jsonResponse = new String();
 		JsonNode node;
 
-		jsonResponse = getDataFromDHISEndpoint(DATASETS_PATH+"/"+id);
+		jsonResponse = getDataFromDHISEndpoint(DATASETS_PATH+id);
 
 		try {
 			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);

@@ -250,7 +250,7 @@ function getDefault() {
 
     for (var i = 0; i < comboOptions.length; i++) {
         var option = jQuery(comboOptions.get(i));
-        if (option.html() == "(default)") {
+        if (option.html() == "default") {
             return option.attr('data-uid');
         }
     }
@@ -308,10 +308,10 @@ function saveMapping(event) {
     //associate default combooption with blank category mappings
     var def = getDefault();
     var noMapping = [];
-    for (var j = 0; j < mapping.elements.length; j++) {
+   for (var j = 0; j < mapping.elements.length; j++) {
         if (mapping.elements[j].dataElement == undefined) {
             noMapping.push(j);
-        } else if (mapping.elements[j].comboOption == undefined) {
+       } else if (mapping.elements[j].comboOption == undefined) {
             mapping.elements[j].comboOption = def;
         }
     }

@@ -516,6 +516,11 @@ function buildDXFJSON(locationUid, orgUnitId) {
         dxfJSON.period = selectedPeriod.toString();
         dxfJSON.orgUnit = orgUnitId;
         var indicatorValues = reportData.dataSets[0].rows[0];
+        
+        if(reportData.dataSets.length !== 1){
+        indicatorValues = reportData.dataSets[1].rows[0];
+        }
+        
         var dataValues = [];
 
         for (var indicator in indicatorValues) {
@@ -523,7 +528,6 @@ function buildDXFJSON(locationUid, orgUnitId) {
             if (indicatorValues.hasOwnProperty(indicator)) {
 
                 var mapping = getMappingForIndicator(indicator);
-
                 if (mapping !== null) {
                     dataValue.dataElement = mapping.dataElement;
                     dataValue.categoryOptionCombo = mapping.comboOption;
@@ -590,9 +594,10 @@ function sendDataToDHIS() {
     jQuery('#tableBody').append(loadingRow);
     loadingRow.hide().fadeIn("slow");
     for (let i = 0; i < selectedLocations.length ; i++) {
+    
         if (!(selectedLocations[i].locationId === undefined)){
+        
             buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
-                console.log(dxfJSON);
                 // post to dhis
                 jQuery.ajax({
                     url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",

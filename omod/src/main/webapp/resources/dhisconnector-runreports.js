@@ -414,10 +414,8 @@ function populateOrgUnitsOfDataSet() {
             jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + data.organisationUnits[i].id, function (mappingData) {
                 mappingData.orgUnitName = orgUnitName;
                 availableLocations.push(mappingData);
-                if (mappingData.locationName === undefined) {
-                    locationMappings.append('<tr><td><input type="checkbox" disabled/><span id="">'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
-                } else {
-                    locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                if (!(mappingData.locationName === undefined)) {
+                   locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
                 }
             });
         }

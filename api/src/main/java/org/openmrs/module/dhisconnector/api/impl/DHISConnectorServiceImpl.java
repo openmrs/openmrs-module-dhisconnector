@@ -1671,6 +1671,9 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public Object sendReportDataToDHIS(Report ranReport, DHISMapping mapping, String dhisPeriod, String orgUnitUid) {
 		DHISDataValueSet dataValueSet = new DHISDataValueSet();
 		DataSet ds = ranReport.getReportData().getDataSets().get("defaultDataSet");
+		if(ranReport.getReportData().getDataSets().size() == 2) {
+			ds = ranReport.getReportData().getDataSets().get("R");
+		}
 		List<DataSetColumn> columns = ds.getMetaData().getColumns();
 		DataSetRow row = ds.iterator().next();
 		List<DHISDataValue> dataValues = new ArrayList<DHISDataValue>();

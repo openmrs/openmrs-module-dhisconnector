@@ -250,7 +250,7 @@ function getDefault() {
 
     for (var i = 0; i < comboOptions.length; i++) {
         var option = jQuery(comboOptions.get(i));
-        if (option.html() == "default") {
+        if (option.html() === "default") {
             return option.attr('data-uid');
         }
     }

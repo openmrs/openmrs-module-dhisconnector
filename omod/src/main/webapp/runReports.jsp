@@ -92,8 +92,12 @@
           </thead>
           <tbody>
           <tr>
-            <td><input type="text" name="openmrsStartDate" id="openmrs-start-date" class="periodSelector"/></td>
-            <td><input type="text" name="openmrsEndDate" id="openmrs-end-date" class="periodSelector"/></td>
+            <td><input type="text" name="openmrsStartDate" id="openmrs-start-date" class="periodSelector"/>
+                <input type="text" name="globalPropertyStartDate" hidden="true" value="${globalPropertyStartDate}" id="global-property-start-date"/>
+            </td>
+            <td><input type="text" name="openmrsEndDate" id="openmrs-end-date" class="periodSelector"/>
+                <input type="text" name="globalPropertyEndDate" hidden="true" value="${globalPropertyEndDate}" id="global-property-end-date"/>
+            </td>
           </tr>
           </tbody>
         </table>

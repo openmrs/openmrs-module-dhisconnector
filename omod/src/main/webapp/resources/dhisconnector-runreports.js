@@ -433,6 +433,15 @@ function getReportData(locationUid) {
     var locationGUID = locationUid;
     let startDate = selectedStartDate;
     let endDate = selectedEndDate;
+    
+    let globalPropertyStartDate = jQuery('#global-property-start-date').val();
+    let globalPropertyEndDate = jQuery('#global-property-end-date').val();
+    
+    if(!(globalPropertyStartDate =='' && globalPropertyEndDate =='')){
+    	startDate = new Date(startDate.getFullYear(), startDate.getMonth()-1, globalPropertyStartDate);
+    	endDate = new Date(endDate.getFullYear(), endDate.getMonth(), globalPropertyEndDate);
+    }
+
     if(document.getElementById('custom-range-option').checked){
         startDate = jQuery('#openmrs-start-date').datepicker('getDate');
         endDate = jQuery('#openmrs-end-date').datepicker('getDate');

@@ -50,11 +50,11 @@
     <tbody>
     <tr>
       <td><spring:message code="dhisconnector.openmrsStartDate"/></td>
-      <td><input type="text" name="startDate" id="openmrs-start-date" class="periodSelector" value="${startDate}"/></td>
+      <td><input type="number" name="startDate" min="1" max="31" value="${startDate}"/></td>
     </tr>
     <tr>
       <td><spring:message code="dhisconnector.openmrsEndDate"/></td>
-      <td><input type="text" name="endDate" id="openmrs-end-date" class="periodSelector" value="${endDate}"/></td>
+      <td><input type="number" name="endDate" min="1" max="31" value="${endDate}"/></td>
     </tr>
       <tr>
         <td/>

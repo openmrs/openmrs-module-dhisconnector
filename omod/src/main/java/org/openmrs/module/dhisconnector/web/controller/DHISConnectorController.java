@@ -156,6 +156,15 @@ public class DHISConnectorController {
 		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
 		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
 		
+		if(startDate == "" || endDate == "") {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.periodParametersNotFilled"),
+					WebRequest.SCOPE_SESSION);
+			
+			model.addAttribute("startDate", startDateProperty.getPropertyValue());
+			model.addAttribute("endDate", endDateProperty.getPropertyValue());
+			
+		}else {
 		startDateProperty.setPropertyValue(startDate);
 		endDateProperty.setPropertyValue(endDate);
 
@@ -163,11 +172,13 @@ public class DHISConnectorController {
 		as.saveGlobalProperty(endDateProperty);
 
 		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
-				Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
+				Context.getMessageSourceService().getMessage("dhisconnector.savePeriodSuccess"),
 				WebRequest.SCOPE_SESSION);
-
+		
 		model.addAttribute("startDate", startDate);
 		model.addAttribute("endDate", endDate);
+		}
+
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "testConfig", method = RequestMethod.POST)
@@ -194,6 +205,13 @@ public class DHISConnectorController {
 
 	@RequestMapping(value = "/module/dhisconnector/runReports", method = RequestMethod.GET)
 	public void showRunReports(ModelMap model) {
+		
+		AdministrationService as = Context.getAdministrationService();
+		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
+		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
+		
+		model.addAttribute("globalPropertyStartDate", startDateProperty.getPropertyValue());
+		model.addAttribute("globalPropertyEndDate", endDateProperty.getPropertyValue());
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 

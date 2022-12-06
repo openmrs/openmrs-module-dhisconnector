@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -67,6 +68,10 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_USER = "dhisconnector.user";
 
 	public static final String GLOBAL_PROPERTY_PASS = "dhisconnector.pass";
+	
+	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
+
+	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
 
 	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList(
 			"Daily",
@@ -141,6 +146,28 @@ public class DHISConnectorController {
 			model.addAttribute("user", userProperty.getPropertyValue());
 			model.addAttribute("pass", passProperty.getPropertyValue());
 		}
+	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "savePeriod", method = RequestMethod.POST)
+	public void savePeriod(ModelMap model, @RequestParam(value = "startDate", required = true) String startDate,
+			@RequestParam(value = "endDate", required = true) String endDate, WebRequest req) throws ParseException {
+
+		AdministrationService as = Context.getAdministrationService();
+		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
+		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
+		
+		startDateProperty.setPropertyValue(startDate);
+		endDateProperty.setPropertyValue(endDate);
+
+		as.saveGlobalProperty(startDateProperty);
+		as.saveGlobalProperty(endDateProperty);
+
+		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+				Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
+				WebRequest.SCOPE_SESSION);
+
+		model.addAttribute("startDate", startDate);
+		model.addAttribute("endDate", endDate);
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "testConfig", method = RequestMethod.POST)

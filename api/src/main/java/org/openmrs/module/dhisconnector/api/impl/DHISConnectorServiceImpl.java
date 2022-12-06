@@ -29,6 +29,7 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +63,7 @@ import javax.xml.transform.stream.StreamResult;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -176,6 +178,10 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	private String CAT_OPTION_COMBOS_PATH = "/api/categoryOptionCombos/";
 	
 	public static final String DHISCONNECTOR_DATA_FOLDER = File.separator + "dhisconnector" + File.separator + "data";
+	
+	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
+
+	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
 	
 	private Configurations configs = new Configurations();
 	
@@ -1345,6 +1351,10 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		if (reportToDatasetMapping != null) {
 			Calendar startDate = Calendar.getInstance(Context.getLocale());
 			Calendar endDate = Calendar.getInstance(Context.getLocale());
+
+			String startDatePropertyValue = Context.getAdministrationService().getGlobalProperty("dhisconnector.startDate");
+			String endDatePropertyValue = Context.getAdministrationService().getGlobalProperty("dhisconnector.endDate");
+			
 			DHISMapping mapping = getMapping(reportToDatasetMapping.getMapping());
 			
 			if (mapping != null) {
@@ -1365,7 +1375,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					if (locationToOrgUnitMapping != null && ranReportDef != null) {
 						Location location = locationToOrgUnitMapping.getLocation();
 						if (StringUtils.isNotBlank(period)) {
-							Report ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(), location);
+							
+							Report ranReport = null;
+							if(startDatePropertyValue != null && endDatePropertyValue != null) {
+								useGlobalPropertyDate(startDate,endDate,startDatePropertyValue,endDatePropertyValue);
+								ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(), location);
+							}
+							else
+								ranReport = runPeriodIndicatorReport(ranReportDef, startDate.getTime(), endDate.getTime(), location);
+							
 							if (ranReport != null) {
 								Object response = sendReportDataToDHIS(ranReport, mapping, period, orgUnitUid);
 
@@ -1772,5 +1790,11 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	@Override
 	public void deleteLocationToOrgUnitMappingsByLocation(Location location) {
 		getDao().deleteLocationToOrgUnitMappingsByLocation(location);
+	}
+	
+	private void useGlobalPropertyDate(Calendar startDate, Calendar endDate, String startDatePropertyValue, String endDatePropertyValue) {	
+		startDate.add(Calendar.MONTH, -1);
+		startDate.set(Calendar.DAY_OF_MONTH, Integer.valueOf(startDatePropertyValue));
+		endDate.set(Calendar.DAY_OF_MONTH, Integer.valueOf(endDatePropertyValue));
 	}
 }

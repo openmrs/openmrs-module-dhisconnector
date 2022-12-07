@@ -77,8 +77,8 @@
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.customRange.openmrs.choose"/></th>
-      <td><input type="checkbox" name="customRange" id="custom-range-option"/></td>
+      <th class="runHeader"></th>
+      <td><input type="checkbox" name="customRange" id="custom-range-option" hidden="true"/></td>
     </tr>
     <tr id="date-range-section" style="display:none">
       <th class="runHeader"><spring:message code="dhisconnector.customRange.openmrs.Date"/></th>

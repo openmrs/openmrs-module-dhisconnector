@@ -590,6 +590,9 @@ function downloadAdx() {
 }
 
 function sendDataToDHIS() {
+	
+	let yesSend = confirm("Do you really want to send the report to the selected period? ("+selectedPeriod.toString()+")");
+	if(yesSend){
     selectedLocations = [];
     jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
         selectedLocations.push(availableLocations[this.id])
@@ -619,6 +622,7 @@ function sendDataToDHIS() {
 
             });
         }
+    }
     }
 
 }

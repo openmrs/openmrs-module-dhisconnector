@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require anyPrivilege="View Automation,Run Automation,Manage Automation" otherwise="/login.htm"
-                 redirect="/module/dhisconnector/automation.form"/>
+                 redirect="/module/dhisconnector/automation/"/>
 
 <%@ include file="template/localHeader.jsp" %>
 

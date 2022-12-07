@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require privilege="Run Failed Data" otherwise="/login.htm"
-				 redirect="/module/dhisconnector/failedData.form"/>
+				 redirect="/module/dhisconnector/failedData/"/>
 <%@ include file="template/localHeader.jsp" %>
 
 <c:if test="${showLogin == 'true'}">

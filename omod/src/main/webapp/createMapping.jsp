@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require privilege="Manage Mappings" otherwise="/login.htm"
-                 redirect="/module/dhisconnector/createMapping.form"/>
+                 redirect="/module/dhisconnector/createMapping/"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/flexboxgrid.min.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dragula.min.css"/>

@@ -1,5 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
+<openmrs:require privilege="Manage Mappings" otherwise="/login.htm"
+                 redirect="/module/dhisconnector/dhis2BackupImport.jsp"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
 

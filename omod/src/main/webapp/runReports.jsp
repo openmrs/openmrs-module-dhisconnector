@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
-<openmrs:require privilege="Run Reports" otherwise="/login.htm"
+<openmrs:require privilege="Run DHIS 2 Reports" otherwise="/login.htm"
                  redirect="/module/dhisconnector/runReports.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>

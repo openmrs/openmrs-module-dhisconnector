@@ -6,42 +6,65 @@
 	<id>${project.parent.artifactId}</id>
 	<name>${project.parent.name}</name>
 	<version>${project.parent.version}</version>
-	<package>${project.parent.groupId}.${project.parent.artifactId}</package>
+	<package>${project.parent.groupId}.${project.parent.artifactId}
+	</package>
 	<author>Jembi</author>
 	<description>
-		This module posts aggregate data from OpenMRS to DHIS2, and gives implementers a User Interface for an 
-		easier-to-set-up OMRS to DHIS2 pipeline, that doesn’t need manual code fixes every time there’s a change 
-		to reporting indicators. Includes a Mapping Tool UI, the ability to automatically send data to DHIS2 
-		right away or on a schedule, and to map exports so that you can re-use your mapping work across sites.
+		This module posts aggregate data from OpenMRS to DHIS2,
+		and gives implementers a User Interface for an
+		easier-to-set-up OMRS to
+		DHIS2 pipeline, that doesn’t need manual code fixes every
+		time there’s
+		a change
+		to reporting indicators. Includes a Mapping Tool UI, the
+		ability to
+		automatically send data to DHIS2
+		right away or on a schedule,
+		and to map exports so that you can re-use your
+		mapping work across
+		sites.
 	</description>
-	<updateURL>https://modules.openmrs.org/modules/download/${project.parent.artifactId}/update.rdf</updateURL>
+	<updateURL>https://modules.openmrs.org/modules/download/${project.parent.artifactId}/update.rdf
+	</updateURL>
 	<require_version>1.11.5</require_version>
 	<!-- / Module Properties -->
 
-	
+
 	<!-- Required Modules -->
 	<require_modules>
-		<require_module version="${reportingRestVersion}">org.openmrs.module.reportingrest</require_module>
-		<require_module version="${reportingVersion}">org.openmrs.module.reporting</require_module>
-		<require_module version="${calculationVersion}">org.openmrs.calculation</require_module>
-		<require_module version="${webservicesRestVersion}">org.openmrs.module.webservices.rest</require_module>
-		<require_module version="${serializationXstreamVersion}">org.openmrs.module.serialization.xstream</require_module>
+		<require_module version="${reportingRestVersion}">org.openmrs.module.reportingrest
+		</require_module>
+		<require_module version="${reportingVersion}">org.openmrs.module.reporting
+		</require_module>
+		<require_module version="${calculationVersion}">org.openmrs.calculation
+		</require_module>
+		<require_module version="${webservicesRestVersion}">org.openmrs.module.webservices.rest
+		</require_module>
+		<require_module
+			version="${serializationXstreamVersion}">org.openmrs.module.serialization.xstream</require_module>
 	</require_modules>
 	<!-- / Required Modules -->
-	
+
 	<!-- Module Activator -->
-	<activator>${project.parent.groupId}.${project.parent.artifactId}.DHISConnectorActivator</activator>
-	
-	
+	<activator>${project.parent.groupId}.${project.parent.artifactId}.DHISConnectorActivator
+	</activator>
+
+
 	<!-- Adds link to admin page -->
 	<extension>
 		<point>org.openmrs.admin.list</point>
-		<class>${project.parent.groupId}.${project.parent.artifactId}.extension.html.AdminList</class>
+		<class>${project.parent.groupId}.${project.parent.artifactId}.extension.html.AdminList
+		</class>
 	</extension>
-	
+	<extension>
+		<point>org.openmrs.gutter.tools</point>
+		<class>org.openmrs.module.dhisconnector.extension.html.GutterListExt
+		</class>
+	</extension>
+
 	<!-- Maps hibernate file's, if present -->
 	<mappingFiles>
-				
+
 	</mappingFiles>
 
 	<!-- Global properties -->
@@ -70,21 +93,24 @@
 		<property>dhisconnector.config.dxfToAdxSwitch</property>
 		<defaultValue>false</defaultValue>
 		<description>
-			DHIS Connector: true/false whether or not to use the DXF to ADX conversion before sending data to DHIS2
+			DHIS Connector: true/false whether or not to use the DXF
+			to ADX conversion before sending data to DHIS2
 		</description>
 	</globalProperty>
 	<globalProperty>
 		<property>dhisconnector.config.dataAndLogsStoragePeriod</property>
 		<defaultValue>6</defaultValue>
 		<description>
-			DHIS Connector: Number of months backwards from current date for which to store both stored logs and data
+			DHIS Connector: Number of months backwards from current
+			date for which to store both stored logs and data
 		</description>
 	</globalProperty>
 	<globalProperty>
 		<property>dhisconnector.config.enableAutoRun</property>
 		<defaultValue>false</defaultValue>
 		<description>
-			Set to true to enable this module to run configured openmrs reports and post data into DHIS2 automatically
+			Set to true to enable this module to run configured
+			openmrs reports and post data into DHIS2 automatically
 		</description>
 	</globalProperty>
 
@@ -119,6 +145,11 @@
 	<privilege>
 		<name>Run Reports</name>
 		<description>Base privilege for running the reports</description>
+	</privilege>
+	<privilege>
+		<name>Run DHIS 2 Reports</name>
+		<description>This gives access to send Reports from OpenMRS to DHIS 2 
+		</description>
 	</privilege>
 	<privilege>
 		<name>Run Failed Data</name>

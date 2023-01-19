@@ -21,6 +21,8 @@ import org.openmrs.module.dhisconnector.web.controller.DHISConnectorRestControll
 import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition;
 import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn;
 import org.openmrs.module.reporting.dataset.definition.DataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.SimpleIndicatorDataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.SimpleIndicatorDataSetDefinition.SimpleIndicatorColumn;
 import org.openmrs.module.reporting.evaluation.parameter.Mapped;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.module.reporting.report.definition.ReportDefinition;
@@ -123,6 +125,14 @@ public class PeriodIndicatorReportsResource extends DataDelegatingCrudResource i
 
 					for (CohortIndicatorAndDimensionColumn cd : cols2) {
 						simpleColumns.add(cd.getName(), cd.getDimensionOptions());
+					}
+				}else if (mapped.getParameterizable() instanceof SimpleIndicatorDataSetDefinition) {
+
+					List<SimpleIndicatorColumn> cols2 = ((SimpleIndicatorDataSetDefinition) mapped
+							.getParameterizable()).getColumns();
+
+					for (SimpleIndicatorColumn cd : cols2) {
+						simpleColumns.add(cd.getName(), null);
 					}
 				}
 			}

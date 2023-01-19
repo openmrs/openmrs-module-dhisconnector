@@ -522,15 +522,14 @@ function buildDXFJSON(locationUid, orgUnitId) {
         dxfJSON.dataSet = selectedMapping.dataSetUID
         dxfJSON.period = selectedPeriod.toString();
         dxfJSON.orgUnit = orgUnitId;
-        var indicatorValues = reportData.dataSets[0].rows[0];
-        
-        if(reportData.dataSets.length !== 1){
-        indicatorValues = reportData.dataSets[1].rows[0];
-        }
         
         var dataValues = [];
-
-        for (var indicator in indicatorValues) {
+        
+        for(let i =0; i < reportData.dataSets.length; i++){
+            
+            var indicatorValues = reportData.dataSets[i].rows[0];
+            
+            for (var indicator in indicatorValues) {
             var dataValue = {};
             if (indicatorValues.hasOwnProperty(indicator)) {
 
@@ -543,6 +542,8 @@ function buildDXFJSON(locationUid, orgUnitId) {
                     dataValues.push(dataValue);
                 }
             }
+        }
+        
         }
 
         dxfJSON.dataValues = dataValues;

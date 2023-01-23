@@ -37,11 +37,11 @@
     </tr>
     <tr>
       <td>
-        <div id="locationsList" class="max-content-size">Select a Mapping to choose the Locations</div>
+        <div id="locationsList" class="max-content-size"><spring:message code="dhisconnector.run.reports.choose.location"/></div>
       </td>
     </tr>
     <tr>
-      <th class="runHeader">Period</th>
+      <th class="runHeader"><spring:message code="dhisconnector.run.reports.period"/></th>
       <td>
         <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>

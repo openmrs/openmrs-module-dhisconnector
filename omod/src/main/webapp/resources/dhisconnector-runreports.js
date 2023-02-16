@@ -556,10 +556,22 @@ function slugify(text) {
 
 function displayPostReponse(json) {
     jQuery('#loadingRow').remove();
-    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td></tr>');
+    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white;">Relatório enviado com Sucesso para DHIS</th></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Novos </td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.imported, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Actualizados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.updated, null, 2) + '</td></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos ignorados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.ignored, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Apagados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.deleted, null, 2) + '</td></tr></table></code></pre></td></tr>');
     jQuery('#tableBody').append(responseRow);
     responseRow.hide().fadeIn("slow");
     jQuery('#send').prop('disabled', false);
+
+    jQuery('pre code').each(function (i, block) {
+        hljs.highlightBlock(block);
+    });
+}
+
+function displayPostReponseError(xhr, status, error) {
+	jQuery('#loadingRow').remove();
+	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: red; color: white;">Erro ao enviar relatório '+ JSON.stringify(status, null, 2) +'</th></tr></table></code></pre></td></tr>');
+    jQuery('#tableBody').append(responseRow);
+    responseRow.hide().fadeIn("slow");	
+	jQuery('#send').prop('disabled', false);
 
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
@@ -618,7 +630,10 @@ function sendDataToDHIS() {
                     dataType: "json",
                     success: function (data) {
                         displayPostReponse(data);
-                    }
+                    },
+                    error: function (xhr, status, error) {
+						displayPostReponseError(xhr, status, error);					
+					}
                 });
 
             });

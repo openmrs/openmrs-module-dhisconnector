@@ -13,19 +13,23 @@ package org.openmrs.module.dhisconnector;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.openmrs.module.BaseModuleActivator;
 import org.openmrs.module.ModuleActivator;
 
 /**
- * This class contains the logic that is run every time this module is either started or stopped.
+ * This class contains the logic that is run every time this module is either
+ * started or stopped.
  */
-public class DHISConnectorActivator implements ModuleActivator {
+public class DHISConnectorActivator extends BaseModuleActivator {
 
 	protected Log log = LogFactory.getLog(getClass());
 
 	/**
 	 * @see ModuleActivator#willRefreshContext()
 	 */
-	public void willRefreshContext() { log.info("Refreshing DHIS Connector Module"); }
+	public void willRefreshContext() {
+		log.info("Refreshing DHIS Connector Module");
+	}
 
 	/**
 	 * @see ModuleActivator#contextRefreshed()

@@ -256,7 +256,8 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						.exportMappings(selectedMappings, shouldIncludeMetadata);
+						//.exportMappings(selectedMappings, shouldIncludeMetadata);
+						.exportSelectedMappings(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
 				String fullPath = exported[1];// contains path to
@@ -382,9 +383,10 @@ public class DHISConnectorController {
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
+			//String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
+			String msg = Context.getService(DHISConnectorService.class).uploadMappings(mapping);
 
-			if (msg.startsWith("Successfully")) {
+			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
 				successMessage = msg;
 				failedMessage = "";
 			} else {

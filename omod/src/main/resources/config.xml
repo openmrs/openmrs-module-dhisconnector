@@ -26,7 +26,7 @@
 	</description>
 	<updateURL>https://modules.openmrs.org/modules/download/${project.parent.artifactId}/update.rdf
 	</updateURL>
-	<require_version>2.3.3</require_version>
+	<require_version>1.11.5</require_version>
 	<!-- / Module Properties -->
 
 
@@ -44,10 +44,6 @@
 			version="${serializationXstreamVersion}">org.openmrs.module.serialization.xstream</require_module>
 	</require_modules>
 	<!-- / Required Modules -->
-
-	<aware_of_modules>
-		<aware_of_module>org.openmrs.module.legacyui</aware_of_module>
-	</aware_of_modules>
 
 	<!-- Module Activator -->
 	<activator>${project.parent.groupId}.${project.parent.artifactId}.DHISConnectorActivator
@@ -152,7 +148,7 @@
 	</privilege>
 	<privilege>
 		<name>Run DHIS 2 Reports</name>
-		<description>This gives access to send Reports from OpenMRS to DHIS 2
+		<description>This gives access to send Reports from OpenMRS to DHIS 2 
 		</description>
 	</privilege>
 	<privilege>

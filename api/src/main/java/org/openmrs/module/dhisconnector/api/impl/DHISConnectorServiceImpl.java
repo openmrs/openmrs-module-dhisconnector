@@ -11,13 +11,13 @@
  */
 package org.openmrs.module.dhisconnector.api.impl;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -29,12 +29,12 @@ import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
@@ -60,10 +60,9 @@ import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -109,7 +108,6 @@ import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMappingElement;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
-import org.openmrs.module.dhisconnector.api.util.DHISConnectorUtil;
 import org.openmrs.module.reporting.cohort.definition.CohortDefinition;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetColumn;
@@ -843,114 +841,199 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return false;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Override
-	public String importMappings (MultipartFile mappingBundle, boolean shouldReplaceMetadata) throws IOException {
-		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
-		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-		(new File(sourceDirectory)).mkdirs();
-		(new File(tempDirectory)).mkdirs();
-		ObjectMapper mapper = new ObjectMapper();
-		XmlMapper xmlMapper = new XmlMapper();
+	public String uploadMappings(MultipartFile mapping) {
+		String msg = "";
+		String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+		String mappingFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
+		        + File.separator;
+		String mappingName = mapping.getOriginalFilename();
 
-		if (mappingBundle.getOriginalFilename().endsWith(ZIP_FILE_SUFFIX)) {
-			File tempBundle = new File(tempDirectory + mappingBundle.getOriginalFilename());
-			if (!tempBundle.exists()) {
-				tempBundle.createNewFile();
-			}
-			mappingBundle.transferTo(tempBundle);
-			ZipFile zipFile = new ZipFile(tempBundle);
-			List<File> fileList = DHISConnectorUtil.unzipMappingBundle(zipFile, tempDirectory);
-			for (File f: fileList) {
-				log.info("Processing " + f.getName());
-				if (f.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
-					DHISMapping dhisMapping = mapper.readValue(f, DHISMapping.class);
-					this.saveMapping(dhisMapping);
-				} else if (f.getName().endsWith(METADATA_FILE_SUFFIX)) {
-					SerializedObject serializedObject = xmlMapper.readValue(f, SerializedObject.class);
-					// Check if the system already has an object with the same uuid
-					SerializedObject existing = dao.getSerializedObjectByUuid(serializedObject.getUuid());
-					if (existing != null) {
-						if (shouldReplaceMetadata) {
-							log.info("Overriding the existing object with the newly imported object");
-							dao.deleteSerializedObjectByUuid(serializedObject.getUuid());
+		File mappingsFolder = new File(mappingFolderName);
+		mappingsFolder.mkdirs();
+
+		if (!mappingsFolder.isDirectory()) {
+			return Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.directoryNotCreated");
+		}
+
+		if (mappingName.endsWith(".zip")) {
+			boolean allFailed = true;
+			File tempMappings = new File(tempFolderName + mappingName);
+			
+			(new File(tempFolderName)).mkdirs();
+			try {
+				mapping.transferTo(tempMappings);
+				
+				try {
+					ZipFile zipfile = new ZipFile(tempMappings);
+					
+					for (Enumeration e = zipfile.entries(); e.hasMoreElements();) {
+						ZipEntry entry = (ZipEntry) e.nextElement();
+						
+						if (entry.isDirectory()) {
+							System.out.println(
+							    "Incorrect file (Can't be a folder instead): " + entry.getName() + " has been ignored");
+						} else if (entry.getName().endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
+							File outputFile = new File(mappingFolderName, entry.getName());
+							
+							if (outputFile.exists()) {
+								System.out.println("File: " + outputFile.getName() + " already exists and has been ignored");
+							} else {
+								BufferedInputStream inputStream = new BufferedInputStream(zipfile.getInputStream(entry));
+								BufferedOutputStream outputStream = new BufferedOutputStream(
+								        new FileOutputStream(outputFile));
+								
+								try {
+									System.out.println("Extracting: " + entry);
+									IOUtils.copy(inputStream, outputStream);
+									allFailed = false;
+								}
+								finally {
+									outputStream.close();
+									inputStream.close();
+								}
+							}
 						} else {
-							log.info(serializedObject.getName() + " already exists in the system. Ignored");
-							continue;
+							System.out.println("Incorrect file: " + entry.getName() + " has been ignored");
 						}
 					}
-					// Set serialized object creator to the current user and date created to the current day
-					serializedObject.setCreator(Context.getAuthenticatedUser());
-					serializedObject.setChangedBy(Context.getAuthenticatedUser());
-					serializedObject.setRetiredBy(null);
-					Date currentDate = new Date();
-					serializedObject.setDateCreated(currentDate);
-					serializedObject.setDateChanged(currentDate);
-					dao.saveSerializedObject(serializedObject);
+					if (!allFailed) {
+						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.groupSuccess");
+					} else {
+						msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.allFailed");
+					}
+					FileUtils.deleteDirectory(new File(tempFolderName));
+				}
+				catch (Exception e) {
+					System.out.println("Error while extracting file:" + mapping.getName() + " ; " + e);
 				}
 			}
-			return "Successfully imported the mapping files";
+			catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else if (mappingName.endsWith(DHISCONNECTOR_MAPPING_FILE_SUFFIX)) {
+			try {
+				File uploadedMapping = new File(mappingFolderName + mappingName);
+				if (uploadedMapping.exists()) {
+					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.exists");
+				} else {
+					mapping.transferTo(uploadedMapping);
+					msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.singleSuccess");
+				}
+				
+			}
+			catch (IllegalStateException e) {
+				e.printStackTrace();
+			}
+			catch (IOException e) {
+				e.printStackTrace();
+			}
 		} else {
-			return "Unsupported file format";
+			msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.wrongType");
+		}
+		
+		return msg;
+	}
+	
+	@Override
+	public String[] exportSelectedMappings(String[] selectedMappings) {
+		String[] cleanedSelectedMappings = cleanSelectedMappings(selectedMappings);
+		String msg = "";
+		String[] returnStr = new String[2];
+		String path = null;
+		
+		try {
+			byte[] buffer = new byte[1024];
+			String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
+			        + File.separator;
+			String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
+			String suffix = ".mapping.json";
+			String zipFile = tempFolderName + "exported-mappings_" + (new Date()).getTime() + ".zip";
+			
+			(new File(tempFolderName)).mkdirs();
+			
+			FileOutputStream fout = new FileOutputStream(zipFile);
+			ZipOutputStream zout = new ZipOutputStream(fout);
+			File dir = new File(sourceDirectory);
+			
+			if (!dir.isDirectory()) {
+				System.out.println(sourceDirectory + " is not a directory");
+			} else {
+				File[] files = dir.listFiles();
+				String mappings = "";
+				
+				if (files.length == 0) {
+					msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
+				} else {
+					for (int i = 0; i < files.length; i++) {
+						if (files[i].getName().endsWith(suffix)) {
+							FileInputStream fin = new FileInputStream(files[i]);
+							
+							mappings += files[i].getName() + "<:::>";
+							System.out.println("Compressing " + files[i].getName());
+							if (cleanedSelectedMappings.length == 0) {
+								copyToZip(buffer, zout, files, i, fin);
+							} else {
+								if (selectedMappingsIncludes(cleanedSelectedMappings, files[i].getName())) {
+									copyToZip(buffer, zout, files, i, fin);
+								}
+							}
+							msg = Context.getMessageSourceService().getMessage("Successfully bundled the mapping with the metadata");
+							zout.closeEntry();
+							fin.close();
+						}
+					}
+					if (mappings.split("<:::>").length == 0) {
+						msg = Context.getMessageSourceService().getMessage("dhisconnector.exportMapping.noMappingsFound");
+					}
+					path = zipFile;
+				}
+			}
+			zout.close();
+			System.out.println("Zip file has been created!");
+		}
+		catch (IOException e) {
+			e.printStackTrace();
+		}
+		returnStr[0] = msg;
+		returnStr[1] = path;
+		return returnStr;
+	}
+	
+	private String[] cleanSelectedMappings(String[] selectedMappings) {
+		int r, w;
+		final int n = r = w = selectedMappings.length;
+		while (r > 0) {
+			final String s = selectedMappings[--r];
+			if (!s.equals("null")) {
+				selectedMappings[--w] = s;
+			}
+		}
+		return Arrays.copyOfRange(selectedMappings, w, n);
+	}
+	
+	private void copyToZip(byte[] buffer, ZipOutputStream zout, File[] files, int i, FileInputStream fin)
+	        throws IOException {
+		zout.putNextEntry(new ZipEntry(files[i].getName()));
+		int length;
+		while ((length = fin.read(buffer)) > 0) {
+			zout.write(buffer, 0, length);
 		}
 	}
-
-	@Override
-	public String[] exportMappings(String[] mappings, boolean shouldIncludeMetadata) throws IOException {
-		String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER + File.separator;
-		String tempDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER + File.separator;
-		(new File(tempDirectory)).mkdirs();
-
-		String[] output = new String[2];
-		String msg = "";
-		String path = "";
-
-		XmlMapper xmlMapper = new XmlMapper();
-		List<File> fileList = new ArrayList<>();
-		Set<SerializedObject> metadataSet = new HashSet<>();
-
-		File mappingsDirectory = new File(sourceDirectory);
-		File[] mappingFiles = mappingsDirectory.listFiles();
-		assert mappingFiles != null;
-		for (String mapping: mappings) {
-			mapping += DHISCONNECTOR_MAPPING_FILE_SUFFIX;
-			if (DHISConnectorUtil.mappingExists(mappingFiles, mapping)) {
-				// Add mapping file into the file list
-				String mappingPath = sourceDirectory + mapping;
-				File mappingFile = new File(mappingPath);
-				fileList.add(mappingFile);
-				// Extract and store related metadata in the metadataSet
-				if (shouldIncludeMetadata) {
-					Set<SerializedObject> extractedMetadata = extractMetadataFromMapping(mappingPath);
-					metadataSet.addAll(extractedMetadata);
-				}
-			} else {
-				log.error("The requested mapping doesn't exist: " + mapping);
+	
+	private boolean selectedMappingsIncludes(String[] selectedMappings, String name) {
+		boolean contains = false;
+		
+		for (int i = 0; i < selectedMappings.length; i++) {
+			if ((selectedMappings[i] + DHISCONNECTOR_MAPPING_FILE_SUFFIX).equals(name)) {
+				contains = true;
 			}
 		}
-
-		// Add metadata array xml into the file list
-		for (SerializedObject metadata: metadataSet) {
-			if (metadata != null) {
-				metadata.setCreator(null);
-				metadata.setChangedBy(null);
-				File metadataFile = new File(tempDirectory + metadata.getName().replaceAll("[ /]", "_") + METADATA_FILE_SUFFIX);
-				FileWriter fileWriter = new FileWriter(metadataFile);
-				fileWriter.write(xmlMapper.writeValueAsString(metadata));
-				fileWriter.close();
-				fileList.add(metadataFile);
-			}
-		}
-
-		if (fileList.size() > 0) {
-			path = DHISConnectorUtil.zipMappingBundle(tempDirectory, fileList);
-			msg = "Successfully bundled the mapping with the metadata";
-		} else {
-			msg = "Error, no dhis mapping files were found";
-		}
-
-		output[0] = msg;
-		output[1] = path;
-		return output;
+		return contains;
 	}
 
 	private Set<SerializedObject> extractMetadataFromMapping(String mappingPath) throws IOException {

@@ -21,12 +21,13 @@ let selectedStartDate = null;
 let selectedEndDate = null;
 let availableLocations = null;
 let selectedLocations = null;
+let selectedReportName = null;
 
 function populateReportsDropdown() {
     // fetch reports
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/periodindicatorreports?q=hasMapping", function (data) {
 
-        var reportSelect = jQuery('<select id="reportSelect"></select>');
+        var reportSelect = jQuery('<select id="reportSelect" name="reportSelect"></select>');
         reportSelect.append('<option value="">Select</option>');
 
         for (var i = 0; i < data.results.length; i++) {
@@ -518,10 +519,14 @@ function buildDXFJSON(locationUid, orgUnitId) {
     dxfJSON = null;
 
     return getReportData(locationUid).then(function () {
+	    selectedReportName = jQuery('#reportSelect option:selected').text();
         dxfJSON = {};
         dxfJSON.dataSet = selectedMapping.dataSetUID
         dxfJSON.period = selectedPeriod.toString();
         dxfJSON.orgUnit = orgUnitId;
+        dxfJSON.reportName = selectedReportName;
+        
+        selectedPeriod = selectedPeriod.toString();
         
         var dataValues = [];
         
@@ -555,6 +560,8 @@ function slugify(text) {
 }
 
 function displayPostReponse(json) {
+	console.log("Objeto devolvido: "+json);
+	if(json !== null && !(json == '')){
     jQuery('#loadingRow').remove();
     var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white;">Relatório enviado com Sucesso para DHIS</th></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Novos </td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.imported, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Actualizados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.updated, null, 2) + '</td></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos ignorados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.ignored, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Apagados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.deleted, null, 2) + '</td></tr></table></code></pre></td></tr>');
     jQuery('#tableBody').append(responseRow);
@@ -564,15 +571,18 @@ function displayPostReponse(json) {
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });
+    }else{
+	displayPostReponseError();
+}
 }
 
 function displayPostReponseError(xhr, status, error) {
 	jQuery('#loadingRow').remove();
-	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: red; color: white;">Erro ao enviar relatório '+ JSON.stringify(status, null, 2) +'</th></tr></table></code></pre></td></tr>');
+	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #cb2e0c; color: white;">Erro ao enviar relatório, use o botão Reenviar Dados, para voltar a enviar!</th></tr></table></code></pre></td></tr>');
     jQuery('#tableBody').append(responseRow);
     responseRow.hide().fadeIn("slow");	
 	jQuery('#send').prop('disabled', false);
-
+    jQuery('#reSend').prop('disabled', false);
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });
@@ -637,11 +647,85 @@ function sendDataToDHIS() {
                 });
 
             });
+            
         }
     }
     }
 
 }
+
+function reSendReportDataToDHIS(){
+		jQuery('#responseRow').remove();
+	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+ 	    jQuery('#tableBody').append(loadingRow);
+  	    loadingRow.hide().fadeIn("slow");
+	    selectedReportName = jQuery('#reportSelect option:selected').text();
+        jQuery.ajax({
+            type: "POST",
+            url: "resendReportData.form",
+            data: JSON.stringify({"selectedReportName": selectedReportName, "selectedPeriod": selectedPeriod}),
+            contentType: "application/json;charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+				    displayPostReponse(data);
+            }, 
+            error: function (xhr, status, error) {
+				    displayPostReponseError(xhr, status, error);					
+		    }
+        });
+}
+
+function reSendFailedDataToDHIS(){
+	var rowId = event.target.parentNode.parentNode.id;
+    
+    var data = document.getElementById(rowId).querySelectorAll(".row-data");
+    
+    var reportName = data[0].innerHTML;
+    
+    	jQuery('#responseRow').remove();
+ 	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img width="50px;" height="50px;" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+        jQuery('#tableBody').append(loadingRow);
+        loadingRow.hide().fadeIn("slow");
+    
+        jQuery.ajax({
+            type: "POST",
+            url: "resendFailedReportData.form",
+            data: JSON.stringify({"selectedReportName": reportName }),
+            contentType: "application/json;charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+		            getFailedReportDataRender();  
+					displayPostReponse(data);  
+            }, 
+            error: function (xhr, status, error) {
+		            getFailedReportDataRender();
+				    displayPostReponseError(xhr, status, error);	
+		    }
+        });
+}
+
+function getFailedReportDataRender(){
+        jQuery.ajax({
+            type: "GET",
+            url: "failedReportDataRender.form",
+            data: "",
+            datatype: "json",
+            success: function (data) {
+	        for (let i = 0; i < data.length ; i++) {
+			displayFailedPostData(data[i],i);
+	}
+            }
+        });
+}
+
+function displayFailedPostData(reportName, rowId) {
+	jQuery("#"+rowId).remove();
+    jQuery('#loadingRow').remove();
+    var responseRow = jQuery('<tr style="background-color: #f2f2f2;" id="'+rowId+'"><td style="border: 1px solid #ddd; padding: 8px; width: 70%;" class="row-data">'+reportName+'</td><td style="border: 1px solid #ddd; padding: 8px; width: 20%;"><input id="reSend" name="reSend" type="button" onclick="reSendFailedDataToDHIS();" value="Reenviar Dados"/></td></tr>');
+    jQuery('#tableBody').append(responseRow);
+    responseRow.hide().fadeIn("slow");
+}
+
 
 function createDownload(content, contentType, extension, orgUnitUid) {
     var dl = document.createElement('a');

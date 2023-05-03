@@ -45,7 +45,7 @@
       <td>
         <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>
-        <input type="month" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
+        <input type="month" name="monthlyPicker" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
                style="display: none"/>
         <input type="number" id="sixMonthlyPicker" min="1970" onchange="handleSixMonthlyPeriodChange()"
                style="display: none"/>
@@ -105,7 +105,9 @@
     </tr>
     <tr>
       <th class="runHeader"><spring:message code="dhisconnector.action"/></th>
-      <td><input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/> <input
+      <td><input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/>
+            <input id="reSend" name="reSend" type="button" onclick="reSendReportDataToDHIS()" disabled="true" value="<spring:message code="dhisconnector.rePost" />"/>
+       <input
               name="submit" type="button" onclick="generateDXFDownload()"
               value="<spring:message code="dhisconnector.dxf.download" />" />
         <input name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" /></td>

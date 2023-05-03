@@ -22,6 +22,9 @@ public class DHISImportSummaryImportOptions {
 	@JsonProperty("mergeMode")
 	private String mergeMode;
 	
+	@JsonProperty("reportMode")
+	private String reportMode;
+	
 	@JsonProperty("skipExistingCheck")
 	private boolean skipExistingCheck;
 	
@@ -30,6 +33,12 @@ public class DHISImportSummaryImportOptions {
 	
 	@JsonProperty("skipNotifications")
 	private boolean skipNotifications;
+	
+	@JsonProperty("skipAudit")
+	private boolean skipAudit;
+	
+	@JsonProperty("strictDataElements")
+	private boolean strictDataElements;
 	
 	@JsonProperty("datasetAllowsPeriods")
 	private boolean datasetAllowsPeriods;
@@ -51,6 +60,27 @@ public class DHISImportSummaryImportOptions {
 	
 	@JsonProperty("requireAttributeOptionCombo")
 	private boolean requireAttributeOptionCombo;
+	
+	@JsonProperty("skipPatternValidation")
+	private boolean skipPatternValidation;
+	
+	@JsonProperty("ignoreEmptyCollection")
+	private boolean ignoreEmptyCollection;
+	
+	@JsonProperty("force")
+	private boolean force;
+	
+	@JsonProperty("firstRowIsHeader")
+	private boolean firstRowIsHeader;
+	
+	@JsonProperty("skipLastUpdated")
+	private boolean skipLastUpdated;
+	
+	@JsonProperty("mergeDataValues")
+	private boolean mergeDataValues;
+	
+	@JsonProperty("skipCache")
+	private boolean skipCache;
 	
 	@JsonProperty("idSchemes")
 	private JSONObject idSchemes;
@@ -87,6 +117,14 @@ public class DHISImportSummaryImportOptions {
 		this.mergeMode = mergeMode;
 	}
 	
+	public String getReportMode() {
+		return reportMode;
+	}
+
+	public void setReportMode(String reportMode) {
+		this.reportMode = reportMode;
+	}
+
 	public boolean isSkipExistingCheck() {
 		return skipExistingCheck;
 	}
@@ -111,6 +149,14 @@ public class DHISImportSummaryImportOptions {
 		this.skipNotifications = skipNotifications;
 	}
 	
+	public boolean isSkipAudit() {
+		return skipAudit;
+	}
+
+	public void setSkipAudit(boolean skipAudit) {
+		this.skipAudit = skipAudit;
+	}
+
 	public boolean isDatasetAllowsPeriods() {
 		return datasetAllowsPeriods;
 	}
@@ -167,6 +213,70 @@ public class DHISImportSummaryImportOptions {
 		this.requireAttributeOptionCombo = requireAttributeOptionCombo;
 	}
 	
+	public boolean isStrictDataElements() {
+		return strictDataElements;
+	}
+
+	public void setStrictDataElements(boolean strictDataElements) {
+		this.strictDataElements = strictDataElements;
+	}
+
+	public boolean isSkipPatternValidation() {
+		return skipPatternValidation;
+	}
+
+	public void setSkipPatternValidation(boolean skipPatternValidation) {
+		this.skipPatternValidation = skipPatternValidation;
+	}
+
+	public boolean isIgnoreEmptyCollection() {
+		return ignoreEmptyCollection;
+	}
+
+	public void setIgnoreEmptyCollection(boolean ignoreEmptyCollection) {
+		this.ignoreEmptyCollection = ignoreEmptyCollection;
+	}
+
+	public boolean isForce() {
+		return force;
+	}
+
+	public void setForce(boolean force) {
+		this.force = force;
+	}
+
+	public boolean isFirstRowIsHeader() {
+		return firstRowIsHeader;
+	}
+
+	public void setFirstRowIsHeader(boolean firstRowIsHeader) {
+		this.firstRowIsHeader = firstRowIsHeader;
+	}
+
+	public boolean isSkipLastUpdated() {
+		return skipLastUpdated;
+	}
+
+	public void setSkipLastUpdated(boolean skipLastUpdated) {
+		this.skipLastUpdated = skipLastUpdated;
+	}
+
+	public boolean isMergeDataValues() {
+		return mergeDataValues;
+	}
+
+	public void setMergeDataValues(boolean mergeDataValues) {
+		this.mergeDataValues = mergeDataValues;
+	}
+
+	public boolean isSkipCache() {
+		return skipCache;
+	}
+
+	public void setSkipCache(boolean skipCache) {
+		this.skipCache = skipCache;
+	}
+
 	public JSONObject getIdSchemes() {
 		return idSchemes;
 	}

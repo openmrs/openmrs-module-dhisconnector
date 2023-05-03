@@ -11,7 +11,6 @@
  */
 package org.openmrs.module.dhisconnector.api;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -127,5 +126,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);
+	
+	Object reSendReportToDHIS(String reportName);
+	
+	List<String> getFileNameOfFailedDataPosts();
 
 }

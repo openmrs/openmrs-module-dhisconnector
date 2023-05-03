@@ -108,6 +108,7 @@ import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMappingElement;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.util.DHISConnectorUtil;
 import org.openmrs.module.reporting.cohort.definition.CohortDefinition;
 import org.openmrs.module.reporting.dataset.DataSet;
 import org.openmrs.module.reporting.dataset.DataSetColumn;
@@ -480,6 +481,41 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		}
 	}
 	
+	private Object subDirectoryJSONFilePost(File file) {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		String responseString;
+		if (file != null && file.exists()) {
+			if (file.isFile() && (file.getName().endsWith(".json") || file.getName().endsWith(".xml"))) {
+				try {
+					String data = FileUtils.readFileToString(file);
+					String endPoint = file.getPath()
+					        .replace(OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER, "")
+					        .replace(File.separator + file.getName(), "");
+					
+					if (StringUtils.isNotBlank(data) && StringUtils.isNotBlank(endPoint)) {
+						file.delete();
+						responseString = postDataToDHISEndpoint(endPoint, data);
+						return  mapper.readValue(responseString, DHISImportSummary.class);
+					}
+				}
+				catch (Exception e) {
+					log.error("Exception", e);
+				}
+			} else if (file.isDirectory()) {
+				for (File f : file.listFiles()) {
+					subDirectoryJSONFilePost(f);
+				}
+			}
+		}
+		return null;
+	}
+	
+	@Override
+	public Object reSendReportToDHIS(String reportName) {
+		return subDirectoryJSONFilePost(new File(OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER+""+DATAVALUESETS_PATH+File.separator+reportName+".json"));
+	}
+	
 	@Override
 	public Integer getNumberOfFailedDataPosts() {
 		File dataDir = new File(OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER);
@@ -508,7 +544,23 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return count;
 	}
 	
+	private List<String> subDirectoryJSONAndXMLFile(File dataDir) {
+		List<String> reportNames = new ArrayList<>();
+		if (dataDir != null && dataDir.exists()) {
+			if (dataDir.isDirectory()) {
+				for (File f : dataDir.listFiles()) {
+					reportNames.add(f.getName());
+				}
+			}
+		}
+		
+		return reportNames;
+	}
+	
 	private void backUpData(String endPoint, String data, String extension) {
+		
+		ObjectMapper mapper = new ObjectMapper();
+		DHISDataValueSet dvs = null;
 		if (StringUtils.isNotBlank(endPoint) && StringUtils.isNotBlank(data)) {
 			if (StringUtils.isBlank(extension))
 				extension = ".json";
@@ -521,8 +573,23 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			if (!dataFile.exists())
 				dataFile.mkdirs();
 			
+			try {
+				dvs = mapper.readValue(data, DHISDataValueSet.class);
+			} catch (JsonParseException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (JsonMappingException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
+			
+			String reportNameWithUnderScore = DHISConnectorUtil.putUnderScoreInReportName(dvs.getReportName());
+			
 			String datafileLocation = dataFile.getPath() + File.separator
-			        + new SimpleDateFormat("ddMMyyy_hhmmss").format(new Date()) + extension;
+			       + reportNameWithUnderScore + "_" + new SimpleDateFormat("ddMMyyy").format(new Date()) +"_"+ dvs.getPeriod() + extension;
 			File datafile = new File(datafileLocation);
 			
 			if (!datafile.exists()) {
@@ -1880,4 +1947,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		startDate.set(Calendar.DAY_OF_MONTH, Integer.valueOf(startDatePropertyValue));
 		endDate.set(Calendar.DAY_OF_MONTH, Integer.valueOf(endDatePropertyValue));
 	}
+
+	@Override
+	public List<String> getFileNameOfFailedDataPosts() {
+		List<String>  reportNames = null;
+		File dataDir = new File(OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER+DATAVALUESETS_PATH);
+		if (dataDir.exists() && dataDir.isDirectory()) {
+			reportNames = subDirectoryJSONAndXMLFile(dataDir);
+		}
+		return reportNames;
+	}
+
 }

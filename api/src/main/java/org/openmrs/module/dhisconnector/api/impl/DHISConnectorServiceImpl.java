@@ -201,6 +201,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	private String getFromBackUp(String path) {
+
 		String backupFilePath = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER + path;
 		
 		File backupFile = new File(backupFilePath);
@@ -219,7 +220,8 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	}
 	
 	private void saveToBackUp(String path, String jsonResponse) {
-		String backUpDirecoryPath = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER;
+		
+	String backUpDirecoryPath = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER;
 		
 		File backUpDirecory = new File(backUpDirecoryPath);
 		
@@ -235,8 +237,21 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		
-		String directoryStructure = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER
+		String directoryStructure = "";
+		
+		try {
+			
+		directoryStructure = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER
 		        + path.substring(0, path.lastIndexOf(File.separator));
+		
+		}catch(StringIndexOutOfBoundsException ex) {
+			
+			String invertWindowsFileSeparator = "/";
+			
+			directoryStructure = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DHIS2BACKUP_FOLDER
+			        + path.substring(0, path.lastIndexOf(invertWindowsFileSeparator));
+			
+		}
 		
 		File directory = new File(directoryStructure);
 		

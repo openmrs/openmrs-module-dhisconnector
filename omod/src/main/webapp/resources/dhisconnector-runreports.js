@@ -617,40 +617,72 @@ function sendDataToDHIS() {
 	let yesSend = confirm("Do you really want to send the report to the selected period? ("+selectedPeriod.toString()+")");
 	if(yesSend){
     selectedLocations = [];
-    jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
+ 	let locationsToSend = [];
+    
+	jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
         selectedLocations.push(availableLocations[this.id])
     })
 
-    jQuery('#send').prop('disabled', true);
-	jQuery('#responseRow').remove();
-    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
-    jQuery('#tableBody').append(loadingRow);
-    loadingRow.hide().fadeIn("slow");
-    for (let i = 0; i < selectedLocations.length ; i++) {
-    
-        if (!(selectedLocations[i].locationId === undefined)){
-        
-            buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
-                // post to dhis
-                jQuery.ajax({
-                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
-                    type: "POST",
-                    data: JSON.stringify(dxfJSON),
-                    contentType: "application/json;charset=utf-8",
-                    dataType: "json",
-                    success: function (data) {
-                        displayPostReponse(data);
-                    },
-                    error: function (xhr, status, error) {
-						displayPostReponseError(xhr, status, error);					
+	let locationsToNotSend = '';
+	for (let i = 0; i < selectedLocations.length ; i++) {
+		jQuery.ajax({
+			url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhismonthcheck?dhisreportdataset="+selectedMapping.dataSetUID+"&periodtype="+selectedMapping.periodType+"&reportperiod="+selectedPeriod.toString()+"&datasetid="+ selectedMapping.dataSetUID,
+		  	type: 'GET',
+		  	async: false,
+		  	success: function(data) {
+		  		if(data){
+					if(data.monthOpen == false){
+						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].locationName +'\n'
 					}
-                });
+					else{
+						locationsToSend.push(selectedLocations[i]);
+					}
+				}
+		  },
+		  error: function(xhr, status, error) {
+			displayPostReponseError(xhr, status, error);
+		  }
+		});
+	}
 
-            });
-            
-        }
+	if(locationsToNotSend.length > 0){
+		alert('O relatório não será envido para a(s) localização(ões) : '+locationsToNotSend+' \n porque o mês selecionado não está aberto para envio dos dados.');
+	}
+		
+	if(locationsToSend.length > 0){
+ 	
+		jQuery('#send').prop('disabled', true);
+		jQuery('#responseRow').remove();
+	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+	    jQuery('#tableBody').append(loadingRow);
+	    loadingRow.hide().fadeIn("slow");
+	    for (let i = 0; i < locationsToSend.length ; i++) {
+	    
+	        if (!(locationsToSend[i].locationId === undefined)){
+	        
+	            buildDXFJSON(locationsToSend[i].locationUid, locationsToSend[i].orgUnitUid).then(function () {
+	                // post to dhis
+	                jQuery.ajax({
+	                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
+	                    type: "POST",
+	                    data: JSON.stringify(dxfJSON),
+	                    contentType: "application/json;charset=utf-8",
+	                    dataType: "json",
+	                    success: function (data) {
+	                        displayPostReponse(data);
+	                    },
+	                    error: function (xhr, status, error) {
+							displayPostReponseError(xhr, status, error);					
+						}
+	                });
+	
+	            });
+	            
+	        }
+	    }
     }
-    }
+
+}
 
 }
 

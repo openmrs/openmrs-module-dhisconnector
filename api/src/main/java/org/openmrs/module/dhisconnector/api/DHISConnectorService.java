@@ -29,8 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * This service exposes module's core functionality. It is a Spring managed bean which is configured
- * in moduleApplicationContext.xml. It can be accessed only via Context:<br>
+ * This service exposes module's core functionality. It is a Spring managed bean
+ * which is configured in moduleApplicationContext.xml. It can be accessed only
+ * via Context:<br>
  * <code>
  * Context.getService(DHISConnectorService.class).someMethod();
  * </code>
@@ -39,8 +40,7 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Transactional
 public interface DHISConnectorService extends OpenmrsService {
-	
-	
+
 	/**
 	 * Queries a DHIS endoint and returns the result as JSON
 	 *
@@ -48,71 +48,71 @@ public interface DHISConnectorService extends OpenmrsService {
 	 * @return Result as JSON string
 	 */
 	public String getDataFromDHISEndpoint(String endpoint);
-	
+
 	public String postDataToDHISEndpoint(String endpoint, String jsonPayload);
-	
+
 	/**
 	 * Tests to check if the given DHIS server details are correct
 	 *
-	 * @param url The URL of the server
+	 * @param url  The URL of the server
 	 * @param user The login username
 	 * @param pass The login password
 	 * @return True if the details are correct, false otherwise
 	 */
 	public boolean testDHISServerDetails(String url, String user, String pass);
-	
+
 	public Object saveMapping(DHISMapping mapping);
-	
+
 	public Object postDataValueSet(DHISDataValueSet dataValueSet);
-	
+
 	public List<DHISMapping> getMappings();
-	
+
 	public List<PeriodIndicatorReportDefinition> getReportWithMappings(List<DHISMapping> mappings);
-	
+
 	public List<DHISOrganisationUnit> getDHISOrgUnits();
 
 	public DHISDataSet getDHISDataSetById(String id);
-	
+
 	public String uploadMappings(MultipartFile mapping);
 
 //	public String importMappings(MultipartFile mapping, boolean shouldReplaceMetadata) throws IOException;
 //	
 //	public String[] exportMappings(String[] selectedMappings, boolean shouldIncludeMetadata) throws IOException;
-	
+
 	public String[] exportSelectedMappings(String[] selectedMappings);
 
 	public boolean dhis2BackupExists();
-	
+
 	public String getLastSyncedAt();
-	
+
 	public String getDHIS2APIBackupPath();
-	
+
 	public String uploadDHIS2APIBackup(MultipartFile dhis2APIBackup);
-	
+
 	public DHISMapping getMapping(String s);
-	
+
 	public boolean permanentlyDeleteMapping(DHISMapping mapping);
-	
+
 	String getAdxFromDxf(DHISDataValueSet dataValueSet);
-	
+
 	Integer getNumberOfFailedDataPosts();
-	
+
 	void postPreviouslyFailedData();
-	
+
 	List<ReportToDataSetMapping> getAllReportToDataSetMappings();
-	
+
 	ReportToDataSetMapping getReportToDataSetMappingByUuid(String uuid);
-	
+
 	ReportToDataSetMapping getReportToDataSetMapping(Integer id);
-	
+
 	void deleteReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
-	
+
 	void saveReportToDataSetMapping(ReportToDataSetMapping reportToDataSetMapping);
-	
+
 	void deleteReportToDataSetMapping(String reportToDataSetMappingUuid);
-	
+
 	List<String> runAndPushReportToDHIS(ReportToDataSetMapping reportToDatasetMapping);
-	
+
 	ArrayList<List<String>> runAllAutomatedReportsAndPostToDHIS();
 
 	String transformToDHISPeriod(Calendar startDate, Calendar endDate, String periodType, Date lastRun);
@@ -126,9 +126,12 @@ public interface DHISConnectorService extends OpenmrsService {
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);
-	
+
 	Object reSendReportToDHIS(String reportName);
-	
+
 	List<String> getFileNameOfFailedDataPosts();
+
+	boolean isDHISMonthOpenToSendReport(String dhisDatasetListName, String periodType, String periodValue,
+			String datasetid);
 
 }

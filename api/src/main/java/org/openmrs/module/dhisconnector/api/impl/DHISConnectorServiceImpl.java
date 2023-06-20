@@ -615,6 +615,15 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String extension = ".json";
 
 		try {
+			if (!endpoint.startsWith(File.separator))
+				endpoint = File.separator + endpoint;
+			
+			String dataLocation = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER + endpoint;
+			File dataFile = new File(dataLocation);
+			
+			if (!dataFile.exists())
+				dataFile.mkdirs();
+
 			URL dhisURL = new URL(url);
 
 			String host = dhisURL.getHost();
@@ -647,6 +656,10 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 
 			HttpResponse response = client.execute(targetHost, httpPost, localcontext);
 			HttpEntity entity = response.getEntity();
+			
+			if(response.getStatusLine().getStatusCode() != 200) {
+				backUpData(endpoint, data, extension);
+			}
 
 			if (entity != null) {
 				payload = EntityUtils.toString(entity);

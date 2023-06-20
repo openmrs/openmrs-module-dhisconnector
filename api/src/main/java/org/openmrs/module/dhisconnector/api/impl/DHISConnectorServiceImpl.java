@@ -1939,10 +1939,14 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 
 	@Override
 	public boolean isDHISMonthOpenToSendReport(String dhisDatasetListName, String periodType, String periodValue,
-			String dhisLocationId) {
+			String organicunit) {
+
+		if (DHISConnectorPeriodUtils.isCurrentMonth(periodType, periodValue)) {
+			return DHISConnectorPeriodUtils.isCurrentMonthOpen(periodType, periodValue);
+		}
 
 		DefaultHttpClient client = null;
-		boolean isPreviousMonth = DHISConnectorPeriodUtils.IsPreviousMonth(periodType, periodValue);
+		boolean isCurrentOrPreviousMonth = DHISConnectorPeriodUtils.isPreviousMonth(periodType, periodValue);
 
 		// TODO: por enquanto temos a logica de verificação de mês aberto para
 		// Relatórios Mensais
@@ -1959,19 +1963,21 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				ExceptionByExample exceptionByExample = mapper.readValue(lockExceptionsPayload,
 						ExceptionByExample.class);
 
-				if (isPreviousMonth) {
+				if (isCurrentOrPreviousMonth) {
 
 					if (DHISConnectorPeriodUtils.isMonthOpenByExpiryDays(expiryDays, periodValue)) {
 						return Boolean.TRUE;
 					} else {
-						return hasLockExectionToLocation(exceptionByExample, dhisLocationId);
+						return hasLockExectionToLocation(exceptionByExample, dhisDatasetListName, organicunit,
+								periodValue);
 					}
 				} else {
 
 					if (expiryDays == 0) {
 						return Boolean.TRUE;
 					} else {
-						return hasLockExectionToLocation(exceptionByExample, dhisLocationId);
+						return hasLockExectionToLocation(exceptionByExample, dhisDatasetListName, organicunit,
+								periodValue);
 					}
 				}
 			} catch (Exception ex) {
@@ -1986,13 +1992,17 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return Boolean.FALSE;
 	}
 
-	private boolean hasLockExectionToLocation(ExceptionByExample exceptionByExample, String dhisLocationId) {
+	private boolean hasLockExectionToLocation(ExceptionByExample exceptionByExample, String dhisDatasetListName,
+			String organicunit, String periodValue) {
 		if (exceptionByExample == null || exceptionByExample.getLockExceptions() == null) {
 			return Boolean.FALSE;
 		}
+		
 		for (LockException lockException : exceptionByExample.getLockExceptions()) {
 
-			if (dhisLocationId.equals(lockException.getOrganisationUnit().getId())) {
+			if (dhisDatasetListName.equals(lockException.getDataSet().getId())
+					&& organicunit.equals(lockException.getOrganisationUnit().getId())
+					&& periodValue.equals(lockException.getPeriod().getId())) {
 				return Boolean.TRUE;
 			}
 		}

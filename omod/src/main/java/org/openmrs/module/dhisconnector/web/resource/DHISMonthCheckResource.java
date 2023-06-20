@@ -36,10 +36,10 @@ public class DHISMonthCheckResource extends DataDelegatingCrudResource implement
 		String dhisreportdataset = context.getParameter("dhisreportdataset");
 		String periodtype = context.getParameter("periodtype");
 		String reportperiod = context.getParameter("reportperiod");
-		String datasetid = context.getParameter("datasetid");
+		String organicunit = context.getParameter("organicunit");
 
 		boolean monthOpenToSendReport = Context.getService(DHISConnectorService.class)
-				.isDHISMonthOpenToSendReport(dhisreportdataset, periodtype, reportperiod, datasetid);
+				.isDHISMonthOpenToSendReport(dhisreportdataset, periodtype, reportperiod, organicunit);
 
 		SimpleObject simpleObject = new SimpleObject();
 		simpleObject.add("monthOpen", monthOpenToSendReport);

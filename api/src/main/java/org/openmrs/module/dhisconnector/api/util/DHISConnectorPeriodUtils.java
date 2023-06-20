@@ -41,7 +41,40 @@ public class DHISConnectorPeriodUtils {
 		return PeriodTypes.MONTHLY.getName().equals(periodType);
 	}
 
-	public static boolean IsPreviousMonth(String periodType, String periodValue) {
+	public static boolean isCurrentMonthOpen(String periodType, String periodValue) {
+
+		if (isCurrentMonth(periodType, periodValue)) {
+
+			int year = Integer.valueOf(StringUtils.substring(periodValue, 0, 4));
+			int month = Integer.valueOf(StringUtils.substring(periodValue, 4));
+
+			Calendar cal = Calendar.getInstance();
+			cal.set(Calendar.MONTH, month - 1);
+			cal.set(Calendar.YEAR, year);
+			cal.set(Calendar.DAY_OF_MONTH, 21);
+
+			Date minOpenDate = cal.getTime();
+			Date currentDate = Calendar.getInstance().getTime();
+
+			if (currentDate.compareTo(minOpenDate) >= 0) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public static boolean isCurrentMonth(String periodType, String periodValue) {
+
+		if (isMonthlyPeriod(periodType)) {
+			int month = Integer.valueOf(StringUtils.substring(periodValue, 4));
+			int currentMonth = DateTime.now().getMonthOfYear();
+
+			return month == currentMonth ? true : false;
+		}
+		return false;
+	}
+
+	public static boolean isPreviousMonth(String periodType, String periodValue) {
 
 		if (isMonthlyPeriod(periodType)) {
 			int month = Integer.valueOf(StringUtils.substring(periodValue, 4));

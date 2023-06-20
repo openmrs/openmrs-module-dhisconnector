@@ -145,7 +145,7 @@ function initializeWeeklyPicker(){
 function initializeMonthlyPicker() {
     const monthlyPicker = jQuery('#monthlyPicker');
     monthlyPicker.attr("max",
-        moment().add(-1, 'months').format("YYYY-MM"));
+        moment().add(0, 'months').format("YYYY-MM"));
     monthlyPicker.show();
 }
 
@@ -626,11 +626,12 @@ function sendDataToDHIS() {
 	let locationsToNotSend = '';
 	for (let i = 0; i < selectedLocations.length ; i++) {
 		jQuery.ajax({
-			url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhismonthcheck?dhisreportdataset="+selectedMapping.dataSetUID+"&periodtype="+selectedMapping.periodType+"&reportperiod="+selectedPeriod.toString()+"&datasetid="+ selectedMapping.dataSetUID,
+			url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhismonthcheck?dhisreportdataset="+selectedMapping.dataSetUID+"&periodtype="+selectedMapping.periodType+"&reportperiod="+selectedPeriod.toString()+"&organicunit="+ selectedLocations[i].orgUnitUid,
 		  	type: 'GET',
 		  	async: false,
 		  	success: function(data) {
 		  		if(data){
+			
 					if(data.monthOpen == false){
 						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].locationName +'\n'
 					}

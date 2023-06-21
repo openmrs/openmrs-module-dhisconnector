@@ -130,4 +130,39 @@
 		                         baseTableName="dhisconnector_location_to_orgunit" baseColumnNames="location"
 		                         referencedTableName="location" referencedColumnNames="location_id"/>
 	</changeSet>
+		<changeSet id="20221206-0001" author="FGH">
+		<preConditions onFail="MARK_RAN">
+			<or>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM global_property where property ='dhisconnector.startDate';
+            </sqlCheck>
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM global_property where property ='dhisconnector.endDate';
+            </sqlCheck>
+            </or>
+        </preConditions>
+        <comment>Insert start and end dates parameters for run openmrs reports</comment>
+        <insert tableName="global_property">
+            <column name="property" value="dhisconnector.startDate" />
+            <column name="property_value"
+                    value="21" />
+            <column name="description"
+                    value="" />
+            <column name="uuid" value="fcc9f775-7269-46c5-a44e-732c35b6db51" />
+            <column name="datatype" value="" />
+            <column name="datatype_config" value="" />
+            <column name="preferred_handler" value="" />
+            <column name="handler_config" value="" />
+        </insert>
+        <insert tableName="global_property">
+            <column name="property" value="dhisconnector.endDate" />
+            <column name="property_value"
+                    value="20" />
+            <column name="description"
+                    value="" />
+            <column name="uuid" value="8da13b6d-6b1d-40db-8bf7-fbfe54bcaad9" />
+            <column name="datatype" value="" />
+            <column name="datatype_config" value="" />
+            <column name="preferred_handler" value="" />
+            <column name="handler_config" value="" />
+        </insert>
+	</changeSet>
 </databaseChangeLog>

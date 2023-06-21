@@ -61,7 +61,7 @@
 }
 
 .dataElementDragDestination, .comboOptionDragDestination, .indicatorContainer, .dataElementDragSource, .comboOptionDragSource {
-	height: 2em;
+	height: 3em;
 	overflow: auto;
 }
 

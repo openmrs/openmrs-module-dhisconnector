@@ -50,7 +50,6 @@ public class AdminList extends AdministrationSectionExt {
 		map.put("/module/dhisconnector/dhis2BackupExport.form", "dhisconnector.dhis2Backup.export");
 		map.put("/module/dhisconnector/createMapping.form", "dhisconnector.createMapping");
 		map.put("/module/dhisconnector/manageMappings.form", "dhisconnector.manageMappings");
-		map.put("/module/dhisconnector/runReports.form", "dhisconnector.runReports");
 		map.put("/module/dhisconnector/failedData.form", "dhisconnector.failedData");
 
 		return map;

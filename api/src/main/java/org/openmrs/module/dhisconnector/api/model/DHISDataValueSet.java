@@ -26,6 +26,7 @@ import java.util.List;
     "completeData",
     "period",
     "orgUnit",
+    "reportName",
     "dataValues"
 })
 public class DHISDataValueSet {
@@ -38,6 +39,8 @@ public class DHISDataValueSet {
     private String period;
     @JsonProperty("orgUnit")
     private String orgUnit;
+    @JsonProperty("reportName")
+    private String reportName;
     @JsonProperty("dataValues")
     private List<DHISDataValue> dataValues = new ArrayList<DHISDataValue>();
 
@@ -120,6 +123,24 @@ public class DHISDataValueSet {
     public void setOrgUnit(String orgUnit) {
         this.orgUnit = orgUnit;
     }
+    
+    /**
+     * 
+     * @return
+     *     The reportName
+     */
+    public String getReportName() {
+		return reportName;
+	}
+
+    /**
+     * 
+     * @param reportName
+     *     The reportName
+     */
+	public void setReportName(String reportName) {
+		this.reportName = reportName;
+	}
 
     /**
      * 
@@ -130,8 +151,9 @@ public class DHISDataValueSet {
     public List<DHISDataValue> getDataValues() {
         return dataValues;
     }
+    
 
-    /**
+	/**
      * 
      * @param dataValues
      *     The dataValues

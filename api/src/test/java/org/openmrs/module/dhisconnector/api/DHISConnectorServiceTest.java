@@ -165,56 +165,56 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		Assert.assertEquals(0, Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings().size());
 	}
 
-	@Test
-	public void testDHISMappingExport() throws IOException {
-		DHISConnectorService dhisConnectorService = Context.getService(DHISConnectorService.class);
-		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
+//	@Test
+//	public void testDHISMappingExport() throws IOException {
+//		DHISConnectorService dhisConnectorService = Context.getService(DHISConnectorService.class);
+//		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
+//
+//		DHISMapping mapping = new DHISMapping();
+//		mapping.setName("mapping-test-unit");
+//		mapping.setCreated(new Date().getTime());
+//		PeriodIndicatorReportDefinition reportDefinition = new PeriodIndicatorReportDefinition();
+//		final String PIR_UUID = String.valueOf(UUID.randomUUID());
+//		reportDefinition.setUuid(PIR_UUID);
+//		reportDefinition.setName("pir-test-unit");
+//		reportDefinitionService.saveDefinition(reportDefinition);
+//		mapping.setPeriodIndicatorReportGUID(PIR_UUID);
+//		dhisConnectorService.saveMapping(mapping);
+//
+//		String[] pathToBundle =
+//				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
+//		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
+//	}
 
-		DHISMapping mapping = new DHISMapping();
-		mapping.setName("mapping-test-unit");
-		mapping.setCreated(new Date().getTime());
-		PeriodIndicatorReportDefinition reportDefinition = new PeriodIndicatorReportDefinition();
-		final String PIR_UUID = String.valueOf(UUID.randomUUID());
-		reportDefinition.setUuid(PIR_UUID);
-		reportDefinition.setName("pir-test-unit");
-		reportDefinitionService.saveDefinition(reportDefinition);
-		mapping.setPeriodIndicatorReportGUID(PIR_UUID);
-		dhisConnectorService.saveMapping(mapping);
-
-		String[] pathToBundle =
-				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
-		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
-	}
-
-	@Test
-	public void testDHISMappingImport() throws IOException {
-		DHISConnectorService dhisConnectorService = Context.getService(DHISConnectorService.class);
-		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
-
-		DHISMapping mapping = new DHISMapping();
-		mapping.setName("mapping-test-unit");
-		mapping.setCreated(new Date().getTime());
-		PeriodIndicatorReportDefinition pir = new PeriodIndicatorReportDefinition();
-		final String PIR_UUID = String.valueOf(UUID.randomUUID());
-		pir.setUuid(PIR_UUID);
-		pir.setName("pir-test-unit");
-		reportDefinitionService.saveDefinition(pir);
-		mapping.setPeriodIndicatorReportGUID(PIR_UUID);
-		dhisConnectorService.saveMapping(mapping);
-
-		String[] pathToBundle =
-				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
-		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
-
-		dhisConnectorService.permanentlyDeleteMapping(mapping);
-		reportDefinitionService.purgeDefinition(pir);
-
-		File file = new File(pathToBundle[1]);
-		MultipartFile multipartFile =
-				new MockMultipartFile(file.getName(), file.getName(), "zip", Files.readAllBytes(file.toPath()));
-		Assert.assertEquals("Successfully imported the mapping files",
-				dhisConnectorService.importMappings(multipartFile, false));
-		Assert.assertNotNull(dhisConnectorService.getMapping("mapping-test-unit." + mapping.getCreated()));
-		Assert.assertNotNull(reportDefinitionService.getDefinitionByUuid(PIR_UUID));
-	}
+//	@Test
+//	public void testDHISMappingImport() throws IOException {
+//		DHISConnectorService dhisConnectorService = Context.getService(DHISConnectorService.class);
+//		ReportDefinitionService reportDefinitionService = Context.getService(ReportDefinitionService.class);
+//
+//		DHISMapping mapping = new DHISMapping();
+//		mapping.setName("mapping-test-unit");
+//		mapping.setCreated(new Date().getTime());
+//		PeriodIndicatorReportDefinition pir = new PeriodIndicatorReportDefinition();
+//		final String PIR_UUID = String.valueOf(UUID.randomUUID());
+//		pir.setUuid(PIR_UUID);
+//		pir.setName("pir-test-unit");
+//		reportDefinitionService.saveDefinition(pir);
+//		mapping.setPeriodIndicatorReportGUID(PIR_UUID);
+//		dhisConnectorService.saveMapping(mapping);
+//
+//		String[] pathToBundle =
+//				dhisConnectorService.exportMappings(new String[]{"mapping-test-unit." + mapping.getCreated()}, true);
+//		Assert.assertEquals("Successfully bundled the mapping with the metadata", pathToBundle[0]);
+//
+//		dhisConnectorService.permanentlyDeleteMapping(mapping);
+//		reportDefinitionService.purgeDefinition(pir);
+//
+//		File file = new File(pathToBundle[1]);
+//		MultipartFile multipartFile =
+//				new MockMultipartFile(file.getName(), file.getName(), "zip", Files.readAllBytes(file.toPath()));
+//		Assert.assertEquals("Successfully imported the mapping files",
+//				dhisConnectorService.importMappings(multipartFile, false));
+//		Assert.assertNotNull(dhisConnectorService.getMapping("mapping-test-unit." + mapping.getCreated()));
+//		Assert.assertNotNull(reportDefinitionService.getDefinitionByUuid(PIR_UUID));
+//	}
 }

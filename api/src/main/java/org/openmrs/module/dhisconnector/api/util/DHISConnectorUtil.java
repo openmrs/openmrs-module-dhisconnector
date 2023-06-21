@@ -87,4 +87,8 @@ public class DHISConnectorUtil {
         }
         return false;
     }
+    
+    public static String putUnderScoreInReportName(String reportName) {
+    	return reportName.replaceAll(" ", "_").replaceAll("/", "_").replaceAll("-", "_").toUpperCase();
+    }
 }

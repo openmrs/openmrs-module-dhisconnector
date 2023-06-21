@@ -17,10 +17,12 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,10 +45,12 @@ import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.util.DHISConnectorUtil;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.web.WebConstants;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -67,6 +71,10 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_USER = "dhisconnector.user";
 
 	public static final String GLOBAL_PROPERTY_PASS = "dhisconnector.pass";
+	
+	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
+
+	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
 
 	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList(
 			"Daily",
@@ -142,6 +150,39 @@ public class DHISConnectorController {
 			model.addAttribute("pass", passProperty.getPropertyValue());
 		}
 	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "savePeriod", method = RequestMethod.POST)
+	public void savePeriod(ModelMap model, @RequestParam(value = "startDate", required = true) String startDate,
+			@RequestParam(value = "endDate", required = true) String endDate, WebRequest req) throws ParseException {
+
+		AdministrationService as = Context.getAdministrationService();
+		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
+		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
+		
+		if(startDate == "" || endDate == "") {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.periodParametersNotFilled"),
+					WebRequest.SCOPE_SESSION);
+			
+			model.addAttribute("startDate", startDateProperty.getPropertyValue());
+			model.addAttribute("endDate", endDateProperty.getPropertyValue());
+			
+		}else {
+		startDateProperty.setPropertyValue(startDate);
+		endDateProperty.setPropertyValue(endDate);
+
+		as.saveGlobalProperty(startDateProperty);
+		as.saveGlobalProperty(endDateProperty);
+
+		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+				Context.getMessageSourceService().getMessage("dhisconnector.savePeriodSuccess"),
+				WebRequest.SCOPE_SESSION);
+		
+		model.addAttribute("startDate", startDate);
+		model.addAttribute("endDate", endDate);
+		}
+
+	}
 
 	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "testConfig", method = RequestMethod.POST)
 	public void testConfig(ModelMap model, WebRequest req) throws ParseException {
@@ -167,6 +208,13 @@ public class DHISConnectorController {
 
 	@RequestMapping(value = "/module/dhisconnector/runReports", method = RequestMethod.GET)
 	public void showRunReports(ModelMap model) {
+		
+		AdministrationService as = Context.getAdministrationService();
+		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
+		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
+		
+		model.addAttribute("globalPropertyStartDate", startDateProperty.getPropertyValue());
+		model.addAttribute("globalPropertyEndDate", endDateProperty.getPropertyValue());
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
@@ -211,7 +259,8 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						.exportMappings(selectedMappings, shouldIncludeMetadata);
+						//.exportMappings(selectedMappings, shouldIncludeMetadata);
+						.exportSelectedMappings(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
 				String fullPath = exported[1];// contains path to
@@ -337,9 +386,10 @@ public class DHISConnectorController {
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
+			//String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
+			String msg = Context.getService(DHISConnectorService.class).uploadMappings(mapping);
 
-			if (msg.startsWith("Successfully")) {
+			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
 				successMessage = msg;
 				failedMessage = "";
 			} else {
@@ -374,19 +424,41 @@ public class DHISConnectorController {
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/failedData", method = RequestMethod.GET)
-	public void failedDataRender(ModelMap model) {
+	public  void failedDataRender(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 		model.addAttribute("nunmberOfFailedPostAttempts",
 				Context.getService(DHISConnectorService.class).getNumberOfFailedDataPosts());
 	}
+	
+	@RequestMapping(value = "/module/dhisconnector/failedReportDataRender", method = RequestMethod.GET)
+	public  @ResponseBody List<String>  failedReportDataRender(ModelMap model) {
+		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+		List<String> failedReportDataNames = Context.getService(DHISConnectorService.class).getFileNameOfFailedDataPosts();
+		return failedReportDataNames;
+	}
 
-	@RequestMapping(value = "/module/dhisconnector/failedData", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/failedData", params = "pushAgain", method = RequestMethod.POST)
 	public void failedData(ModelMap model, HttpServletRequest request) {
 		// TODO be specific which post went well and if any failed which one
 		Context.getService(DHISConnectorService.class).postPreviouslyFailedData();
 		model.addAttribute("nunmberOfFailedPostAttempts",
 				Context.getService(DHISConnectorService.class).getNumberOfFailedDataPosts());
 		request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, "Completed successfully!");
+	}
+	
+	@RequestMapping(value = "/module/dhisconnector/resendReportData", method = RequestMethod.POST )
+	public @ResponseBody Object resendReportDataToDHIS(ModelMap model,@RequestBody Map<String, String> payload,
+			HttpServletRequest request) {
+		String reportNameToResend = DHISConnectorUtil.putUnderScoreInReportName(payload.get("selectedReportName"));
+		String finalReportName = reportNameToResend+"_"+new SimpleDateFormat("ddMMyyy").format(new Date())+"_"+payload.get("selectedPeriod");
+		return Context.getService(DHISConnectorService.class).reSendReportToDHIS(finalReportName);
+	}
+	
+	@RequestMapping(value = "/module/dhisconnector/resendFailedReportData", method = RequestMethod.POST)
+	public @ResponseBody Object resendFailedReportData(ModelMap model,@RequestBody Map<String, String> payload,
+			HttpServletRequest request) {
+		String reportName = payload.get("selectedReportName");
+		return Context.getService(DHISConnectorService.class).reSendReportToDHIS(reportName.substring(0, reportName.length()-5));
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/automation", method = RequestMethod.GET)

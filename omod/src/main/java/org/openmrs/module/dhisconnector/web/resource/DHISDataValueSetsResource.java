@@ -101,6 +101,7 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 		description.addProperty("dataSet");
 		description.addProperty("period");
 		description.addProperty("orgUnit");
+		description.addProperty("reportName");
 		description.addProperty("dataValues");
 		return description;
 	}
@@ -116,6 +117,7 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 		description.addProperty("dataSet");
 		description.addProperty("period");
 		description.addProperty("orgUnit");
+		description.addProperty("reportName");
 		description.addProperty("dataValues");
 		return description;
 	}

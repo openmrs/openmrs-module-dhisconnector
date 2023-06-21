@@ -21,12 +21,13 @@ let selectedStartDate = null;
 let selectedEndDate = null;
 let availableLocations = null;
 let selectedLocations = null;
+let selectedReportName = null;
 
 function populateReportsDropdown() {
     // fetch reports
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/periodindicatorreports?q=hasMapping", function (data) {
 
-        var reportSelect = jQuery('<select id="reportSelect"></select>');
+        var reportSelect = jQuery('<select id="reportSelect" name="reportSelect"></select>');
         reportSelect.append('<option value="">Select</option>');
 
         for (var i = 0; i < data.results.length; i++) {
@@ -144,7 +145,7 @@ function initializeWeeklyPicker(){
 function initializeMonthlyPicker() {
     const monthlyPicker = jQuery('#monthlyPicker');
     monthlyPicker.attr("max",
-        moment().add(-1, 'months').format("YYYY-MM"));
+        moment().add(0, 'months').format("YYYY-MM"));
     monthlyPicker.show();
 }
 
@@ -414,10 +415,8 @@ function populateOrgUnitsOfDataSet() {
             jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + data.organisationUnits[i].id, function (mappingData) {
                 mappingData.orgUnitName = orgUnitName;
                 availableLocations.push(mappingData);
-                if (mappingData.locationName === undefined) {
-                    locationMappings.append('<tr><td><input type="checkbox" disabled/><span id="">'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
-                } else {
-                    locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
+                if (!(mappingData.locationName === undefined)) {
+                   locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+ mappingData.locationName +'=>'+ mappingData.orgUnitName +'</span></td></tr>');
                 }
             });
         }
@@ -435,6 +434,15 @@ function getReportData(locationUid) {
     var locationGUID = locationUid;
     let startDate = selectedStartDate;
     let endDate = selectedEndDate;
+    
+    let globalPropertyStartDate = jQuery('#global-property-start-date').val();
+    let globalPropertyEndDate = jQuery('#global-property-end-date').val();
+    
+    if(!(globalPropertyStartDate =='' && globalPropertyEndDate =='')){
+    	startDate = new Date(startDate.getFullYear(), startDate.getMonth()-1, globalPropertyStartDate);
+    	endDate = new Date(endDate.getFullYear(), endDate.getMonth(), globalPropertyEndDate);
+    }
+
     if(document.getElementById('custom-range-option').checked){
         startDate = jQuery('#openmrs-start-date').datepicker('getDate');
         endDate = jQuery('#openmrs-end-date').datepicker('getDate');
@@ -511,19 +519,26 @@ function buildDXFJSON(locationUid, orgUnitId) {
     dxfJSON = null;
 
     return getReportData(locationUid).then(function () {
+	    selectedReportName = jQuery('#reportSelect option:selected').text();
         dxfJSON = {};
         dxfJSON.dataSet = selectedMapping.dataSetUID
         dxfJSON.period = selectedPeriod.toString();
         dxfJSON.orgUnit = orgUnitId;
-        var indicatorValues = reportData.dataSets[0].rows[0];
+        dxfJSON.reportName = selectedReportName;
+        
+        selectedPeriod = selectedPeriod.toString();
+        
         var dataValues = [];
-
-        for (var indicator in indicatorValues) {
+        
+        for(let i =0; i < reportData.dataSets.length; i++){
+            
+            var indicatorValues = reportData.dataSets[i].rows[0];
+            
+            for (var indicator in indicatorValues) {
             var dataValue = {};
             if (indicatorValues.hasOwnProperty(indicator)) {
 
                 var mapping = getMappingForIndicator(indicator);
-
                 if (mapping !== null) {
                     dataValue.dataElement = mapping.dataElement;
                     dataValue.categoryOptionCombo = mapping.comboOption;
@@ -532,6 +547,8 @@ function buildDXFJSON(locationUid, orgUnitId) {
                     dataValues.push(dataValue);
                 }
             }
+        }
+        
         }
 
         dxfJSON.dataValues = dataValues;
@@ -543,9 +560,29 @@ function slugify(text) {
 }
 
 function displayPostReponse(json) {
-    var reponseRow = jQuery('#responseRow');
-    reponseRow.append('<td><pre><code className="JSON">' + JSON.stringify(json, null, 2) + '</code></pre></td>');
+	console.log("Objeto devolvido: "+json);
+	if(json !== null && !(json == '')){
+    jQuery('#loadingRow').remove();
+    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white;">Relatório enviado com Sucesso para DHIS</th></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Novos </td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.imported, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Actualizados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.updated, null, 2) + '</td></tr><tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos ignorados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.ignored, null, 2) + '</td></tr><tr><td style="border: 1px solid #ddd; padding: 8px;">Total de Registos Apagados</td><td style="border: 1px solid #ddd; padding: 8px;">' + JSON.stringify(json.importCount.deleted, null, 2) + '</td></tr></table></code></pre></td></tr>');
+    jQuery('#tableBody').append(responseRow);
+    responseRow.hide().fadeIn("slow");
+    jQuery('#send').prop('disabled', false);
 
+    jQuery('pre code').each(function (i, block) {
+        hljs.highlightBlock(block);
+    });
+    }else{
+	displayPostReponseError();
+}
+}
+
+function displayPostReponseError(xhr, status, error) {
+	jQuery('#loadingRow').remove();
+	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #cb2e0c; color: white;">Erro ao enviar relatório, use o botão Reenviar Dados, para voltar a enviar!</th></tr></table></code></pre></td></tr>');
+    jQuery('#tableBody').append(responseRow);
+    responseRow.hide().fadeIn("slow");	
+	jQuery('#send').prop('disabled', false);
+    jQuery('#reSend').prop('disabled', false);
     jQuery('pre code').each(function (i, block) {
         hljs.highlightBlock(block);
     });
@@ -576,35 +613,152 @@ function downloadAdx() {
 }
 
 function sendDataToDHIS() {
+	
+	let yesSend = confirm("Do you really want to send the report to the selected period? ("+selectedPeriod.toString()+")");
+	if(yesSend){
     selectedLocations = [];
-    jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
+ 	let locationsToSend = [];
+    
+	jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
         selectedLocations.push(availableLocations[this.id])
     })
 
-    jQuery('#responseRow').remove();
-    var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th></tr>');
-    for (let i = 0; i < selectedLocations.length ; i++) {
-        if (!(selectedLocations[i].locationId === undefined)){
-            buildDXFJSON(selectedLocations[i].locationUid, selectedLocations[i].orgUnitUid).then(function () {
-                console.log(dxfJSON);
-                // post to dhis
-                jQuery.ajax({
-                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
-                    type: "POST",
-                    data: JSON.stringify(dxfJSON),
-                    contentType: "application/json;charset=utf-8",
-                    dataType: "json",
-                    success: function (data) {
-                        displayPostReponse(data);
-                    }
-                });
+	let locationsToNotSend = '';
+	for (let i = 0; i < selectedLocations.length ; i++) {
+		jQuery.ajax({
+			url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhismonthcheck?dhisreportdataset="+selectedMapping.dataSetUID+"&periodtype="+selectedMapping.periodType+"&reportperiod="+selectedPeriod.toString()+"&organicunit="+ selectedLocations[i].orgUnitUid,
+		  	type: 'GET',
+		  	async: false,
+		  	success: function(data) {
+		  		if(data){
+			
+					if(data.monthOpen == false){
+						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].locationName +'\n'
+					}
+					else{
+						locationsToSend.push(selectedLocations[i]);
+					}
+				}
+		  },
+		  error: function(xhr, status, error) {
+			displayPostReponseError(xhr, status, error);
+		  }
+		});
+	}
 
-            });
-        }
+	if(locationsToNotSend.length > 0){
+		alert('O relatório não será envido para a(s) localização(ões) : '+locationsToNotSend+' \n porque o mês selecionado não está aberto para envio dos dados.');
+	}
+		
+	if(locationsToSend.length > 0){
+ 	
+		jQuery('#send').prop('disabled', true);
+		jQuery('#responseRow').remove();
+	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+	    jQuery('#tableBody').append(loadingRow);
+	    loadingRow.hide().fadeIn("slow");
+	    for (let i = 0; i < locationsToSend.length ; i++) {
+	    
+	        if (!(locationsToSend[i].locationId === undefined)){
+	        
+	            buildDXFJSON(locationsToSend[i].locationUid, locationsToSend[i].orgUnitUid).then(function () {
+	                // post to dhis
+	                jQuery.ajax({
+	                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
+	                    type: "POST",
+	                    data: JSON.stringify(dxfJSON),
+	                    contentType: "application/json;charset=utf-8",
+	                    dataType: "json",
+	                    success: function (data) {
+	                        displayPostReponse(data);
+	                    },
+	                    error: function (xhr, status, error) {
+							displayPostReponseError(xhr, status, error);					
+						}
+	                });
+	
+	            });
+	            
+	        }
+	    }
     }
+
+}
+
+}
+
+function reSendReportDataToDHIS(){
+		jQuery('#responseRow').remove();
+	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+ 	    jQuery('#tableBody').append(loadingRow);
+  	    loadingRow.hide().fadeIn("slow");
+	    selectedReportName = jQuery('#reportSelect option:selected').text();
+        jQuery.ajax({
+            type: "POST",
+            url: "resendReportData.form",
+            data: JSON.stringify({"selectedReportName": selectedReportName, "selectedPeriod": selectedPeriod}),
+            contentType: "application/json;charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+				    displayPostReponse(data);
+            }, 
+            error: function (xhr, status, error) {
+				    displayPostReponseError(xhr, status, error);					
+		    }
+        });
+}
+
+function reSendFailedDataToDHIS(){
+	var rowId = event.target.parentNode.parentNode.id;
+    
+    var data = document.getElementById(rowId).querySelectorAll(".row-data");
+    
+    var reportName = data[0].innerHTML;
+    
+    	jQuery('#responseRow').remove();
+ 	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img width="50px;" height="50px;" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+        jQuery('#tableBody').append(loadingRow);
+        loadingRow.hide().fadeIn("slow");
+    
+        jQuery.ajax({
+            type: "POST",
+            url: "resendFailedReportData.form",
+            data: JSON.stringify({"selectedReportName": reportName }),
+            contentType: "application/json;charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+		            getFailedReportDataRender();  
+					displayPostReponse(data);  
+            }, 
+            error: function (xhr, status, error) {
+		            getFailedReportDataRender();
+				    displayPostReponseError(xhr, status, error);	
+		    }
+        });
+}
+
+function getFailedReportDataRender(){
+        jQuery.ajax({
+            type: "GET",
+            url: "failedReportDataRender.form",
+            data: "",
+            datatype: "json",
+            success: function (data) {
+	        for (let i = 0; i < data.length ; i++) {
+			displayFailedPostData(data[i],i);
+	}
+            }
+        });
+}
+
+function displayFailedPostData(reportName, rowId) {
+	jQuery("#"+rowId).remove();
+    jQuery('#loadingRow').remove();
+    var responseRow = jQuery('<tr style="background-color: #f2f2f2;" id="'+rowId+'"><td style="border: 1px solid #ddd; padding: 8px; width: 70%;" class="row-data">'+reportName+'</td><td style="border: 1px solid #ddd; padding: 8px; width: 20%;"><input id="reSend" name="reSend" type="button" onclick="reSendFailedDataToDHIS();" value="Reenviar Dados"/></td></tr>');
     jQuery('#tableBody').append(responseRow);
     responseRow.hide().fadeIn("slow");
 }
+
 
 function createDownload(content, contentType, extension, orgUnitUid) {
     var dl = document.createElement('a');

@@ -1,6 +1,6 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
-<openmrs:require privilege="Run Reports" otherwise="/login.htm"
+<openmrs:require privilege="Run DHIS 2 Reports" otherwise="/login.htm"
                  redirect="/module/dhisconnector/runReports.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
@@ -37,15 +37,15 @@
     </tr>
     <tr>
       <td>
-        <div id="locationsList" class="max-content-size">Select a Mapping to choose the Locations</div>
+        <div id="locationsList" class="max-content-size"><spring:message code="dhisconnector.run.reports.choose.location"/></div>
       </td>
     </tr>
     <tr>
-      <th class="runHeader">Period</th>
+      <th class="runHeader"><spring:message code="dhisconnector.run.reports.period"/></th>
       <td>
         <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>
-        <input type="month" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
+        <input type="month" name="monthlyPicker" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
                style="display: none"/>
         <input type="number" id="sixMonthlyPicker" min="1970" onchange="handleSixMonthlyPeriodChange()"
                style="display: none"/>
@@ -77,8 +77,8 @@
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.customRange.openmrs.choose"/></th>
-      <td><input type="checkbox" name="customRange" id="custom-range-option"/></td>
+      <th class="runHeader"></th>
+      <td><input type="checkbox" name="customRange" id="custom-range-option" hidden="true"/></td>
     </tr>
     <tr id="date-range-section" style="display:none">
       <th class="runHeader"><spring:message code="dhisconnector.customRange.openmrs.Date"/></th>
@@ -92,8 +92,12 @@
           </thead>
           <tbody>
           <tr>
-            <td><input type="text" name="openmrsStartDate" id="openmrs-start-date" class="periodSelector"/></td>
-            <td><input type="text" name="openmrsEndDate" id="openmrs-end-date" class="periodSelector"/></td>
+            <td><input type="text" name="openmrsStartDate" id="openmrs-start-date" class="periodSelector"/>
+                <input type="text" name="globalPropertyStartDate" hidden="true" value="${globalPropertyStartDate}" id="global-property-start-date"/>
+            </td>
+            <td><input type="text" name="openmrsEndDate" id="openmrs-end-date" class="periodSelector"/>
+                <input type="text" name="globalPropertyEndDate" hidden="true" value="${globalPropertyEndDate}" id="global-property-end-date"/>
+            </td>
           </tr>
           </tbody>
         </table>
@@ -101,7 +105,9 @@
     </tr>
     <tr>
       <th class="runHeader"><spring:message code="dhisconnector.action"/></th>
-      <td><input name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/> <input
+      <td><input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/>
+            <input id="reSend" name="reSend" type="button" onclick="reSendReportDataToDHIS()" disabled="true" value="<spring:message code="dhisconnector.rePost" />"/>
+       <input
               name="submit" type="button" onclick="generateDXFDownload()"
               value="<spring:message code="dhisconnector.dxf.download" />" />
         <input name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" /></td>

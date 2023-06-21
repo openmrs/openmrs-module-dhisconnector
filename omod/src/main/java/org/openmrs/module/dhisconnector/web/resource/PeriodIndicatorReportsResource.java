@@ -11,10 +11,19 @@
  */
 package org.openmrs.module.dhisconnector.web.resource;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.web.controller.DHISConnectorRestController;
 import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn;
+import org.openmrs.module.reporting.dataset.definition.DataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.SimpleIndicatorDataSetDefinition;
+import org.openmrs.module.reporting.dataset.definition.SimpleIndicatorDataSetDefinition.SimpleIndicatorColumn;
+import org.openmrs.module.reporting.evaluation.parameter.Mapped;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.module.reporting.report.definition.ReportDefinition;
 import org.openmrs.module.reporting.report.definition.service.ReportDefinitionService;
@@ -25,15 +34,16 @@ import org.openmrs.module.webservices.rest.web.annotation.Resource;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
 import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.api.Retrievable;
-import org.openmrs.module.webservices.rest.web.resource.impl.*;
+import org.openmrs.module.webservices.rest.web.resource.impl.AlreadyPaged;
+import org.openmrs.module.webservices.rest.web.resource.impl.DataDelegatingCrudResource;
+import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
+import org.openmrs.module.webservices.rest.web.resource.impl.EmptySearchResult;
+import org.openmrs.module.webservices.rest.web.resource.impl.NeedsPaging;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Resource(name = RestConstants.VERSION_1 + DHISConnectorRestController.DHISCONNECTOR_NAMESPACE
 		+ "/periodindicatorreports", supportedClass = PeriodIndicatorReportDefinition.class, supportedOpenmrsVersions = {
-		"1.8.*", "1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
+				"1.8.*", "1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
 public class PeriodIndicatorReportsResource extends DataDelegatingCrudResource implements Retrievable {
 
 	@Override
@@ -95,11 +105,37 @@ public class PeriodIndicatorReportsResource extends DataDelegatingCrudResource i
 	public SimpleObject getSimpleColumns(PeriodIndicatorReportDefinition pird) {
 		SimpleObject simpleColumns = new SimpleObject();
 
-		List<CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn> cols = ((CohortIndicatorDataSetDefinition) (pird
-				.getDataSetDefinitions().get("defaultDataSet")).getParameterizable()).getColumns();
+		if (pird.getDataSetDefinitions().get("defaultDataSet") != null) {
 
-		for (CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn cd : cols) {
-			simpleColumns.add(cd.getName(), cd.getDimensionOptions());
+			List<CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn> cols = ((CohortIndicatorDataSetDefinition) (pird
+					.getDataSetDefinitions().get("defaultDataSet")).getParameterizable()).getColumns();
+
+			for (CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn cd : cols) {
+				simpleColumns.add(cd.getName(), cd.getDimensionOptions());
+			}
+		} else {
+			Map<String, Mapped<? extends DataSetDefinition>> dataSetDefinitions = pird.getDataSetDefinitions();
+
+			for (Mapped<? extends DataSetDefinition> mapped : dataSetDefinitions.values()) {
+
+				if (mapped.getParameterizable() instanceof CohortIndicatorDataSetDefinition) {
+
+					List<CohortIndicatorAndDimensionColumn> cols2 = ((CohortIndicatorDataSetDefinition) mapped
+							.getParameterizable()).getColumns();
+
+					for (CohortIndicatorAndDimensionColumn cd : cols2) {
+						simpleColumns.add(cd.getName(), cd.getDimensionOptions());
+					}
+				}else if (mapped.getParameterizable() instanceof SimpleIndicatorDataSetDefinition) {
+
+					List<SimpleIndicatorColumn> cols2 = ((SimpleIndicatorDataSetDefinition) mapped
+							.getParameterizable()).getColumns();
+
+					for (SimpleIndicatorColumn cd : cols2) {
+						simpleColumns.add(cd.getName(), null);
+					}
+				}
+			}
 		}
 
 		return simpleColumns;

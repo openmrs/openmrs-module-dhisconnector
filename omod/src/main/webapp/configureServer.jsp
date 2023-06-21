@@ -5,6 +5,10 @@
 
 <%@ include file="template/localHeader.jsp" %>
 
+<openmrs:htmlInclude file="/moduleResources/dhisconnector/configure-server.js"/>
+<openmrs:htmlInclude file="/moduleResources/dhisconnector/jquery.monthpicker.js"/>
+<openmrs:htmlInclude file="/moduleResources/dhisconnector/moment.min.js"/>
+
 <c:if test="${showLogin == 'true'}">
 	<c:redirect url="../../login.htm" />
 </c:if>
@@ -34,6 +38,28 @@
             <input name="saveConfig" type="submit" value="<spring:message code="dhisconnector.save" />"/>
           </openmrs:hasPrivilege>
           <input name="testConfig" type="submit" value="<spring:message code="dhisconnector.testConnection" />"/>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </form>
+  
+    <h3><spring:message code="dhisconnector.configure.reportExecutionPeriod"/></h3>
+  <form method="POST">
+    <table>
+    <tbody>
+    <tr>
+      <td><spring:message code="dhisconnector.openmrsStartDate"/></td>
+      <td><input type="number" name="startDate" min="1" max="31" value="${startDate}"/></td>
+    </tr>
+    <tr>
+      <td><spring:message code="dhisconnector.openmrsEndDate"/></td>
+      <td><input type="number" name="endDate" min="1" max="31" value="${endDate}"/></td>
+    </tr>
+      <tr>
+        <td/>
+        <td>
+            <input name="savePeriod" type="submit" value="<spring:message code="dhisconnector.save" />"/>
         </td>
       </tr>
     </tbody>

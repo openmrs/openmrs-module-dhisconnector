@@ -83,7 +83,7 @@
 					<br>
 					<label ng-hide="disableMultipleActions()">
 						<input type="checkbox" name="dontIncludeMetadata">
-						<span style="font-size: smaller">Do not include report metadata</span>
+						<span style="font-size: smaller"><openmrs:message code="dhisconnector.manage.mappings.metadata"/></span>
 					</label>
 				</form>
 			</div>

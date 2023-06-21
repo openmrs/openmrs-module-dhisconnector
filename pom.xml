@@ -26,9 +26,9 @@
     </organization>
 
     <scm>
-        <connection>scm:git:git@github.com:csaude/openmrs-module-dhisconnector.git</connection>
-        <developerConnection>scm:git:git@github.com:csaude/openmrs-module-dhisconnector.git</developerConnection>
-        <url>scm:git:git@github.com:csaude/openmrs-module-dhisconnector.git</url>
+        <connection>scm:git:git@github.com:FriendsInGlobalHealth/openmrs-module-dhisconnector.git</connection>
+        <developerConnection>scm:git:git@github.com:FriendsInGlobalHealth/openmrs-module-dhisconnector.git</developerConnection>
+        <url>scm:git:git@github.com:FriendsInGlobalHealth/openmrs-module-dhisconnector.git</url>
         <tag>HEAD</tag>
     </scm>
 

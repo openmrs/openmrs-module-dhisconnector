@@ -632,10 +632,12 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			HttpHost targetHost = new HttpHost(host, port, dhisURL.getProtocol());
 			client = new DefaultHttpClient();
 			BasicHttpContext localcontext = new BasicHttpContext();
+			
+			String endpointCorrected = endpoint.replace("\\/", "/");
 
-			HttpPost httpPost = new HttpPost(dhisURL.getPath() + endpoint
+			HttpPost httpPost = new HttpPost(dhisURL.getPath() + endpointCorrected
 					+ (configs.useAdxInsteadOfDxf()
-							? (endpoint.indexOf("?") > -1 ? "&"
+							? (endpointCorrected.indexOf("?") > -1 ? "&"
 									: "?" + "dataElementIdScheme=CODE&orgUnitIdScheme=CODE&idScheme=CODE")
 							: ""));
 

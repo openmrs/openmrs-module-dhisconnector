@@ -408,7 +408,7 @@ function populateOrgUnitsOfDataSet() {
     let datasetId = selectedMapping.dataSetUID;
     availableLocations = [];
     let locationMappings = jQuery('<tr id="orgUnitSelect"></tr>');
-    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId + "?v=full", function (data) {
+    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId, function (data) {
         for (var i = 0; i < data.organisationUnits.length ; i++) {
 
             let orgUnitName = data.organisationUnits[i].name;

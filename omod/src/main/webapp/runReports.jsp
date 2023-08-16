@@ -5,6 +5,7 @@
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector-runreports.js"/>
+<openmrs:htmlInclude file="/moduleResources/dhisconnector/modernizr.min.js"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/jquery.monthpicker.js"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/moment.min.js"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/highlight.min.js"/>
@@ -46,7 +47,7 @@
         <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>
         <input type="month" name="monthlyPicker" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
-               style="display: none"/>
+               style="display: none" onkeydown="return false"/>
         <input type="number" id="sixMonthlyPicker" min="1970" onchange="handleSixMonthlyPeriodChange()"
                style="display: none"/>
         <select id="sixMonthTypeSelector" onchange="handleSixMonthlyPeriodChange()" style="display: none">

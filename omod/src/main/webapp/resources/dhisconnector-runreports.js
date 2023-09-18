@@ -22,7 +22,20 @@ let selectedEndDate = null;
 let availableLocations = null;
 let selectedLocations = null;
 let selectedReportName = null;
+let userAgent = navigator.userAgent;
 
+	window.addEventListener('beforeunload', function (e) {
+        e.preventDefault();
+        e.returnValue = '';
+   });
+   
+   $j(document).ready(function () {
+	 if(userAgent.match(/firefox|fxios/i)){
+    $j('#monthlyPicker').datepicker({
+     });
+       }
+   });
+   
 function populateReportsDropdown() {
     // fetch reports
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/periodindicatorreports?q=hasMapping", function (data) {
@@ -230,10 +243,16 @@ function initializeYearlyPicker(month) {
 }
 
 function handleMonthlyPeriodChange() {
-    const selectedValue = moment(jQuery('#monthlyPicker').val(), "YYYY-MM");
+	let selectedValue = moment(jQuery('#monthlyPicker').val(), "YYYY-MM");
+	
+	if(userAgent.match(/firefox|fxios/i)){
+	selectedValue = jQuery('#monthlyPicker').val();
+	selectedPeriod = moment(selectedValue).format('YYYYMM');
+    }else {
     selectedStartDate = selectedValue.toDate();
     selectedEndDate = selectedValue.endOf('month').toDate();
     selectedPeriod = selectedValue.format('YYYYMM');
+    }
 }
 
 function handleSixMonthlyPeriodChange() {
@@ -408,7 +427,7 @@ function populateOrgUnitsOfDataSet() {
     let datasetId = selectedMapping.dataSetUID;
     availableLocations = [];
     let locationMappings = jQuery('<tr id="orgUnitSelect"></tr>');
-    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId + "?v=full", function (data) {
+    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId, function (data) {
         for (var i = 0; i < data.organisationUnits.length ; i++) {
 
             let orgUnitName = data.organisationUnits[i].name;

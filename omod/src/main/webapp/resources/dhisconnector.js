@@ -86,7 +86,7 @@ function getDataElementsAndCategoryComboOptions() {
 
     // fetch dataset details
     jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
-    displayIndicatorsAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + jQuery('#dataSetSelect').val() + "?v=full", function (data) {
+    displayIndicatorsAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + jQuery('#dataSetSelect').val() + "", function (data) {
 
         jQuery('#periodType').html(data.periodType);
 
@@ -212,7 +212,7 @@ function populateReportsDropdown() {
 
 function populateDataSetsDropdown() {
     // fetch datasets
-	dataSetsDropDownAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets?v=full", function (data) {
+	dataSetsDropDownAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets", function (data) {
 
         var reportSelect = jQuery('<select id="dataSetSelect"><option>Select</option></select>');
         reportSelect.on('change', onDataSetSelect);

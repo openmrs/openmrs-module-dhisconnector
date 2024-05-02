@@ -89,6 +89,8 @@ function getDataElementsAndCategoryComboOptions() {
     displayIndicatorsAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + jQuery('#dataSetSelect').val() + "", function (data) {
 
         jQuery('#periodType').html(data.periodType);
+        
+        console.log(data);
 
         dataElements = (data.dataElements.length == 0 && data.dataSetElements.length > 0) ? data.dataSetElements : data.dataElements;
         var dataElementsOptionsCol = jQuery('#dataElementsOptions');

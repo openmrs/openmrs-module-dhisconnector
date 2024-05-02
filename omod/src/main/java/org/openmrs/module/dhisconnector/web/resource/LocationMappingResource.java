@@ -44,6 +44,7 @@ public class LocationMappingResource extends DataDelegatingCrudResource implemen
 			simpleObject.add("locationName", locationToOrgUnitMapping.getLocation().getName());
 			simpleObject.add("orgUnitUid", locationToOrgUnitMapping.getOrgUnitUid());
 			simpleObject.add("locationUid", locationToOrgUnitMapping.getLocation().getUuid());
+			simpleObject.add("serverUuid", locationToOrgUnitMapping.getServerUuid());
 			return simpleObject;
 		} catch (Exception exception) {
 			return new SimpleObject();

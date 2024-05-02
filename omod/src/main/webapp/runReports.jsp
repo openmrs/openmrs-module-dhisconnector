@@ -22,29 +22,43 @@
   <table>
     <tbody id="tableBody">
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.report"/></th>
+      <th class="runHeader"><spring:message code="dhisconnector.report"/><br>
+      <span id="reportsSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span>
+      <br>
+      <br>
+      </th>
       <td>
-        <span id="reportsSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span>
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.mapping"/></th>
+      <th class="runHeader"><spring:message code="dhisconnector.mapping"/><br>
+      <span id="mappingSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span>
+      <br>
+      <br>
+      </th>
       <td>
-        <span id="mappingSelectContainer"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/></span>
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.location"/></th>
+<!--       <th class="runHeader"><spring:message code="dhisconnector.location"/></th> -->
+<th class="runHeader">
     </tr>
     <tr>
       <td>
-        <div id="locationsList" class="max-content-size"><spring:message code="dhisconnector.run.reports.choose.location"/></div>
+<!--         <div id="locationsList" class="max-content-size"><spring:message code="dhisconnector.run.reports.choose.location"/> -->
+<!--         </div> -->
+  <table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;" id="locationsList">
+    <thead>
+    <tr><th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 5%;"></th><th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 45%;">Servidor DHIS2</th>
+	<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 25%;">Unidade Organizacional DHIS2</th>
+    <th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 25%;">Localização do OpenMRS</th>
+    </tr>
+
+  </table>
       </td>
-    </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.run.reports.period"/></th>
-      <td>
-        <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
+      <th class="runHeader"><br><spring:message code="dhisconnector.run.reports.period"/><br>
+      <input type="text" id="dailyPicker" class="periodSelector" style="display: none"/>
         <input type="text" id="weeklyPicker" class="periodSelector" style="display: none"/>
         <input type="month" name="monthlyPicker" id="monthlyPicker" onchange="handleMonthlyPeriodChange()"
                style="display: none" onkeydown="return false"/>
@@ -74,7 +88,10 @@
                   The mapped period type is not supported. Please type the appropriate value
               </span>
           <input type="text" id="customPeriodSelector" onchange="handleCustomPeriodChange()"/>
-        </div>
+        </div><br>
+      </th>
+      <td>
+        
       </td>
     </tr>
     <tr>
@@ -105,13 +122,15 @@
       </td>
     </tr>
     <tr>
-      <th class="runHeader"><spring:message code="dhisconnector.action"/></th>
-      <td><input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/>
+      <th class="runHeader"><spring:message code="dhisconnector.action"/><br>
+      <input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/>
             <input id="reSend" name="reSend" type="button" onclick="reSendReportDataToDHIS()" disabled="true" value="<spring:message code="dhisconnector.rePost" />"/>
        <input
               name="submit" type="button" onclick="generateDXFDownload()"
               value="<spring:message code="dhisconnector.dxf.download" />" />
-        <input name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" /></td>
+        <input name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" />
+      </th>
+      <td></td>
     </tr>
     </tbody>
   </table>

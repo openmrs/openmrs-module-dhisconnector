@@ -37,6 +37,7 @@ import java.util.Date;
 import java.util.Enumeration;
 import java.util.GregorianCalendar;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -87,6 +88,8 @@ import org.openmrs.api.context.Context;
 import org.openmrs.api.db.SerializedObject;
 import org.openmrs.api.impl.BaseOpenmrsService;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.DHISServerConfiguration;
+import org.openmrs.module.dhisconnector.DHISServerReportsToReceive;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping.ReportingPeriodType;
@@ -104,10 +107,13 @@ import org.openmrs.module.dhisconnector.api.model.DHISDataElement;
 import org.openmrs.module.dhisconnector.api.model.DHISDataSet;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValue;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
+import org.openmrs.module.dhisconnector.api.model.DHISImportErrorSummary;
 import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
+import org.openmrs.module.dhisconnector.api.model.DHISImportSummaryImportCount;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMappingElement;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 import org.openmrs.module.dhisconnector.api.model.lockexception.ExceptionByExample;
 import org.openmrs.module.dhisconnector.api.model.lockexception.LockException;
 import org.openmrs.module.dhisconnector.api.util.DHISConnectorPeriodUtils;
@@ -280,13 +286,44 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 
 	@Override
 	public String getDataFromDHISEndpoint(String endpoint) {
+
 		String url = Context.getAdministrationService().getGlobalProperty("dhisconnector.url");
 		String user = Context.getAdministrationService().getGlobalProperty("dhisconnector.user");
 		String pass = Context.getAdministrationService().getGlobalProperty("dhisconnector.pass");
 
-		DefaultHttpClient client = null;
 		String payload = "";
+		DefaultHttpClient client = null;
 
+		payload = getDataFromEachDHISEndpoint(endpoint, url, user, pass, client, payload);
+
+		return payload;
+	}
+
+	public String getDHISOrgUnits(String endpoint) {
+
+		String payload = "";
+		String url = "";
+		String user = "";
+		String pass = "";
+		DefaultHttpClient client = null;
+
+		List<DHISServerConfiguration> dhisServerConfigurations = this.getDHISServerConfigurations();
+
+		if (dhisServerConfigurations.size() > 0) {
+
+			url = dhisServerConfigurations.get(0).getUrl();
+			user = dhisServerConfigurations.get(0).getUser();
+			pass = dhisServerConfigurations.get(0).getPassword();
+
+		}
+
+		payload = getDataFromEachDHISEndpoint(endpoint, url, user, pass, client, payload);
+
+		return payload;
+	}
+
+	private String getDataFromEachDHISEndpoint(String endpoint, String url, String user, String pass,
+			DefaultHttpClient client, String payload) {
 		if (StringUtils.isNotBlank(endpoint)) {
 			try {
 				if (endpoint.contains("fields=")) {
@@ -328,7 +365,6 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				}
 			}
 		}
-
 		return payload;
 	}
 
@@ -606,21 +642,33 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 
 	@Override
 	public String postDataToDHISEndpoint(String endpoint, String data) {
-		String url = Context.getAdministrationService().getGlobalProperty("dhisconnector.url");
-		String user = Context.getAdministrationService().getGlobalProperty("dhisconnector.user");
-		String pass = Context.getAdministrationService().getGlobalProperty("dhisconnector.pass");
 
-		DefaultHttpClient client = null;
+		String url = "";
+		String user = "";
+		String pass = "";
+
 		String payload = "";
+		DefaultHttpClient client = null;
 		String extension = ".json";
 
+		url = Context.getAdministrationService().getGlobalProperty("dhisconnector.url");
+		user = Context.getAdministrationService().getGlobalProperty("dhisconnector.user");
+		pass = Context.getAdministrationService().getGlobalProperty("dhisconnector.pass");
+
+		payload = postDataToEachDHISEndPoint(endpoint, data, url, user, pass, client, payload, extension);
+
+		return payload;
+	}
+
+	private String postDataToEachDHISEndPoint(String endpoint, String data, String url, String user, String pass,
+			DefaultHttpClient client, String payload, String extension) {
 		try {
 			if (!endpoint.startsWith(File.separator))
 				endpoint = File.separator + endpoint;
-			
+
 			String dataLocation = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_DATA_FOLDER + endpoint;
 			File dataFile = new File(dataLocation);
-			
+
 			if (!dataFile.exists())
 				dataFile.mkdirs();
 
@@ -632,7 +680,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			HttpHost targetHost = new HttpHost(host, port, dhisURL.getProtocol());
 			client = new DefaultHttpClient();
 			BasicHttpContext localcontext = new BasicHttpContext();
-			
+
 			String endpointCorrected = endpoint.replace("\\/", "/");
 
 			HttpPost httpPost = new HttpPost(dhisURL.getPath() + endpointCorrected
@@ -658,8 +706,8 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 
 			HttpResponse response = client.execute(targetHost, httpPost, localcontext);
 			HttpEntity entity = response.getEntity();
-			
-			if(response.getStatusLine().getStatusCode() != 200) {
+
+			if (response.getStatusLine().getStatusCode() != 200) {
 				backUpData(endpoint, data, extension);
 			}
 
@@ -678,7 +726,6 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 				client.getConnectionManager().shutdown();
 			}
 		}
-
 		return payload;
 	}
 
@@ -788,6 +835,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String responseString;
 
 		try {
+
 			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 			jsonOrXmlString = configs.useAdxInsteadOfDxf()
 					? factory.translateAdxDataValueSetIntoString(convertDHISDataValueSetToAdxDataValueSet(dataValueSet))
@@ -804,6 +852,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 					return mapper.readValue(responseString, DHISImportSummary.class);
 				}
 			}
+
 		} catch (Exception e) {
 			log.error("Exception", e);
 		}
@@ -866,7 +915,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String jsonResponse = new String();
 		JsonNode node;
 
-		jsonResponse = getDataFromDHISEndpoint(DHISCONNECTOR_ORGUNIT_RESOURCE);
+		jsonResponse = getDHISOrgUnits(DHISCONNECTOR_ORGUNIT_RESOURCE);
 
 		try {
 			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -1831,7 +1880,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public Object sendReportDataToDHIS(Report ranReport, DHISMapping mapping, String dhisPeriod, String orgUnitUid) {
 		DHISDataValueSet dataValueSet = new DHISDataValueSet();
 		DataSet ds = ranReport.getReportData().getDataSets().get("defaultDataSet");
-		if (ranReport.getReportData().getDataSets().size() == 2) {
+		if (ranReport.getReportData().getDataSets().size() >= 2) {
 			ds = ranReport.getReportData().getDataSets().get("R");
 		}
 		List<DataSetColumn> columns = ds.getMetaData().getColumns();
@@ -2012,7 +2061,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		if (exceptionByExample == null || exceptionByExample.getLockExceptions() == null) {
 			return Boolean.FALSE;
 		}
-		
+
 		for (LockException lockException : exceptionByExample.getLockExceptions()) {
 
 			if (dhisDatasetListName.equals(lockException.getDataSet().getId())
@@ -2030,6 +2079,14 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		String user = Context.getAdministrationService().getGlobalProperty("dhisconnector.user");
 		String pass = Context.getAdministrationService().getGlobalProperty("dhisconnector.pass");
 
+		String payload = "";
+
+		payload = getPayloadForEachDHISEndPoint(datasetPath, url, user, pass);
+
+		return payload;
+	}
+
+	private String getPayloadForEachDHISEndPoint(String datasetPath, String url, String user, String pass) {
 		DefaultHttpClient client = null;
 		String payload = "";
 
@@ -2068,6 +2125,208 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 			}
 		}
 		return payload;
+	}
+
+	@Override
+	public void saveDHISServerConfiguration(DHISServerConfiguration server) {
+		getDao().saveDHISServerConfiguration(server);
+	}
+
+	@Override
+	public List<DHISServerConfiguration> getDHISServerConfigurations() {
+		return getDao().getDHISServerConfigurations();
+	}
+
+	@Override
+	public void permanentlyDHISServerConfiguration(DHISServerConfiguration server) {
+		getDao().deleteDHISServerConfiguration(server);
+	}
+
+	@Override
+	public void saveDHISServerReportsToReceive(String[] reports) {
+
+		List<DHISServerReportsToReceive> serverReports = new ArrayList<>();
+		String serverUuid = reports[0];
+		for (String uuid : reports) {
+
+			DHISServerReportsToReceive dhisReport = this
+					.getDHISServerReportsToReceiveByServerUuidAndReportUuid(serverUuid, uuid);
+
+			if (dhisReport == null) {
+				dhisReport = new DHISServerReportsToReceive();
+				dhisReport.setDhisServerUuid(serverUuid);
+				dhisReport.setSespReportUuid(uuid);
+
+				serverReports.add(dhisReport);
+			}
+		}
+
+		getDao().saveDHISServerReportsToReceive(serverReports);
+
+	}
+
+	@Override
+	public List<DHISServerReportsToReceive> getDHISServerReportsToReceive() {
+		return getDao().getDHISServerReportsToReceive();
+	}
+
+	@Override
+	public DHISServerReportsToReceive getDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid,
+			String sespReportUuid) {
+		return getDao().getDHISServerReportsToReceiveByServerUuidAndReportUuid(dhisServerUuid, sespReportUuid);
+	}
+
+	@Override
+	public DHISServerConfiguration getDHISServerByUrl(String serverUrl) {
+		return getDao().getDHISServerByUrl(serverUrl);
+	}
+
+	@Override
+	public String postDataToMultipleDHISEndpoint(String endpoint, String data, DHISServerConfigurationDTO dhisServer) {
+
+		String url = dhisServer.getUrl();
+		String user = dhisServer.getUser();
+		String pass = dhisServer.getPassword();
+
+		String payload = "";
+		DefaultHttpClient client = null;
+		String extension = ".json";
+
+		payload = postDataToEachDHISEndPoint(endpoint, data, url, user, pass, client, payload, extension);
+
+		return payload;
+	}
+
+	@Override
+	public List<Object> postDataValueSetToMultiPleDhisServers(DHISDataValueSet dataValueSet) {
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonOrXmlString;
+		String responseString;
+		List<Object> responses = new ArrayList<>();
+		mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+		try {
+			for (DHISServerConfigurationDTO dhisServer : dataValueSet.getDhisServers()) {
+
+				jsonOrXmlString = configs.useAdxInsteadOfDxf()
+						? factory.translateAdxDataValueSetIntoString(
+								convertDHISDataValueSetToAdxDataValueSet(dataValueSet))
+						: mapper.writeValueAsString(dataValueSet);
+				responseString = postDataToMultipleDHISEndpoint(DATAVALUESETS_PATH, jsonOrXmlString, dhisServer);
+
+				if (StringUtils.isNotBlank(responseString)) {
+					if (configs.useAdxInsteadOfDxf()) {
+						JAXBContext jaxbImportSummaryContext = JAXBContext.newInstance(ImportSummaries.class);
+						Unmarshaller importSummaryUnMarshaller = jaxbImportSummaryContext.createUnmarshaller();
+						responses.add((ImportSummaries) importSummaryUnMarshaller
+								.unmarshal(new StringReader(responseString)));
+					} else {
+						try {
+							DHISImportSummary summary = mapper.readValue(responseString, DHISImportSummary.class);
+							URL url = new URL(dhisServer.getUrl());
+							summary.setDescription("Relatório enviado com sucesso para o servidor DHIS2 : "
+									+ url.getAuthority() + url.getPath() + "");
+							responses.add(summary);
+							
+							DHISImportSummaryImportCount p = mapper.readValue(responseString, DHISImportSummaryImportCount.class);
+							
+						} catch (Exception e) {
+							DHISImportSummary error = new DHISImportSummary();
+							URL url = new URL(dhisServer.getUrl());
+							error.setStatus("ERROR");
+							error.setDescription("Falha no envio de relatório para o servidor DHIS2 : "
+									+ url.getAuthority() + url.getPath() + "");
+							responses.add(error);
+						}
+					}
+				}
+
+			}
+
+			return responses;
+
+		} catch (Exception e) {
+			log.error("Exception", e);
+		}
+		return null;
+	}
+
+	@Override
+	public DHISServerConfiguration getDHISServerByUuid(String serverUuid) {
+		return getDao().getDHISServerByUuid(serverUuid);
+	}
+
+	@Override
+	public List<DHISOrganisationUnit> getDHISOrgUnitsByServer(DHISServerConfiguration server) {
+
+		List<DHISOrganisationUnit> orgUnits = new ArrayList<DHISOrganisationUnit>();
+
+		ObjectMapper mapper = new ObjectMapper();
+		String jsonResponse = new String();
+		JsonNode node;
+
+		jsonResponse = getDataFromEachDHISEndpoint(DHISCONNECTOR_ORGUNIT_RESOURCE, server.getUrl(), server.getUser(),
+				server.getPassword(), null, "");
+
+		try {
+			mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+			node = mapper.readTree(jsonResponse);
+			orgUnits = Arrays
+					.asList(mapper.readValue(node.get("organisationUnits").toString(), DHISOrganisationUnit[].class));
+		} catch (Exception ex) {
+			log.error("Exception", ex);
+		}
+
+		return orgUnits;
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(Location location,
+			String orgUnitId, String serverUuid) {
+		return getDao().getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(location, orgUnitId, serverUuid);
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(Location location,
+			String serverUuid, String orgUnitUid) {
+		getDao().deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(location, serverUuid, orgUnitUid);
+	}
+
+	@Override
+	public void verifyDHISServerReportsToReceiveToBeDeleted(String[] payload,
+			List<DHISServerReportsToReceive> serversWithReports) {
+		boolean configurationToBeDeleted = true;
+
+		String dhisServerUrlUuid = payload[0];
+
+		for (DHISServerReportsToReceive dhisServerReportsToReceive : serversWithReports) {
+
+				for (int i = 1; i < payload.length; i++) {
+
+					if (dhisServerReportsToReceive.getSespReportUuid().equals(payload[i])) {
+						configurationToBeDeleted = false;
+						break;
+					}
+					
+					configurationToBeDeleted = true;
+				}
+
+				if (configurationToBeDeleted) {
+					this.deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(dhisServerUrlUuid,
+							dhisServerReportsToReceive.getSespReportUuid());
+			}
+		}
+	}
+
+	@Override
+	public void deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid,
+			String sespReportUuid) {
+		getDao().deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(dhisServerUuid, sespReportUuid);
+	}
+
+	@Override
+	public List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid) {
+		return getDao().getDHISServerReportsToReceiveByServerUuid(dhisServerUuid);
 	}
 
 }

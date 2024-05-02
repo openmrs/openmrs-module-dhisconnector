@@ -40,13 +40,17 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
     @ManyToOne(optional = false)
     @JoinColumn(name = "location")
     private Location location;
+    
+    @Column(name = "server_uuid", nullable = false)
+    private String serverUuid;
 
     public LocationToOrgUnitMapping() {
     }
 
-    public LocationToOrgUnitMapping(Location location, String orgUnitId) {
+    public LocationToOrgUnitMapping(Location location, String orgUnitId, String serverUuid) {
         setLocation(location);
         setOrgUnitUid(orgUnitId);
+        setServerUuid(serverUuid);
     }
 
     public Integer getId() {
@@ -100,4 +104,13 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
     }
+
+	public String getServerUuid() {
+		return serverUuid;
+	}
+
+	public void setServerUuid(String serverUuid) {
+		this.serverUuid = serverUuid;
+	}
+    
 }

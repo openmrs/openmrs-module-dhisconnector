@@ -22,6 +22,7 @@ import java.util.List;
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({
+	"dhisServers",
     "dataSet",
     "completeData",
     "period",
@@ -30,7 +31,9 @@ import java.util.List;
     "dataValues"
 })
 public class DHISDataValueSet {
-
+	
+    @JsonProperty("dhisServers")
+    private List<DHISServerConfigurationDTO> dhisServers = new ArrayList<DHISServerConfigurationDTO>();
     @JsonProperty("dataSet")
     private String dataSet;
     @JsonProperty("completeData")
@@ -43,7 +46,6 @@ public class DHISDataValueSet {
     private String reportName;
     @JsonProperty("dataValues")
     private List<DHISDataValue> dataValues = new ArrayList<DHISDataValue>();
-
     /**
      * 
      * @return
@@ -170,4 +172,28 @@ public class DHISDataValueSet {
 
         dataValues.add(dataValue);
     }
+
+    @JsonProperty("dhisServers")
+	public List<DHISServerConfigurationDTO> getDhisServers() {
+		return dhisServers;
+	}
+
+	/**
+     * 
+     * @param dhisServers
+     *     The dhisServers
+     */
+    @JsonProperty("dhisServers")
+	public void setDhisServers(List<DHISServerConfigurationDTO> dhisServers) {
+		this.dhisServers = dhisServers;
+	}
+    
+    public void addDhisServer(DHISServerConfigurationDTO server) {
+        if(dhisServers == null) {
+        	dhisServers = new ArrayList<DHISServerConfigurationDTO>();
+        }
+
+        dhisServers.add(server);
+    }
+
 }

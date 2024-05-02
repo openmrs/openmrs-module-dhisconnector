@@ -20,3 +20,63 @@ function fetchLocationMappings() {
 	})
 	jQuery("input[name='locationMappings']").val(locationMappings);
 }
+
+function saveLocationOrgUnitsMappings() {
+	
+	let locationOrgUnitsMappings = "";
+	
+	let orgUnit = jQuery("[name='orgUnits']").val();
+	let server = jQuery("[name='servers']").val();
+	let location = jQuery("[name='locations']").val();
+	
+	console.log(orgUnit);
+	console.log(server);
+	console.log(location);
+    
+    locationOrgUnitsMappings = locationOrgUnitsMappings + server +","+ orgUnit + "," + location;
+   
+	jQuery("input[name='locationOrgUnitsMappings']").val(locationOrgUnitsMappings);
+	
+	console.log(jQuery("input[name='locationOrgUnitsMappings']").val(locationOrgUnitsMappings));
+}
+
+
+function getOrgUnitsByServer(event) {
+	
+	let selectOrgUnits = $j("#orgUnits").empty();
+	let serverUuid = event.value;
+	//let text = event.options[event.selectedIndex].text;
+	
+	jQuery.ajax({
+		url: "../../module/dhisconnector/orgUnitsByServer.form?serverUuid="+serverUuid,
+		type: "GET",
+		contentType: "application/json; charset=utf-8",
+		dataType: "json",
+		success: function(data) {
+			console.log(data);
+			for (var i=0; i<data.length; i++) {
+				console.log(data[i].id);
+			  selectOrgUnits.append('<option value="' + data[i].id + '">' + data[i].name + '</option>');
+			}
+			//window.location = '../../module/dhisconnector/locationMapping.form';
+		},
+		error: function(data) {
+			console.log(data);
+		}
+	});
+}
+
+function removeMapping(mapping){
+	        jQuery.ajax({
+            type: "POST",
+            url: "deleteLocationMapping.form?mapping=" + mapping,
+            contentType: "application/json;charset=utf-8",
+            datatype: "json",
+            success: function (data) {
+			window.location = '../../module/dhisconnector/locationMapping.form';
+            }, 
+            error: function (xhr, status, error) {
+
+		    }
+        });
+}

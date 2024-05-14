@@ -169,4 +169,6 @@ public interface DHISConnectorService extends OpenmrsService {
 	void verifyDHISServerReportsToReceiveToBeDeleted(String[] payload, List<DHISServerReportsToReceive> serversWithReports);
 	
 	List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid);
+	
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid);
 }

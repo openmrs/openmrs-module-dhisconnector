@@ -32,13 +32,15 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 public class LocationMappingResource extends DataDelegatingCrudResource implements Retrievable {
 	@Override
 	public SimpleObject search(RequestContext context) throws ResponseException {
-		String query = context.getParameter("orgUnitUid");
-		if (query == null) {
+		//String query = context.getParameter("orgUnitUid");
+		String orgUnitUid = context.getParameter("orgUnitUid");
+		String serverUuid = context.getParameter("serverUuid");
+		if (orgUnitUid == null || serverUuid == null) {
 			return new SimpleObject();
 		}
 		try {
 			LocationToOrgUnitMapping locationToOrgUnitMapping = Context.getService(DHISConnectorService.class)
-					.getLocationToOrgUnitMappingByOrgUnitUid(query);
+					.getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(orgUnitUid,serverUuid);
 			SimpleObject simpleObject = new SimpleObject();
 			simpleObject.add("locationId", locationToOrgUnitMapping.getLocation().getLocationId());
 			simpleObject.add("locationName", locationToOrgUnitMapping.getLocation().getName());

@@ -423,42 +423,70 @@ function populateMappingsDropdown() {
 }
 
 function populateOrgUnitsOfDataSet() {
+	
 	populateServersToSendReport();
-    //jQuery('#locationsList').html("");
+	//jQuery('#locationsList').html("");
 
     // fetch datasets
     let datasetId = selectedMapping.dataSetUID;
     availableLocations = [];
-    //let locationMappings = jQuery('<tr id="orgUnitSelect"></tr>');
-    let locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
-    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId, function (data) {
-        for (var i = 0; i < data.organisationUnits.length ; i++) {
+    let orgUnitName = "";
+    let orgUnitUid = "";
+    let serveruuid = "";
+    let serverUrl = "";
+    let locationMappings = "";
+	
+		try {
+			const element = document.getElementById(orgUnitSelect);
+			$j('#locationsList tbody').remove();
+			locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
+		} catch (e) {
+		    if (e instanceof ReferenceError) {
+		    locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
+		    }
+		}
 
-            let orgUnitName = data.organisationUnits[i].name;
-            jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + data.organisationUnits[i].id, function (mappingData) {
+    jQuery.ajaxSetup({ async: false });
+    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId, function (data) {
+	
+        for (let i = 0; i < data.organisationUnits.length ; i++) {
+
+            orgUnitName = data.organisationUnits[i].name;
+            orgUnitUid = data.organisationUnits[i].id;
+            
+            for (let j = 0; j <  servers.length ; j++) {
+	            
+	        serveruuid = servers[j].serveruuid;
+	        serverUrl = servers[j].url;
+
+            jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid +"&serverUuid=" +serveruuid, function (mappingData) {
 			
-                mappingData.orgUnitName = orgUnitName;
-                availableLocations.push(mappingData);
-                if (!(mappingData.locationName === undefined)) {
-						let serverName = "";
-					    for (let i = 0; i <  servers.length ; i++) {
-							if(mappingData.serverUuid === servers[i].serveruuid){
-								serverName = servers[i].url;
-								break;
-							}
-		  				}
-//                   locationMappings.append('<tr><td><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/><span>'+serverName +'   |    '+ mappingData.orgUnitName +'   |    '+ mappingData.locationName +'</span></td></tr>');
-                   locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingData) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>'+serverName +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingData.orgUnitName +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingData.locationName +'</span></td></tr>');
-                }
+                if (!(mappingData.locationName === undefined) && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
+	
+						 mappingData.orgUnitName = orgUnitName;
+						 mappingData.serverUrl = serverUrl;
+						 
+						 availableLocations.push(mappingData);
+               }
             });
-        }
+
+         }
+                 
+      }
     });
-    //jQuery('#locationsList').html("");
+         
+       for (let l = 0; l <  availableLocations.length ; l++) {
+			
+			mappingLocation = availableLocations[l];
+     		locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>'+ mappingLocation.serverUrl +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingLocation.orgUnitName +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingLocation.locationName +'</span></td></tr>');
+		}
 
     jQuery('#locationsList').append(locationMappings);
 
     jQuery("#locationMappings").hide().fadeIn("slow");
     
+    jQuery.ajaxSetup({ async: true });
+        
 }
 
 function getReportData(locationUid) {
@@ -653,7 +681,7 @@ function downloadAdx() {
 }
 
 function sendDataToDHIS() {
-	
+		
 	let yesSend = confirm("Do you really want to send the report to the selected period? ("+selectedPeriod.toString()+")");
 	if(yesSend){
     selectedLocations = [];
@@ -662,6 +690,21 @@ function sendDataToDHIS() {
 	jQuery("#orgUnitSelect input[type='checkbox']:checked").each(function() {
         selectedLocations.push(availableLocations[this.id])
     })
+    
+    if(selectedMapping.periodType === 'Daily'){
+	
+		let locationsToSendNames = '';
+		
+		for (let i = 0; i < selectedLocations.length ; i++) {
+			locationsToSend.push(selectedLocations[i]);
+			locationsToSendNames = locationsToSendNames+ ' '+selectedLocations[i].locationName +'\n';
+		}
+		
+	if(locationsToSend.length > 0){
+		alert('O relatório será enviado para a(s) localização(ões) : '+locationsToSendNames+' \n .');
+	}
+	
+	}else{
 
 	let locationsToNotSend = '';
 	for (let i = 0; i < selectedLocations.length ; i++) {
@@ -688,12 +731,13 @@ function sendDataToDHIS() {
 	if(locationsToNotSend.length > 0){
 		alert('O relatório não será enviado para a(s) localização(ões) : '+locationsToNotSend+' \n porque o mês selecionado não está aberto para envio dos dados.');
 	}
+	}
 		
 	if(locationsToSend.length > 0){
 		
 		jQuery('#send').prop('disabled', true);
 		jQuery('#responseRow').remove();
-	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Sending...</th></tr>');
+	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Enviando, aguarde...</th></tr>');
 	    jQuery('#tableBody').append(loadingRow);
 	    loadingRow.hide().fadeIn("slow");
  	

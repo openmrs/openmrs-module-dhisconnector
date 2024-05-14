@@ -2329,4 +2329,9 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		return getDao().getDHISServerReportsToReceiveByServerUuid(dhisServerUuid);
 	}
 
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid) {
+		return getDao().getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(orgUnitUid, serverUuid);
+	}
+
 }

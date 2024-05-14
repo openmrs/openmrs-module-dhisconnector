@@ -80,23 +80,21 @@ function getCategoryComboOptions(dataElementId, requests) {
 }
 
 function getDataElementsAndCategoryComboOptions() {
-
     var def = jQuery.Deferred();
     var requests = [];
 
     // fetch dataset details
     jq("#loading-progress-bar").html("<img class='loading-progress-bar-img' src='../../moduleResources/dhisconnector/hor_loading.gif'/>");
-    displayIndicatorsAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + jQuery('#dataSetSelect').val() + "", function (data) {
+    displayIndicatorsAjax = jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + jQuery('#dataSetSelect').val() + "?v=full", function (data) {
 
         jQuery('#periodType').html(data.periodType);
-        
-        console.log(data);
 
         dataElements = (data.dataElements.length == 0 && data.dataSetElements.length > 0) ? data.dataSetElements : data.dataElements;
         var dataElementsOptionsCol = jQuery('#dataElementsOptions');
         dataElementsOptionsCol.html("");
         jQuery('#categoryComboOptions').html("");
         categoryComboOptions = {};
+
 
         dataElementsOptionsCol.append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Data Elements</h4></div></div></div>');
         jQuery('#categoryComboOptions').append('<div class="reportRow row"><div class="reportIndicatorCol col-xs"><div class="reportIndicator box" style="height:2.8em;"><h4>Category Option Combinations</h4></div></div></div><img id="categoryComboLoader" class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>');

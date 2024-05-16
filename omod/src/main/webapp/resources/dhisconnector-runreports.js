@@ -496,6 +496,11 @@ function getReportData(locationUid) {
     let startDate = selectedStartDate;
     let endDate = selectedEndDate;
     
+    if(selectedMapping.periodType === 'Daily'){
+		startDate = selectedEndDate;
+		endDate = selectedEndDate;
+	}else{
+    
     let globalPropertyStartDate = jQuery('#global-property-start-date').val();
     let globalPropertyEndDate = jQuery('#global-property-end-date').val();
     
@@ -512,6 +517,8 @@ function getReportData(locationUid) {
             return;
         }
     }
+   }
+
     // fetch report data
     return jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/reportingrest/reportdata/" + reportGUID + "?startDate=" + moment(startDate).format('YYYY-MM-DD') + "&endDate=" + moment(endDate).format('YYYY-MM-DD') + "&location=" + locationGUID + "&v=custom:(dataSets)", function (data) {
         reportData = data;
@@ -784,7 +791,6 @@ function sendDataToDHIS() {
 function displayPostReponseSuccessPerServer(error, mappingIndex, mappingsToBeExecuted) {
 	
 	mappingsToBeExecuted = mappingsToBeExecuted - 1;
-	console.log(mappingsToBeExecuted);
 	if(mappingIndex == mappingsToBeExecuted){
 		jQuery('#loadingRow').remove();
 	}
@@ -803,7 +809,6 @@ function displayPostReponseSuccessPerServer(error, mappingIndex, mappingsToBeExe
 function displayPostReponseErrorPerServer(error, mappingIndex, mappingsToBeExecuted) {
 	
 	mappingsToBeExecuted = mappingsToBeExecuted - 1;
-	console.log(mappingsToBeExecuted);
 	if(mappingIndex == mappingsToBeExecuted){
 		jQuery('#loadingRow').remove();
 	}

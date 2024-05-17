@@ -425,6 +425,8 @@ function populateMappingsDropdown() {
 async function populateOrgUnitsOfDataSet() {
     populateServersToSendReport();
 
+	setButtonDisabled(true);
+
     // fetch datasets
     let datasetId = selectedMapping.dataSetUID;
     availableLocations = [];
@@ -448,36 +450,52 @@ async function populateOrgUnitsOfDataSet() {
         const datasetResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId);
         const data = await datasetResponse.json();
 
-        for (let i = 0; i < data.organisationUnits.length; i++) {
-            orgUnitName = data.organisationUnits[i].name;
-            orgUnitUid = data.organisationUnits[i].id;
-
-            for (let j = 0; j < servers.length; j++) {
-                serveruuid = servers[j].serveruuid;
-                serverUrl = servers[j].url;
-
-                const mappingResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid + "&serverUuid=" + serveruuid);
-                const mappingData = await mappingResponse.json();
-
-                if (mappingData.locationName !== undefined && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
-                    mappingData.orgUnitName = orgUnitName;
-                    mappingData.serverUrl = serverUrl;
-                    availableLocations.push(mappingData);
-                }
-            }
-        }
-
-        for (let l = 0; l < availableLocations.length; l++) {
-            let mappingLocation = availableLocations[l];
-            locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>' + mappingLocation.serverUrl + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.orgUnitName + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.locationName + '</span></td></tr>');
-        }
-
-        jQuery('#locationsList').append(locationMappings);
-        jQuery("#locationMappings").hide().fadeIn("slow");
+		if(data.organisationUnits !== undefined)
+		{
+	        for (let i = 0; i < data.organisationUnits.length; i++) {
+	            orgUnitName = data.organisationUnits[i].name;
+	            orgUnitUid = data.organisationUnits[i].id;
+	
+	            for (let j = 0; j < servers.length; j++) {
+	                serveruuid = servers[j].serveruuid;
+	                serverUrl = servers[j].url;
+	
+	                const mappingResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid + "&serverUuid=" + serveruuid);
+	                const mappingData = await mappingResponse.json();
+	
+	                if (mappingData.locationName !== undefined && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
+	                    mappingData.orgUnitName = orgUnitName;
+	                    mappingData.serverUrl = serverUrl;
+	                    availableLocations.push(mappingData);
+	                }
+	            }
+	        }
+	
+	        for (let l = 0; l < availableLocations.length; l++) {
+	            let mappingLocation = availableLocations[l];
+	            locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>' + mappingLocation.serverUrl + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.orgUnitName + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.locationName + '</span></td></tr>');
+	        }
+	
+	        jQuery('#locationsList').append(locationMappings);
+	        jQuery("#locationMappings").hide().fadeIn("slow");
+	
+			setButtonDisabled(false);
+		}
+		else{
+			alert('O mapeamento '+selectedMapping.name+' não corresponde ao relatório selecionado ');
+			setButtonDisabled(false);
+		}
 
     } catch (error) {
         console.error('Error fetching data:', error);
     }
+}
+
+function setButtonDisabled(status){
+	
+	jQuery('#send').prop('disabled', status);
+    jQuery('#dxfDownload').prop('disabled', status);
+    jQuery('#adxDownload').prop('disabled', status);
 }
 
 

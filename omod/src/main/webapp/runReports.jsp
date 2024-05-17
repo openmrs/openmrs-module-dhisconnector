@@ -125,10 +125,10 @@
       <th class="runHeader"><spring:message code="dhisconnector.action"/><br>
       <input id="send" name="submit" type="button" onclick="sendDataToDHIS()" value="<spring:message code="dhisconnector.post" />"/>
             <input id="reSend" name="reSend" type="button" onclick="reSendReportDataToDHIS()" disabled="true" value="<spring:message code="dhisconnector.rePost" />"/>
-       <input
+       <input id="dxfDownload"
               name="submit" type="button" onclick="generateDXFDownload()"
               value="<spring:message code="dhisconnector.dxf.download" />" />
-        <input name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" />
+        <input id="adxDownload" name="submit" type="button" onclick="downloadAdx()" value="<spring:message code="dhisconnector.adx.download" />" />
       </th>
       <td></td>
     </tr>

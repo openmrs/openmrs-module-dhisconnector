@@ -422,10 +422,8 @@ function populateMappingsDropdown() {
     });
 }
 
-function populateOrgUnitsOfDataSet() {
-	
-	populateServersToSendReport();
-	//jQuery('#locationsList').html("");
+async function populateOrgUnitsOfDataSet() {
+    populateServersToSendReport();
 
     // fetch datasets
     let datasetId = selectedMapping.dataSetUID;
@@ -435,59 +433,53 @@ function populateOrgUnitsOfDataSet() {
     let serveruuid = "";
     let serverUrl = "";
     let locationMappings = "";
-	
-		try {
-			const element = document.getElementById(orgUnitSelect);
-			$j('#locationsList tbody').remove();
-			locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
-		} catch (e) {
-		    if (e instanceof ReferenceError) {
-		    locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
-		    }
-		}
 
-    jQuery.ajaxSetup({ async: false });
-    jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId, function (data) {
-	
-        for (let i = 0; i < data.organisationUnits.length ; i++) {
+    try {
+        const element = document.getElementById(orgUnitSelect);
+        $j('#locationsList tbody').remove();
+        locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
+    } catch (e) {
+        if (e instanceof ReferenceError) {
+            locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
+        }
+    }
 
+    try {
+        const datasetResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId);
+        const data = await datasetResponse.json();
+
+        for (let i = 0; i < data.organisationUnits.length; i++) {
             orgUnitName = data.organisationUnits[i].name;
             orgUnitUid = data.organisationUnits[i].id;
-            
-            for (let j = 0; j <  servers.length ; j++) {
-	            
-	        serveruuid = servers[j].serveruuid;
-	        serverUrl = servers[j].url;
 
-            jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid +"&serverUuid=" +serveruuid, function (mappingData) {
-			
-                if (!(mappingData.locationName === undefined) && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
-	
-						 mappingData.orgUnitName = orgUnitName;
-						 mappingData.serverUrl = serverUrl;
-						 
-						 availableLocations.push(mappingData);
-               }
-            });
+            for (let j = 0; j < servers.length; j++) {
+                serveruuid = servers[j].serveruuid;
+                serverUrl = servers[j].url;
 
-         }
-                 
-      }
-    });
-         
-       for (let l = 0; l <  availableLocations.length ; l++) {
-			
-			mappingLocation = availableLocations[l];
-     		locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>'+ mappingLocation.serverUrl +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingLocation.orgUnitName +'</td><td style="border: 1px solid #ddd; padding: 8px;">'+ mappingLocation.locationName +'</span></td></tr>');
-		}
+                const mappingResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid + "&serverUuid=" + serveruuid);
+                const mappingData = await mappingResponse.json();
 
-    jQuery('#locationsList').append(locationMappings);
+                if (mappingData.locationName !== undefined && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
+                    mappingData.orgUnitName = orgUnitName;
+                    mappingData.serverUrl = serverUrl;
+                    availableLocations.push(mappingData);
+                }
+            }
+        }
 
-    jQuery("#locationMappings").hide().fadeIn("slow");
-    
-    jQuery.ajaxSetup({ async: true });
-        
+        for (let l = 0; l < availableLocations.length; l++) {
+            let mappingLocation = availableLocations[l];
+            locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>' + mappingLocation.serverUrl + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.orgUnitName + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.locationName + '</span></td></tr>');
+        }
+
+        jQuery('#locationsList').append(locationMappings);
+        jQuery("#locationMappings").hide().fadeIn("slow");
+
+    } catch (error) {
+        console.error('Error fetching data:', error);
+    }
 }
+
 
 function getReportData(locationUid) {
     reportData = null;

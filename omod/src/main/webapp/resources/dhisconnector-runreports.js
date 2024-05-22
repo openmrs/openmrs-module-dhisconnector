@@ -36,13 +36,14 @@ var serverUuid = "";
     $j('#monthlyPicker').datepicker({
      });
        }
+       
    });
    
 function populateReportsDropdown() {
     // fetch reports
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/periodindicatorreports?q=hasMapping", function (data) {
 
-        var reportSelect = jQuery('<select id="reportSelect" name="reportSelect"></select>');
+        var reportSelect = jQuery('<select id="reportSelect" name="reportSelect" onchange="populateMappingsDropdown(this)"></select>');
         reportSelect.append('<option value="">Select</option>');
 
         for (var i = 0; i < data.results.length; i++) {
@@ -57,6 +58,8 @@ function populateReportsDropdown() {
         reports = data.results;
     });
 }
+
+
 
 function hidePeriodPickers(){
     jQuery('#dailyPicker').hide();
@@ -246,10 +249,13 @@ function initializeYearlyPicker(month) {
 
 function handleMonthlyPeriodChange() {
 	let selectedValue = moment(jQuery('#monthlyPicker').val(), "YYYY-MM");
-	
+
 	if(userAgent.match(/firefox|fxios/i)){
-	selectedValue = moment(jQuery('#monthlyPicker').val()).format('YYYY-MM');
+	//selectedValue = moment(jQuery('#monthlyPicker').val()).format('YYYY-MM');
+	selectedValue = moment(jQuery('#monthlyPicker').val());
 	selectedPeriod = moment(selectedValue).format('YYYYMM');
+	selectedStartDate = selectedValue.toDate();
+	selectedEndDate = selectedValue.endOf('month').toDate();
     }else {
     selectedPeriod = selectedValue.format('YYYYMM');
     selectedStartDate = selectedValue.toDate();
@@ -406,7 +412,7 @@ function toggleCustomRangeCheckbox(checkDisable) {
     }
 }
 
-function populateMappingsDropdown() {
+function populateMappingsDropdown(periodIndicatorReportGUID) {
     // fetch mappings
     jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/mappings", function (data) {
         mappings = data.results;
@@ -414,7 +420,9 @@ function populateMappingsDropdown() {
         mappingSelect.append('<option value="">Select</option>');
         mappingSelect.on('change', onMappingSelect);
         for (let i = 0; i < mappings.length; i++) {
+			if(periodIndicatorReportGUID !== undefined && mappings[i].periodIndicatorReportGUID === periodIndicatorReportGUID.value){
             mappingSelect.append('<option value="' + i + '">' + mappings[i].name + '</option>');
+            }
         }
         jQuery('#mappingSelectContainer').html("");
         jQuery('#mappingSelectContainer').append(mappingSelect);
@@ -445,50 +453,39 @@ async function populateOrgUnitsOfDataSet() {
             locationMappings = jQuery('<tbody id="orgUnitSelect"></tbody>');
         }
     }
+    
+        try {
+    
+    for (let j = 0; j < servers.length; j++) {
 
-    try {
-        const datasetResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatasets/" + datasetId);
-        const data = await datasetResponse.json();
-
-		if(data.organisationUnits !== undefined)
-		{
-	        for (let i = 0; i < data.organisationUnits.length; i++) {
-	            orgUnitName = data.organisationUnits[i].name;
-	            orgUnitUid = data.organisationUnits[i].id;
+			serveruuid = servers[j].serveruuid;
+            serverUrl = servers[j].url;
+            
+	        const mappingResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings?serverUuid=" + serveruuid);
+			const locationsMapping = await mappingResponse.json();
+			
+			 for (let i = 0; i < locationsMapping.results.length; i++) {		
+				mappingData = locationsMapping.results[i];
+				mappingData.serverUrl = serverUrl;
+				availableLocations.push(mappingData);
+              }
+	}
 	
-	            for (let j = 0; j < servers.length; j++) {
-	                serveruuid = servers[j].serveruuid;
-	                serverUrl = servers[j].url;
+	     for (let l = 0; l < availableLocations.length; l++) {
+              let mappingLocation = availableLocations[l];
+              locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" checked id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>' + mappingLocation.serverUrl + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.orgUnitName + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.location.name + '</span></td></tr>');
+          }
+  
+          jQuery('#locationsList').append(locationMappings);
+          jQuery("#locationMappings").hide().fadeIn("slow");
+  
+    	  setButtonDisabled(false);
 	
-	                const mappingResponse = await fetch(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/locationmappings/?orgUnitUid=" + orgUnitUid + "&serverUuid=" + serveruuid);
-	                const mappingData = await mappingResponse.json();
-	
-	                if (mappingData.locationName !== undefined && mappingData.orgUnitUid === orgUnitUid && mappingData.serverUuid === serveruuid) {
-	                    mappingData.orgUnitName = orgUnitName;
-	                    mappingData.serverUrl = serverUrl;
-	                    availableLocations.push(mappingData);
-	                }
-	            }
-	        }
-	
-	        for (let l = 0; l < availableLocations.length; l++) {
-	            let mappingLocation = availableLocations[l];
-	            locationMappings.append('<tr style="background-color: #f2f2f2;"><td style="border: 1px solid #ddd; padding: 8px;"><input type="checkbox" id="' + availableLocations.indexOf(mappingLocation) + '"/></td><td style="border: 1px solid #ddd; padding: 8px;"><span>' + mappingLocation.serverUrl + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.orgUnitName + '</td><td style="border: 1px solid #ddd; padding: 8px;">' + mappingLocation.locationName + '</span></td></tr>');
-	        }
-	
-	        jQuery('#locationsList').append(locationMappings);
-	        jQuery("#locationMappings").hide().fadeIn("slow");
-	
-			setButtonDisabled(false);
-		}
-		else{
-			alert('O mapeamento '+selectedMapping.name+' não corresponde ao relatório selecionado ');
-			setButtonDisabled(false);
-		}
-
-    } catch (error) {
+	    } catch (error) {
         console.error('Error fetching data:', error);
     }
+
+
 }
 
 function setButtonDisabled(status){
@@ -528,9 +525,9 @@ function getReportData(locationUid) {
         }
     }
    }
-
     // fetch report data
     return jQuery.get(OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/reportingrest/reportdata/" + reportGUID + "?startDate=" + moment(startDate).format('YYYY-MM-DD') + "&endDate=" + moment(endDate).format('YYYY-MM-DD') + "&location=" + locationGUID + "&v=custom:(dataSets)", function (data) {
+        console.log('Relatorio executado');
         reportData = data;
     });
 }
@@ -714,7 +711,7 @@ function sendDataToDHIS() {
 		
 		for (let i = 0; i < selectedLocations.length ; i++) {
 			locationsToSend.push(selectedLocations[i]);
-			locationsToSendNames = locationsToSendNames+ ' '+selectedLocations[i].locationName +'\n';
+			locationsToSendNames = locationsToSendNames+ ' '+selectedLocations[i].location.name +'\n';
 		}
 		
 	if(locationsToSend.length > 0){
@@ -732,7 +729,7 @@ function sendDataToDHIS() {
 		  	success: function(data) {
 		  		if(data){
 					if(data.monthOpen == false){
-						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].locationName +'\n'
+						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].location.name +'\n'
 					}
 					else{
 						locationsToSend.push(selectedLocations[i]);
@@ -757,12 +754,12 @@ function sendDataToDHIS() {
 	    var loadingRow = jQuery('<tr id="loadingRow"><th class="runHeader"><img class="spinner" src="../../moduleResources/dhisconnector/loading.gif"/>Enviando, aguarde...</th></tr>');
 	    jQuery('#tableBody').append(loadingRow);
 	    loadingRow.hide().fadeIn("slow");
- 	
+	    
 	    for (let i = 0; i < locationsToSend.length ; i++) {
 		
-	        if (!(locationsToSend[i].locationId === undefined)){
+	        if (!(locationsToSend[i].location.uuid === undefined)){
 	        
-	            buildDXFJSON(locationsToSend[i].locationUid, locationsToSend[i].orgUnitUid, locationsToSend[i].serverUuid).then(function () {
+	            buildDXFJSON(locationsToSend[i].location.uuid, locationsToSend[i].orgUnitUid, locationsToSend[i].serverUuid).then(function () {
 	                // post to dhis
 	                jQuery.ajax({
 	                    url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhisdatavaluesets",
@@ -771,6 +768,8 @@ function sendDataToDHIS() {
 	                    contentType: "application/json;charset=utf-8",
 	                    dataType: "json",
 	                    success: function (data) {
+		
+							console.log(data);
 							
 							for (const [key, value] of Object.entries(data)) {
 							  	let response = value;
@@ -948,6 +947,7 @@ function populateServersToSendReport() {
 	
         jQuery.ajax({
             type: "GET",
+            async: false,
             url: "getServersByReportSelected.form",
             data:  {"sespReportUuid": sespReportUuid},
             datatype: "json",

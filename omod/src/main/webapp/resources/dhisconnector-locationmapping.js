@@ -25,19 +25,16 @@ function saveLocationOrgUnitsMappings() {
 	
 	let locationOrgUnitsMappings = "";
 	
+	let e = document.getElementById("orgUnits");
+    let orgUnitName = e.options[e.selectedIndex].text;
 	let orgUnit = jQuery("[name='orgUnits']").val();
 	let server = jQuery("[name='servers']").val();
 	let location = jQuery("[name='locations']").val();
 	
-	console.log(orgUnit);
-	console.log(server);
-	console.log(location);
-    
-    locationOrgUnitsMappings = locationOrgUnitsMappings + server +","+ orgUnit + "," + location;
+    locationOrgUnitsMappings = locationOrgUnitsMappings + server +","+ orgUnit + "," + location + "," + orgUnitName;
    
 	jQuery("input[name='locationOrgUnitsMappings']").val(locationOrgUnitsMappings);
-	
-	console.log(jQuery("input[name='locationOrgUnitsMappings']").val(locationOrgUnitsMappings));
+
 }
 
 

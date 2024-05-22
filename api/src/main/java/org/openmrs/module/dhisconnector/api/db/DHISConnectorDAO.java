@@ -82,4 +82,6 @@ public interface DHISConnectorDAO {
 	
 	List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid);
 	
+	List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid);
+	
 }

@@ -801,6 +801,7 @@ public class DHISConnectorController {
 			String serverUuid = locationMappings[0];
 			String orgUnitUId = locationMappings[1];
 			String locationUuid = locationMappings[2];
+			String orgUnitName = locationMappings[3];
 
 			if (StringUtils.isNotBlank(serverUuid) && StringUtils.isNotBlank(orgUnitUId)
 					&& StringUtils.isNotBlank(locationUuid)) {
@@ -813,7 +814,7 @@ public class DHISConnectorController {
 							.getMessage("dhisconnector.locationMapping.per.server.exist"), WebRequest.SCOPE_SESSION);
 				} else {
 					Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
-							new LocationToOrgUnitMapping(location, orgUnitUId, serverUuid));
+							new LocationToOrgUnitMapping(location, orgUnitUId, serverUuid, orgUnitName));
 					response += Context.getMessageSourceService()
 							.getMessage("dhisconnector.locationMapping.per.server.saved");
 				}

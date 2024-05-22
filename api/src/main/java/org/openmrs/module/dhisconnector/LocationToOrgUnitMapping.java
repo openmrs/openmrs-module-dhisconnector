@@ -43,14 +43,18 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
     
     @Column(name = "server_uuid", nullable = false)
     private String serverUuid;
+    
+    @Column(name = "org_unit_name", nullable = false)
+    private String orgUnitName;
 
     public LocationToOrgUnitMapping() {
     }
 
-    public LocationToOrgUnitMapping(Location location, String orgUnitId, String serverUuid) {
+    public LocationToOrgUnitMapping(Location location, String orgUnitId, String serverUuid, String orgUnitName) {
         setLocation(location);
         setOrgUnitUid(orgUnitId);
         setServerUuid(serverUuid);
+        setOrgUnitName(orgUnitName);
     }
 
     public Integer getId() {
@@ -77,30 +81,18 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
         this.location = location;
     }
 
-    /**
-     * @see org.openmrs.Auditable#getCreator()
-     */
     public User getCreator() {
         return creator;
     }
 
-    /**
-     * @see org.openmrs.Auditable#setCreator(User)
-     */
     public void setCreator(User creator) {
         this.creator = creator;
     }
 
-    /**
-     * @see org.openmrs.Auditable#getDateCreated()
-     */
     public Date getDateCreated() {
         return dateCreated;
     }
 
-    /**
-     * @see org.openmrs.Auditable#setDateCreated(Date)
-     */
     public void setDateCreated(Date dateCreated) {
         this.dateCreated = dateCreated;
     }
@@ -112,5 +104,13 @@ public class LocationToOrgUnitMapping extends BaseOpenmrsObject {
 	public void setServerUuid(String serverUuid) {
 		this.serverUuid = serverUuid;
 	}
-    
+
+	public String getOrgUnitName() {
+		return orgUnitName;
+	}
+
+	public void setOrgUnitName(String orgUnitName) {
+		this.orgUnitName = orgUnitName;
+	}
+	
 }

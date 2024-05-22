@@ -273,4 +273,12 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 		return locationToOrgUnitMapping;
 	}
 
+	@Override
+	public List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid) {
+		return sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.serverUuid = :serverUuid")
+				.setParameter("serverUuid", serverUuid)
+				.list();
+	}
+
 }

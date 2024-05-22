@@ -154,6 +154,7 @@ public class DHISConnectorServiceTest extends BaseModuleContextSensitiveTest {
 		locationToOrgUnitMapping.setOrgUnitUid("abc");
 		locationToOrgUnitMapping.setLocation(Context.getLocationService().getDefaultLocation());
 		locationToOrgUnitMapping.setServerUuid("370e8813-f2f2-47de-8bae-a12740885d2b");
+		locationToOrgUnitMapping.setOrgUnitName("CS Alto Mae");
 
 		Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(locationToOrgUnitMapping);
 		Assert.assertEquals(1, Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings().size());

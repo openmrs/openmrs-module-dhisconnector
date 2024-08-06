@@ -165,4 +165,122 @@
             <column name="handler_config" value="" />
         </insert>
 	</changeSet>
+	    <changeSet id="20240920-0001" author="csaude">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="dhisconnector_dhis_server" />
+			</not>
+		</preConditions>
+		<comment>
+			Create dhisconnector_dhis_server table
+		</comment>
+		<createTable tableName="dhisconnector_dhis_server">
+			<column name="id" type="int" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false" />
+			</column>
+			<column name="creator" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="server_url" type="varchar(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="server_username" type="text">
+                <constraints nullable="false"/>
+            </column>
+            <column name="server_password" type="text">
+                <constraints nullable="false"/>
+            </column>
+		</createTable>
+		       <addUniqueConstraint 
+            columnNames="server_url"
+            constraintName="UQ_server_url"
+       		tableName="dhisconnector_dhis_server"
+			/>
+	</changeSet>
+		    <changeSet id="20240920-0002" author="csaude">
+		<preConditions onFail="MARK_RAN">
+			<not>
+				<tableExists tableName="dhisconnector_dhis_server_reports_to_receive" />
+			</not>
+		</preConditions>
+		<comment>
+			Create dhisconnector_dhis_server_reports_to_receive table
+		</comment>
+		<createTable tableName="dhisconnector_dhis_server_reports_to_receive">
+			<column name="id" type="int" autoIncrement="true">
+				<constraints primaryKey="true" nullable="false" />
+			</column>
+			<column name="uuid" type="char(38)">
+				<constraints nullable="false" />
+			</column>
+			<column name="creator" type="int">
+                <constraints nullable="false"/>
+            </column>
+            <column name="date_created" type="DATETIME">
+                <constraints nullable="false"/>
+            </column>
+            <column name="dhis_server_uuid" type="char(38)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="sesp_report_uuid" type="char(38)">
+                <constraints nullable="false"/>
+            </column>
+		</createTable>
+        <addUniqueConstraint 
+            columnNames="dhis_server_uuid, sesp_report_uuid"
+            constraintName="server_url_sesp_report"
+       		tableName="dhisconnector_dhis_server_reports_to_receive"
+			/>
+	</changeSet>
+	<changeSet id="20240920-0003" author="csaude">
+	   <preConditions onFail="MARK_RAN">
+	      <not>
+	         <columnExists tableName="dhisconnector_location_to_orgunit" columnName="server_uuid" />
+	      </not>
+   		</preConditions>
+        <addColumn 
+            tableName="dhisconnector_location_to_orgunit">
+            <column name="server_uuid"
+                type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+    	<changeSet id="20240920-0004" author="csaude">
+	   <preConditions onFail="MARK_RAN">
+	      <not>
+	         <columnExists tableName="dhisconnector_location_to_orgunit" columnName="org_unit_name" />
+	      </not>
+   		</preConditions>
+        <addColumn 
+            tableName="dhisconnector_location_to_orgunit">
+            <column name="org_unit_name"
+                type="varchar(100)">
+                <constraints nullable="false" />
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet id="20240920-0005" author="csaude">
+        <delete  tableName="dhisconnector_location_to_orgunit">
+            <where>server_uuid is null</where>
+        </delete>
+    </changeSet>
+    <changeSet id="20240920-0006" author="csaude">
+    	<preConditions onFail="MARK_RAN">
+	      <not>
+	         <indexExists indexName="UQ_server_url" />
+	      </not>
+   		</preConditions>
+		<addUniqueConstraint 
+            columnNames="server_url"
+            constraintName="UQ_server_url"
+       		tableName="dhisconnector_dhis_server"
+		/>
+    </changeSet>
 </databaseChangeLog>

@@ -39,7 +39,6 @@
           <openmrs:hasPrivilege privilege="Manage Connection">
             <input name="saveConfig" type="submit" value="<spring:message code="dhisconnector.save" />"/>
           </openmrs:hasPrivilege>
-          <input name="testConfig" type="submit" value="<spring:message code="dhisconnector.testConnection" />"/>
         </td>
       </tr>
     </tbody>
@@ -47,12 +46,12 @@
   </form>
     <br/>
       <h3><spring:message code="dhisconnector.server.configurations"/></h3>
-  <form >
+  <form method="POST" enctype="multipart/form-data">
   <table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 50%;" id="table">
     <thead>
     <tr><th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 30%;">URL</th>
 	<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 40%;"></th>
-		<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 10%;"></th>
+		<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 30%;"></th>
     </tr>
     </thead>
     <tbody id="tableBody">
@@ -67,6 +66,13 @@
     <td><input type="button" value="Remover" onclick="removeConfiguration(this)"/></td> 
     </tr>
             </c:forEach>
+    <tr style="background-color: #f2f2f2;" id="server">
+    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;"  id="col0" colspan="3" >
+    <input type="file" name="configuration">
+    <input name="import" type="submit" value="Importar"/>
+    <input name="export" type="submit" value="Exportar"/>
+    </td> 
+    </tr>
         </tbody>
   </table>
   </form>

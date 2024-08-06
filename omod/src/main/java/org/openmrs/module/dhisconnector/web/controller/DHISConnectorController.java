@@ -34,7 +34,6 @@ import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
-import org.hibernate.exception.ConstraintViolationException;
 import org.openmrs.GlobalProperty;
 import org.openmrs.Location;
 import org.openmrs.api.AdministrationService;
@@ -82,6 +81,8 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
 
 	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
+	
+	public static String TYPE = "text/csv";
 
 	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList("Daily", "Weekly", "WeeklySunday",
 			"WeeklyWednesday", "WeeklyThursday", "WeeklySaturday", "BiWeekly", "Monthly", "BiMonthly", "Yearly",
@@ -184,7 +185,7 @@ public class DHISConnectorController {
 						Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
 						WebRequest.SCOPE_SESSION);
 
-			} catch (ConstraintViolationException e) {
+			} catch (Exception e) {
 				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
 						Context.getMessageSourceService().getMessage("dhisconnector.server.configuration.exist"),
 						WebRequest.SCOPE_SESSION);
@@ -207,50 +208,6 @@ public class DHISConnectorController {
 			model.addAttribute("serversWithReports",
 					Context.getService(DHISConnectorService.class).getDHISServerReportsToReceive());
 		}
-
-//			} else {
-//				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
-//						Context.getMessageSourceService().getMessage("dhisconnector.saveFailure"),
-//						WebRequest.SCOPE_SESSION);
-//
-//				model.addAttribute("url", url);
-//				model.addAttribute("user", user);
-//				model.addAttribute("pass", pass);
-//				model.addAttribute("pass", locationUuid);
-//				
-//				
-//			}
-
-//		AdministrationService as = Context.getAdministrationService();
-//		GlobalProperty urlProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_URL);
-//		GlobalProperty userProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_USER);
-//		GlobalProperty passProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_PASS);
-//
-//		if (Context.getService(DHISConnectorService.class).testDHISServerDetails(url, user, pass)) {
-//			// Save the properties
-//			urlProperty.setPropertyValue(url);
-//			userProperty.setPropertyValue(user);
-//			passProperty.setPropertyValue(pass);
-//
-//			as.saveGlobalProperty(urlProperty);
-//			as.saveGlobalProperty(userProperty);
-//			as.saveGlobalProperty(passProperty);
-//
-//			req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
-//					Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
-//					WebRequest.SCOPE_SESSION);
-//
-//			model.addAttribute("url", url);
-//			model.addAttribute("user", user);
-//		} else {
-//			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
-//					Context.getMessageSourceService().getMessage("dhisconnector.saveFailure"),
-//					WebRequest.SCOPE_SESSION);
-//
-//			model.addAttribute("url", urlProperty.getPropertyValue());
-//			model.addAttribute("user", userProperty.getPropertyValue());
-//			model.addAttribute("pass", passProperty.getPropertyValue());
-//		}
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/saveDHISServerSespReportsToReceive", method = RequestMethod.POST)
@@ -392,7 +349,6 @@ public class DHISConnectorController {
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						// .exportMappings(selectedMappings, shouldIncludeMetadata);
 						.exportSelectedMappings(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
@@ -451,6 +407,26 @@ public class DHISConnectorController {
 			inputStream.close();
 			outStream.close();
 			(new File(fullPath)).delete();
+		}
+	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "export", method = RequestMethod.POST)
+	public void exportServerConfigurations(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
+
+			try {
+				String filePath = Context.getService(DHISConnectorService.class).exportServerConfigurations();
+				int BUFFER_SIZE = 4096;
+					exportZipFile(response, BUFFER_SIZE, filePath);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		try {
+			response.sendRedirect("/module/dhisconnector/configureServer");
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -536,6 +512,50 @@ public class DHISConnectorController {
 			failedMessage = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.mustSelectFile");
 		}
 		passOnUploadingFeedback(model, successMessage, failedMessage);
+	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "import", method = RequestMethod.POST)
+	public void importDHISConfigurationsServer(ModelMap model, @RequestParam(value = "configuration", required = false) MultipartFile configuration, WebRequest req)
+			throws IOException {
+		
+		String url = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_URL);
+		String user = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_USER);
+
+		String msg = "";
+
+		if (!configuration.isEmpty()) {
+			
+			if(hasCSVFormat(configuration)) {
+
+			msg = Context.getService(DHISConnectorService.class).uploadDHISServerConfigurations(configuration);
+
+			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
+				req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+						Context.getMessageSourceService().getMessage(msg),
+						WebRequest.SCOPE_SESSION);
+			} else {
+				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+						Context.getMessageSourceService().getMessage(msg),
+						WebRequest.SCOPE_SESSION);
+			}
+		} else {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.format"),
+					WebRequest.SCOPE_SESSION);
+		}
+		
+		} else {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.not.selected"),
+					WebRequest.SCOPE_SESSION);
+		}
+		
+		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
+		model.addAttribute("url", url);
+		model.addAttribute("user", user);
+		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+		model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
+
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/adxGenerator", method = RequestMethod.GET)
@@ -762,35 +782,6 @@ public class DHISConnectorController {
 		return orgUnits;
 	}
 
-//	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
-//	public void postLocationMappings(ModelMap model, HttpServletRequest request) {
-//		String response = "";
-//
-//		if (!request.getParameter("locationMappings").isEmpty()) {
-//			String[] locationMappings = request.getParameter("locationMappings").split(",");
-//			for (String pair : locationMappings) {
-//				String locationUuid = pair.split("=")[0];
-//				String orgUnitUId = pair.split("=")[1];
-//				if (StringUtils.isNotBlank(locationUuid)) {
-//					Location location = Context.getLocationService().getLocationByUuid(locationUuid);
-//					Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
-//					if (StringUtils.isNotBlank(orgUnitUId)) {
-//						Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
-//								new LocationToOrgUnitMapping(location, orgUnitUId)
-//						);
-//					}
-//				}
-//			}
-//			response += " -> Save was successful";
-//		}
-//
-//		model.addAttribute(response);
-//
-//		showLocationMappings(model);
-//		if (StringUtils.isNotBlank(response))
-//			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
-//	}
-
 	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
 	public void postLocationOrgUnitsMappings(ModelMap model, HttpServletRequest request, WebRequest req) {
 		String response = "";
@@ -869,4 +860,14 @@ public class DHISConnectorController {
 				WebRequest.SCOPE_SESSION);
 
 	}
+	
+	  public static boolean hasCSVFormat(MultipartFile file) {
+		    if (TYPE.equals(file.getContentType())
+		    		|| file.getContentType().equals("application/vnd.ms-excel")) {
+		      return true;
+		    }
+
+		    return false;
+		  }
+
 }

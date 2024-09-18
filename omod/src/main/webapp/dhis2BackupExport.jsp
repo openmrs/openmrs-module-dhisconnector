@@ -21,7 +21,7 @@
 <c:choose>
 	<c:when test="${dhis2BackupExists == 'true'}">
 		<form method="POST" id="dhis2api-exportForm">
-			<spring:message code="dhisconnector.dhis2backup.lastSyncedAt" />
+			<spring:message code="dhisconnector.dhis2backup.lastSyncedAt" /><br/> 
 			<b>${lastSyncedAt}</b> <br />
 			<br /> <input type="submit"
 				value="<spring:message code='dhisconnector.export'/>">

@@ -15,6 +15,7 @@
 	<c:redirect url="../../login.htm" />
 </c:if>
 
+<br/>
 <h3><spring:message code="dhisconnector.createMapping"/></h3>
 <h4></h4>
 <div id="loading-progress-bar"></div>

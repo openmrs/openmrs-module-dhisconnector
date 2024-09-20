@@ -14,6 +14,7 @@
 <c:if test="${showLogin == 'true'}">
 	<c:redirect url="../../login.htm" />
 </c:if>
+<br/>
 <h3><spring:message code="dhisconnector.manageMappings"/></h3>
 <a href="createMapping.form">
 	<button><openmrs:message code="dhisconnector.manageMappings.addNew"/></button>

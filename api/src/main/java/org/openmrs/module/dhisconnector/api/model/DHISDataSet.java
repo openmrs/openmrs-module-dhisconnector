@@ -57,6 +57,9 @@ public class DHISDataSet {
 	@JsonProperty("code")
 	private String code;
 	
+	@JsonProperty("uuid")
+	private String uuid;
+	
 	@JsonProperty("displayDescription")
 	private String displayDescription;
 	
@@ -842,5 +845,17 @@ public class DHISDataSet {
 	public void setUserGroupAccesses(List<Object> userGroupAccesses) {
 		this.userGroupAccesses = userGroupAccesses;
 	}
+
+	@JsonProperty("uuid")
+	public String getUuid() {
+		return uuid;
+	}
+
+	@JsonProperty("uuid")
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
+	
+	
 	
 }

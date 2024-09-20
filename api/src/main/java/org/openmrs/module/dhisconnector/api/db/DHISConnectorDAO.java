@@ -17,8 +17,11 @@ import java.util.List;
 
 import org.openmrs.Location;
 import org.openmrs.api.db.SerializedObject;
+import org.openmrs.module.dhisconnector.DHISServerConfiguration;
+import org.openmrs.module.dhisconnector.DHISServerReportsToReceive;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 
 /**
  *  Database methods for {@link DHISConnectorService}.
@@ -40,14 +43,47 @@ public interface DHISConnectorDAO {
 	LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid);
 
 	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid);
+	
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid);
+	
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(Location location, String orgUnitId, String serverUuid);
 
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
 	void deleteLocationToOrgUnitMappingsByLocation(Location location);
+	
+	void deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(Location location, String serverUuid, String orgUnitUid);
 
 	SerializedObject getSerializedObjectByUuid(String uuid);
 
 	void saveSerializedObject(SerializedObject serializedObject);
 
 	void deleteSerializedObjectByUuid(String uuid);
+	
+	void saveDHISServerConfiguration(DHISServerConfiguration server);
+	
+	void saveDHISServerConfiguration(List<DHISServerConfiguration> servers);
+	
+	List<DHISServerConfiguration> getDHISServerConfigurations();
+	
+	void deleteDHISServerConfiguration(DHISServerConfiguration dHISServerConfiguration);
+	
+	void saveDHISServerReportsToReceive(List<DHISServerReportsToReceive> serverWithReportsToReceive);
+	
+	List<DHISServerReportsToReceive> getDHISServerReportsToReceive();
+	
+	DHISServerReportsToReceive getDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid, String sespReportUuid);
+	
+	void deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid, String sespReportUuid);
+	
+	DHISServerConfiguration getDHISServerByUrl(String serverUrl);
+	
+	DHISServerConfiguration getDHISServerByUuid(String serverUuid);
+	
+	List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid);
+	
+	List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid);
+	
+	void exportServerConfigurations(String filename);
+	
 }

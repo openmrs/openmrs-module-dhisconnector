@@ -10,7 +10,7 @@
 </c:if>
 
 <h3><spring:message code="dhisconnector.automation.heading"/></h3>
-
+<br/>
 <spring:message code="dhisconnector.automation.description"/>
 <form method="post">
 	<br />
@@ -24,7 +24,7 @@
     <br />
     <br />
     <openmrs:hasPrivilege privilege="Manage Automation">
-        <span>New mapping</span>
+        <span><spring:message code="dhisconnector.automation.newMapping"/></span><br/>
         <span>
             <select name="mapping">
                 <option></option>

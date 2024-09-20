@@ -13,20 +13,31 @@
  */
 package org.openmrs.module.dhisconnector.api.db.hibernate;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.internal.SessionImpl;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.SerializedObject;
 import org.openmrs.api.db.hibernate.DbSessionFactory;
+import org.openmrs.module.dhisconnector.DHISServerConfiguration;
+import org.openmrs.module.dhisconnector.DHISServerReportsToReceive;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.db.DHISConnectorDAO;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 import org.springframework.util.ReflectionUtils;
+
+import  java.sql.Statement;
 
 /**
  * It is a default implementation of {@link DHISConnectorDAO}.
@@ -145,4 +156,187 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 				.createQuery("delete from SerializedObject s where s.uuid = :uuid")
 				.setParameter("uuid", uuid).executeUpdate();
 	}
+
+	@Override
+	public void saveDHISServerConfiguration(List<DHISServerConfiguration> servers) {
+		for (DHISServerConfiguration server : servers) {
+			server.setCreator(Context.getAuthenticatedUser());
+			sessionFactory.getCurrentSession().save(server);
+		}
+	}
+
+	@Override
+	public void saveDHISServerConfiguration(DHISServerConfiguration server) {
+		server.setCreator(Context.getAuthenticatedUser());
+		sessionFactory.getCurrentSession().save(server);
+	}
+
+	@Override
+	public List<DHISServerConfiguration> getDHISServerConfigurations() {
+		return sessionFactory.getCurrentSession().createCriteria(DHISServerConfiguration.class).list();
+	}
+
+	@Override
+	public void deleteDHISServerConfiguration(DHISServerConfiguration dHISServerConfiguration) {
+		sessionFactory.getCurrentSession()
+		.createQuery("delete from DHISServerConfiguration r where r.url = :url")
+		.setParameter("url", dHISServerConfiguration.getUrl()).executeUpdate();
+	}
+
+	@Override
+	public void saveDHISServerReportsToReceive(List<DHISServerReportsToReceive> serverWithReportsToReceive) {
+		for (DHISServerReportsToReceive serverWithReport : serverWithReportsToReceive) {
+			serverWithReport.setCreator(Context.getAuthenticatedUser());
+			sessionFactory.getCurrentSession().save(serverWithReport);
+		}
+		
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<DHISServerReportsToReceive> getDHISServerReportsToReceive() {
+		return sessionFactory.getCurrentSession().createCriteria(DHISServerReportsToReceive.class).list();
+	}
+
+	@Override
+	public DHISServerReportsToReceive getDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid,
+			String sespReportUuid) {
+		DHISServerReportsToReceive dhisServerReportsToReceive = (DHISServerReportsToReceive) sessionFactory.getCurrentSession()
+				.createQuery("from DHISServerReportsToReceive d where d.dhisServerUuid = :dhisServerUuid and d.sespReportUuid = :sespReportUuid")
+				.setParameter("dhisServerUuid", dhisServerUuid)
+				.setParameter("sespReportUuid", sespReportUuid)
+				.uniqueResult();
+		return dhisServerReportsToReceive;
+	}
+
+	@Override
+	public DHISServerConfiguration getDHISServerByUrl(String serverUrl) {
+		return (DHISServerConfiguration) sessionFactory.getCurrentSession()
+		.createQuery("from DHISServerConfiguration r where r.url = :url")
+		.setParameter("url", serverUrl).uniqueResult();
+	}
+
+	@Override
+	public DHISServerConfiguration getDHISServerByUuid(String serverUuid) {
+		return (DHISServerConfiguration) sessionFactory.getCurrentSession()
+		.createQuery("from DHISServerConfiguration r where r.uuid = :serverUuid")
+		.setParameter("serverUuid", serverUuid).uniqueResult();
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(Location location,
+			String orgUnitId, String serverUuid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.location = :location"
+						+ " and r.orgUnitUid = :orgUnitUid and r.serverUuid = :serverUuid")
+				.setParameter("location", location)
+				.setParameter("orgUnitUid", orgUnitId)
+				.setParameter("serverUuid", serverUuid)
+				.uniqueResult();
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
+	public void deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(Location location,
+			String serverUuid, String orgUnitUid) {
+		sessionFactory.getCurrentSession()
+		.createQuery("delete from LocationToOrgUnitMapping r where r.location = :location and r.serverUuid = :serverUuid and r.orgUnitUid = :orgUnitUid")
+		.setParameter("location", location)
+		.setParameter("serverUuid", serverUuid)
+		.setParameter("orgUnitUid", orgUnitUid)
+		.executeUpdate();
+		
+	}
+
+	@Override
+	public void deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid,
+			String sespReportUuid) {
+		sessionFactory.getCurrentSession()
+				.createQuery("delete from DHISServerReportsToReceive d where d.dhisServerUuid = :dhisServerUuid and d.sespReportUuid = :sespReportUuid")
+				.setParameter("dhisServerUuid", dhisServerUuid)
+				.setParameter("sespReportUuid", sespReportUuid)
+				.executeUpdate();
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid) {
+		return 	sessionFactory.getCurrentSession()
+				.createQuery("from DHISServerReportsToReceive d where d.dhisServerUuid = :dhisServerUuid ")
+				.setParameter("dhisServerUuid", dhisServerUuid)
+				.list();
+				
+	}
+
+	@Override
+	public LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid) {
+		LocationToOrgUnitMapping locationToOrgUnitMapping = (LocationToOrgUnitMapping) sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.orgUnitUid = :orgUnitUid and r.serverUuid = :serverUuid")
+				.setParameter("orgUnitUid", orgUnitUid)
+				.setParameter("serverUuid", serverUuid)
+				.uniqueResult();
+		
+		return locationToOrgUnitMapping;
+	}
+
+	@Override
+	public List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid) {
+		return sessionFactory.getCurrentSession()
+				.createQuery("from LocationToOrgUnitMapping r where r.serverUuid = :serverUuid")
+				.setParameter("serverUuid", serverUuid)
+				.list();
+	}
+	
+	@Override
+	public void exportServerConfigurations(String filename) {
+		
+		SessionImpl sessionImpl = (SessionImpl) sessionFactory.getHibernateSessionFactory().openSession();
+		Connection conn = sessionImpl.connection();
+
+        try {
+            FileWriter fw = new FileWriter(filename);
+            String servers = "SELECT * FROM dhisconnector_dhis_server";
+            String serversAndReports = "SELECT * FROM dhisconnector_dhis_server_reports_to_receive";
+            Statement stmt = conn.createStatement();
+
+            ResultSet rs = stmt.executeQuery(servers);
+            fw.append('\n');
+            while (rs.next()) {
+                fw.append(rs.getString(2));
+                fw.append(',');
+                fw.append(rs.getString(3));
+                fw.append(',');
+                fw.append(rs.getString(4));
+                fw.append(',');
+                fw.append(rs.getString(5));
+                fw.append(',');
+                fw.append(rs.getString(6));
+                fw.append(',');
+                fw.append(rs.getString(7));
+                fw.append('\n');
+            }
+            
+            rs = stmt.executeQuery(serversAndReports);
+            while (rs.next()) {
+                fw.append(rs.getString(2));
+                fw.append(',');
+                fw.append(rs.getString(3));
+                fw.append(',');
+                fw.append(rs.getString(4));
+                fw.append(',');
+                fw.append(rs.getString(5));
+                fw.append(',');
+                fw.append(rs.getString(6));
+                fw.append('\n');
+            }
+            
+            fw.flush();
+            fw.close();
+            this.getConnection().close();
+            System.out.println("CSV File is created successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 }

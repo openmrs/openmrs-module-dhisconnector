@@ -17,7 +17,9 @@
 
 <h3><spring:message code="dhisconnector.dhis2backup.importBackup"/></h3>
 <form method="POST" id="dhis2api-importForm" enctype="multipart/form-data">
-	<spring:message code="dhisconnector.dhis2backup.archiveToUpload"/> <input type="file" name="dhis2APIbBackup"><br /><br />
+	<spring:message code="dhisconnector.dhis2backup.archiveToUpload"/> 
+	<br/><br/>
+	<input type="file" name="dhis2APIbBackup">
 	<input type="submit" value="<spring:message code='dhisconnector.upload'/>" >
 </form>
 

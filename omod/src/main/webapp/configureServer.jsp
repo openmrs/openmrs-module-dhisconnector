@@ -8,10 +8,12 @@
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/configure-server.js"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/jquery.monthpicker.js"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/moment.min.js"/>
+<openmrs:htmlInclude file="/moduleResources/dhisconnector/configure-server.css"/>
 
 <c:if test="${showLogin == 'true'}">
 	<c:redirect url="../../login.htm" />
 </c:if>
+
 <h3><spring:message code="dhisconnector.configureServer"/></h3>
 
 <form method="POST">
@@ -37,15 +39,50 @@
           <openmrs:hasPrivilege privilege="Manage Connection">
             <input name="saveConfig" type="submit" value="<spring:message code="dhisconnector.save" />"/>
           </openmrs:hasPrivilege>
-          <input name="testConfig" type="submit" value="<spring:message code="dhisconnector.testConnection" />"/>
         </td>
       </tr>
     </tbody>
   </table>
   </form>
-  
-    <h3><spring:message code="dhisconnector.configure.reportExecutionPeriod"/></h3>
+    <br/>
+      <h3><spring:message code="dhisconnector.server.configurations"/></h3>
+  <form method="POST" enctype="multipart/form-data">
+  <table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 50%;" id="table">
+    <thead>
+    <tr><th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 30%;">URL</th>
+	<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 40%;"></th>
+		<th style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white; width: 30%;"></th>
+    </tr>
+    </thead>
+    <tbody id="tableBody">
+    <c:forEach items="${servers}" var="server">
+    <tr style="background-color: #f2f2f2;" id="server">
+    <td style="border: 1px solid #ddd; padding: 8px;"  id="col0"><input name="${server.uuid}" type="checkbox" size="20" value="${server.uuid}" checked="checked" onclick="return false;" hidden="true"/>${server.url}</td>
+    <td style="border: 1px solid #ddd; padding: 8px;"  id="col1" >
+    <a href ="#" onclick="toggler('${server.uuid}');">Configurar relatórios<br><br></a> 
+     <span id="${server.uuid}" class="hidden">
+                 <br><input name="saveServerReport" id="saveServerReport" type="button" value="Salvar Configuração" onclick="saveReportsOfTheSelectedServer(this)"/>
+     </span></td>
+    <td><input type="button" value="Remover" onclick="removeConfiguration(this)"/></td> 
+    </tr>
+            </c:forEach>
+    <tr style="background-color: #f2f2f2;" id="server">
+    <td style="border: 1px solid #ddd; padding: 8px; text-align: right;"  id="col0" colspan="3" >
+    <input type="file" name="configuration">
+    <input name="import" type="submit" value="Importar"/>
+    <input name="export" type="submit" value="Exportar"/>
+    </td> 
+    </tr>
+        </tbody>
+  </table>
+  </form>
+      <br/>
+
+  <br/>
+      <a href ="#" onclick="toggler('dateConfiguration');">Configurar datas de execução dos relatórios<br></a> 
   <form method="POST">
+  <span id="dateConfiguration" class="hidden">
+<!--   <h3><spring:message code="dhisconnector.configure.reportExecutionPeriod"/></h3> -->
     <table>
     <tbody>
     <tr>
@@ -64,7 +101,10 @@
       </tr>
     </tbody>
   </table>
+  </span>
 </form>
+
+
 
 <%@ include file="/WEB-INF/template/footer.jsp" %>
 <%@ include file="jembiOpenMRSFooter.jsp" %>

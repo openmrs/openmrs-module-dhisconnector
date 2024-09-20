@@ -39,15 +39,20 @@ import org.openmrs.Location;
 import org.openmrs.api.AdministrationService;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.Configurations;
+import org.openmrs.module.dhisconnector.DHISServerConfiguration;
+import org.openmrs.module.dhisconnector.DHISServerReportsToReceive;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
+import org.openmrs.module.dhisconnector.api.model.DHISLocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 import org.openmrs.module.dhisconnector.api.util.DHISConnectorUtil;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.web.WebConstants;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,6 +60,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -71,86 +77,169 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_USER = "dhisconnector.user";
 
 	public static final String GLOBAL_PROPERTY_PASS = "dhisconnector.pass";
-	
+
 	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
 
 	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
+	
+	public static String TYPE = "text/csv";
 
-	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList(
-			"Daily",
-			"Weekly",
-			"WeeklySunday",
-			"WeeklyWednesday",
-			"WeeklyThursday",
-			"WeeklySaturday",
-			"BiWeekly",
-			"Monthly",
-			"BiMonthly",
-			"Yearly",
-			"Financial April",
-			"Financial July",
-			"Financial Oct",
-			"SixMonthly",
-			"SixMonthly April",
-			"Quarterly");
+	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList("Daily", "Weekly", "WeeklySunday",
+			"WeeklyWednesday", "WeeklyThursday", "WeeklySaturday", "BiWeekly", "Monthly", "BiMonthly", "Yearly",
+			"Financial April", "Financial July", "Financial Oct", "SixMonthly", "SixMonthly April", "Quarterly");
 
-	@RequestMapping(value = "/module/dhisconnector/manage", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/manage.form", method = RequestMethod.GET)
 	public void manage(ModelMap model) {
 		model.addAttribute("user", Context.getAuthenticatedUser());
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/createMapping", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/createMapping.form", method = RequestMethod.GET)
 	public void createMapping(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/configureServer", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", method = RequestMethod.GET)
 	public void configureServer(ModelMap model) {
 		String url = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_URL);
 		String user = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_USER);
 
+		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
 		model.addAttribute("url", url);
 		model.addAttribute("user", user);
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+		model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "saveConfig", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/getServers", method = RequestMethod.GET)
+	public @ResponseBody List<String> getServersList(ModelMap model) {
+		List<String> serversUuid = new ArrayList<>();
+		List<DHISServerConfiguration> servers = Context.getService(DHISConnectorService.class)
+				.getDHISServerConfigurations();
+		for (DHISServerConfiguration dhisServerConfiguration : servers) {
+			serversUuid.add(dhisServerConfiguration.getUuid());
+		}
+		return serversUuid;
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/getServersByReportSelected", method = RequestMethod.GET)
+	public @ResponseBody List<DHISServerConfigurationDTO> getServersListByReportSelected(
+			@RequestParam(value = "sespReportUuid") String sespReportUuid) {
+
+		List<DHISServerReportsToReceive> serversWithReports = Context.getService(DHISConnectorService.class)
+				.getDHISServerReportsToReceive();
+
+		List<String> serversUuids = new ArrayList<>();
+
+		for (DHISServerReportsToReceive dhisServerReport : serversWithReports) {
+			if (dhisServerReport.getSespReportUuid().equals(sespReportUuid))
+				serversUuids.add(dhisServerReport.getDhisServerUuid());
+		}
+
+		List<DHISServerConfiguration> servers = Context.getService(DHISConnectorService.class)
+				.getDHISServerConfigurations();
+
+		List<DHISServerConfigurationDTO> serversForTheSelectedReport = new ArrayList<>();
+
+		for (DHISServerConfiguration dhisServerConfiguration : servers) {
+			for (String serverUuid : serversUuids) {
+				if (serverUuid.equals(dhisServerConfiguration.getUuid()))
+					serversForTheSelectedReport.add(new DHISServerConfigurationDTO(dhisServerConfiguration.getUrl(),
+							dhisServerConfiguration.getUser(), dhisServerConfiguration.getPassword(),
+							dhisServerConfiguration.getUuid()));
+			}
+		}
+		return serversForTheSelectedReport;
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/getServersAndReportsToReceive", method = RequestMethod.GET)
+	public @ResponseBody List<String> getServersAndReportsToReceiveList(ModelMap model) {
+
+		List<DHISServerReportsToReceive> serversWithReports = Context.getService(DHISConnectorService.class)
+				.getDHISServerReportsToReceive();
+
+		List<String> idsPerServerAndReports = new ArrayList<>();
+
+		for (DHISServerReportsToReceive server : serversWithReports) {
+
+			String idPerServerAndReport = server.getDhisServerUuid() + "" + server.getSespReportUuid();
+
+			idsPerServerAndReports.add(idPerServerAndReport);
+		}
+		return idsPerServerAndReports;
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", params = "saveConfig", method = RequestMethod.POST)
 	public void saveConfig(ModelMap model, @RequestParam(value = "url", required = true) String url,
 			@RequestParam(value = "user", required = true) String user,
 			@RequestParam(value = "pass", required = true) String pass, WebRequest req) throws ParseException {
 
-		AdministrationService as = Context.getAdministrationService();
-		GlobalProperty urlProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_URL);
-		GlobalProperty userProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_USER);
-		GlobalProperty passProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_PASS);
-
 		if (Context.getService(DHISConnectorService.class).testDHISServerDetails(url, user, pass)) {
-			// Save the properties
-			urlProperty.setPropertyValue(url);
-			userProperty.setPropertyValue(user);
-			passProperty.setPropertyValue(pass);
 
-			as.saveGlobalProperty(urlProperty);
-			as.saveGlobalProperty(userProperty);
-			as.saveGlobalProperty(passProperty);
+			try {
 
-			req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
-					Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
-					WebRequest.SCOPE_SESSION);
+				DHISServerConfiguration server = new DHISServerConfiguration(url, user, pass);
+
+				Context.getService(DHISConnectorService.class).saveDHISServerConfiguration(server);
+
+				req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+						Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"),
+						WebRequest.SCOPE_SESSION);
+
+			} catch (Exception e) {
+				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+						Context.getMessageSourceService().getMessage("dhisconnector.server.configuration.exist"),
+						WebRequest.SCOPE_SESSION);
+			}
 
 			model.addAttribute("url", url);
 			model.addAttribute("user", user);
+			model.addAttribute("pass", pass);
+			model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
+
 		} else {
 			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
 					Context.getMessageSourceService().getMessage("dhisconnector.saveFailure"),
 					WebRequest.SCOPE_SESSION);
 
-			model.addAttribute("url", urlProperty.getPropertyValue());
-			model.addAttribute("user", userProperty.getPropertyValue());
-			model.addAttribute("pass", passProperty.getPropertyValue());
+			model.addAttribute("url", url);
+			model.addAttribute("user", user);
+			model.addAttribute("pass", pass);
+			model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
+			model.addAttribute("serversWithReports",
+					Context.getService(DHISConnectorService.class).getDHISServerReportsToReceive());
 		}
 	}
-	
+
+	@RequestMapping(value = "/module/dhisconnector/saveDHISServerSespReportsToReceive", method = RequestMethod.POST)
+	public @ResponseBody List<String> saveDHISServerSespReportsToReceive(ModelMap model, @RequestBody String[] payload,
+			WebRequest req) throws ParseException {
+
+		List<DHISServerReportsToReceive> serversWithReports = Context.getService(DHISConnectorService.class)
+				.getDHISServerReportsToReceiveByServerUuid(payload[0]);
+
+		Context.getService(DHISConnectorService.class).verifyDHISServerReportsToReceiveToBeDeleted(payload,
+				serversWithReports);
+
+		Context.getService(DHISConnectorService.class).saveDHISServerReportsToReceive(payload);
+
+		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+				Context.getMessageSourceService().getMessage("dhisconnector.saveSuccess"), WebRequest.SCOPE_SESSION);
+
+		serversWithReports = Context.getService(DHISConnectorService.class).getDHISServerReportsToReceive();
+
+		List<String> idsPerServerAndReports = new ArrayList<>();
+
+		for (DHISServerReportsToReceive server : serversWithReports) {
+
+			String idPerServerAndReport = server.getDhisServerUuid() + "" + server.getSespReportUuid();
+
+			idsPerServerAndReports.add(idPerServerAndReport);
+		}
+
+		return idsPerServerAndReports;
+
+	}
+
 	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "savePeriod", method = RequestMethod.POST)
 	public void savePeriod(ModelMap model, @RequestParam(value = "startDate", required = true) String startDate,
 			@RequestParam(value = "endDate", required = true) String endDate, WebRequest req) throws ParseException {
@@ -158,33 +247,33 @@ public class DHISConnectorController {
 		AdministrationService as = Context.getAdministrationService();
 		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
 		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
-		
-		if(startDate == "" || endDate == "") {
+
+		if (startDate == "" || endDate == "") {
 			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
 					Context.getMessageSourceService().getMessage("dhisconnector.periodParametersNotFilled"),
 					WebRequest.SCOPE_SESSION);
-			
+
 			model.addAttribute("startDate", startDateProperty.getPropertyValue());
 			model.addAttribute("endDate", endDateProperty.getPropertyValue());
-			
-		}else {
-		startDateProperty.setPropertyValue(startDate);
-		endDateProperty.setPropertyValue(endDate);
 
-		as.saveGlobalProperty(startDateProperty);
-		as.saveGlobalProperty(endDateProperty);
+		} else {
+			startDateProperty.setPropertyValue(startDate);
+			endDateProperty.setPropertyValue(endDate);
 
-		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
-				Context.getMessageSourceService().getMessage("dhisconnector.savePeriodSuccess"),
-				WebRequest.SCOPE_SESSION);
-		
-		model.addAttribute("startDate", startDate);
-		model.addAttribute("endDate", endDate);
+			as.saveGlobalProperty(startDateProperty);
+			as.saveGlobalProperty(endDateProperty);
+
+			req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.savePeriodSuccess"),
+					WebRequest.SCOPE_SESSION);
+
+			model.addAttribute("startDate", startDate);
+			model.addAttribute("endDate", endDate);
 		}
 
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "testConfig", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", params = "testConfig", method = RequestMethod.POST)
 	public void testConfig(ModelMap model, WebRequest req) throws ParseException {
 
 		AdministrationService as = Context.getAdministrationService();
@@ -206,19 +295,19 @@ public class DHISConnectorController {
 		model.addAttribute("user", user);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/runReports", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/runReports.form", method = RequestMethod.GET)
 	public void showRunReports(ModelMap model) {
-		
+
 		AdministrationService as = Context.getAdministrationService();
 		GlobalProperty startDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_START_DATE);
 		GlobalProperty endDateProperty = as.getGlobalPropertyObject(GLOBAL_PROPERTY_END_DATE);
-		
+
 		model.addAttribute("globalPropertyStartDate", startDateProperty.getPropertyValue());
 		model.addAttribute("globalPropertyEndDate", endDateProperty.getPropertyValue());
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/runReports", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/runReports.form", method = RequestMethod.POST)
 	public void runReport(ModelMap model, @RequestParam(value = "report", required = true) String reportMappingFilename,
 			@RequestParam(value = "location", required = true) Date date,
 			@RequestParam(value = "date", required = true) Integer locationId, WebRequest req) throws ParseException {
@@ -234,7 +323,7 @@ public class DHISConnectorController {
 		model.addAttribute("successWhileUploading", successMessage);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/exportMappings", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/exportMappings.form", method = RequestMethod.GET)
 	public void exportMapping(ModelMap model) {
 		passOnExportedFeedback(model, "", "");
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
@@ -245,7 +334,7 @@ public class DHISConnectorController {
 		model.addAttribute("successWhileExporting", successWhileExporting);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/exportMappings", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/exportMappings.form", method = RequestMethod.POST)
 	public void exportMapping(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
 		boolean shouldIncludeMetadata = true;
 		String dontIncludeParameter = request.getParameter("dontIncludeMetadata");
@@ -253,13 +342,13 @@ public class DHISConnectorController {
 			shouldIncludeMetadata = !dontIncludeParameter.equals("on");
 		}
 		String[] selectedMappings = request.getParameter("selectedMappings") != null
-				? request.getParameter("selectedMappings").split("<:::>") : null;
+				? request.getParameter("selectedMappings").split("<:::>")
+				: null;
 		String msg = "";
 
 		if (selectedMappings != null) {
 			try {
 				String[] exported = Context.getService(DHISConnectorService.class)
-						//.exportMappings(selectedMappings, shouldIncludeMetadata);
 						.exportSelectedMappings(selectedMappings);
 				msg = exported[0];
 				int BUFFER_SIZE = 4096;
@@ -282,15 +371,15 @@ public class DHISConnectorController {
 			passOnExportedFeedback(model, "", msg);
 		}
 		try {
-			response.sendRedirect("/module/dhisconnector/manageMappings");
+			response.sendRedirect("/module/dhisconnector/manageMappings.form");
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 	}
 
 	/*
-	 * fullPath must be a temporally stored file path since it's deleted after
-	 * being exported
+	 * fullPath must be a temporally stored file path since it's deleted after being
+	 * exported
 	 */
 	private void exportZipFile(HttpServletResponse response, int BUFFER_SIZE, String fullPath)
 			throws FileNotFoundException, IOException {
@@ -320,8 +409,28 @@ public class DHISConnectorController {
 			(new File(fullPath)).delete();
 		}
 	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "export", method = RequestMethod.POST)
+	public void exportServerConfigurations(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
 
-	@RequestMapping(value = "/module/dhisconnector/dhis2BackupExport", method = RequestMethod.GET)
+			try {
+				String filePath = Context.getService(DHISConnectorService.class).exportServerConfigurations();
+				int BUFFER_SIZE = 4096;
+					exportZipFile(response, BUFFER_SIZE, filePath);
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		try {
+			response.sendRedirect("/module/dhisconnector/configureServer");
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/dhis2BackupExport.form", method = RequestMethod.GET)
 	public void backupDHIS2APIExport(ModelMap model) {
 		failureOrSuccessFeedback(model, "", "");
 		model.addAttribute("dhis2BackupExists", Context.getService(DHISConnectorService.class).dhis2BackupExists());
@@ -329,13 +438,13 @@ public class DHISConnectorController {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/dhis2BackupImport", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/dhis2BackupImport.form", method = RequestMethod.GET)
 	public void backupDHIS2(ModelMap model) {
 		failureOrSuccessFeedback(model, "", "");
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/dhis2BackupExport", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/dhis2BackupExport.form", method = RequestMethod.POST)
 	public void backupDHIS2APIImport(ModelMap model, HttpServletResponse response) {
 		String path = Context.getService(DHISConnectorService.class).getDHIS2APIBackupPath();
 
@@ -351,7 +460,7 @@ public class DHISConnectorController {
 
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/dhis2BackupImport", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/dhis2BackupImport.form", method = RequestMethod.POST)
 	public void backupDHIS2APIImport(ModelMap model,
 			@RequestParam(value = "dhis2APIbBackup", required = false) MultipartFile dhis2APIbBackup) {
 		if (StringUtils.isNotBlank(dhis2APIbBackup.getOriginalFilename())
@@ -374,19 +483,22 @@ public class DHISConnectorController {
 		model.addAttribute("successEncountered", successEncountered);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/manageMappings", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/manageMappings.form", method = RequestMethod.GET)
 	public void manageMappings(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/manageMappings", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/manageMappings.form", method = RequestMethod.POST)
 	public void manageMappings(ModelMap model, @RequestParam(value = "mapping", required = false) MultipartFile mapping,
-							   @RequestParam(value = "shouldReplaceMetadata", required = false) boolean shouldReplaceMetadata) throws IOException {
+			@RequestParam(value = "shouldReplaceMetadata", required = false) boolean shouldReplaceMetadata)
+			throws IOException {
 		String successMessage = "";
 		String failedMessage = "";
 
 		if (!mapping.isEmpty()) {
-			//String msg = Context.getService(DHISConnectorService.class).importMappings(mapping, shouldReplaceMetadata);
+			// String msg =
+			// Context.getService(DHISConnectorService.class).importMappings(mapping,
+			// shouldReplaceMetadata);
 			String msg = Context.getService(DHISConnectorService.class).uploadMappings(mapping);
 
 			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
@@ -401,8 +513,52 @@ public class DHISConnectorController {
 		}
 		passOnUploadingFeedback(model, successMessage, failedMessage);
 	}
+	
+	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "import", method = RequestMethod.POST)
+	public void importDHISConfigurationsServer(ModelMap model, @RequestParam(value = "configuration", required = false) MultipartFile configuration, WebRequest req)
+			throws IOException {
+		
+		String url = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_URL);
+		String user = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_USER);
 
-	@RequestMapping(value = "/module/dhisconnector/adxGenerator", method = RequestMethod.GET)
+		String msg = "";
+
+		if (!configuration.isEmpty()) {
+			
+			if(hasCSVFormat(configuration)) {
+
+			msg = Context.getService(DHISConnectorService.class).uploadDHISServerConfigurations(configuration);
+
+			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
+				req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+						Context.getMessageSourceService().getMessage(msg),
+						WebRequest.SCOPE_SESSION);
+			} else {
+				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+						Context.getMessageSourceService().getMessage(msg),
+						WebRequest.SCOPE_SESSION);
+			}
+		} else {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.format"),
+					WebRequest.SCOPE_SESSION);
+		}
+		
+		} else {
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
+					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.not.selected"),
+					WebRequest.SCOPE_SESSION);
+		}
+		
+		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
+		model.addAttribute("url", url);
+		model.addAttribute("user", user);
+		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
+		model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
+
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/adxGenerator.form", method = RequestMethod.GET)
 	public @ResponseBody String adxGenerator(@RequestParam(value = "dxfDataValueSet") String dxfDataValueSet) {
 		String adx = null;
 		ObjectMapper mapper = new ObjectMapper();
@@ -424,20 +580,21 @@ public class DHISConnectorController {
 	}
 
 	@RequestMapping(value = "/module/dhisconnector/failedData", method = RequestMethod.GET)
-	public  void failedDataRender(ModelMap model) {
+	public void failedDataRender(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 		model.addAttribute("nunmberOfFailedPostAttempts",
 				Context.getService(DHISConnectorService.class).getNumberOfFailedDataPosts());
 	}
-	
+
 	@RequestMapping(value = "/module/dhisconnector/failedReportDataRender", method = RequestMethod.GET)
-	public  @ResponseBody List<String>  failedReportDataRender(ModelMap model) {
+	public @ResponseBody List<String> failedReportDataRender(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
-		List<String> failedReportDataNames = Context.getService(DHISConnectorService.class).getFileNameOfFailedDataPosts();
+		List<String> failedReportDataNames = Context.getService(DHISConnectorService.class)
+				.getFileNameOfFailedDataPosts();
 		return failedReportDataNames;
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/failedData", params = "pushAgain", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/failedData.form", params = "pushAgain", method = RequestMethod.POST)
 	public void failedData(ModelMap model, HttpServletRequest request) {
 		// TODO be specific which post went well and if any failed which one
 		Context.getService(DHISConnectorService.class).postPreviouslyFailedData();
@@ -445,43 +602,45 @@ public class DHISConnectorController {
 				Context.getService(DHISConnectorService.class).getNumberOfFailedDataPosts());
 		request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, "Completed successfully!");
 	}
-	
-	@RequestMapping(value = "/module/dhisconnector/resendReportData", method = RequestMethod.POST )
-	public @ResponseBody Object resendReportDataToDHIS(ModelMap model,@RequestBody Map<String, String> payload,
+
+	@RequestMapping(value = "/module/dhisconnector/resendReportData", method = RequestMethod.POST)
+	public @ResponseBody Object resendReportDataToDHIS(ModelMap model, @RequestBody Map<String, String> payload,
 			HttpServletRequest request) {
 		String reportNameToResend = DHISConnectorUtil.putUnderScoreInReportName(payload.get("selectedReportName"));
-		String finalReportName = reportNameToResend+"_"+new SimpleDateFormat("ddMMyyy").format(new Date())+"_"+payload.get("selectedPeriod");
+		String finalReportName = reportNameToResend + "_" + new SimpleDateFormat("ddMMyyy").format(new Date()) + "_"
+				+ payload.get("selectedPeriod");
 		return Context.getService(DHISConnectorService.class).reSendReportToDHIS(finalReportName);
 	}
-	
+
 	@RequestMapping(value = "/module/dhisconnector/resendFailedReportData", method = RequestMethod.POST)
-	public @ResponseBody Object resendFailedReportData(ModelMap model,@RequestBody Map<String, String> payload,
+	public @ResponseBody Object resendFailedReportData(ModelMap model, @RequestBody Map<String, String> payload,
 			HttpServletRequest request) {
 		String reportName = payload.get("selectedReportName");
-		return Context.getService(DHISConnectorService.class).reSendReportToDHIS(reportName.substring(0, reportName.length()-5));
+		return Context.getService(DHISConnectorService.class)
+				.reSendReportToDHIS(reportName.substring(0, reportName.length() - 5));
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/automation.form", method = RequestMethod.GET)
 	public void renderAutomationPage(ModelMap model) {
 		initialiseAutomation(model, new Configurations().automationEnabled(), new ArrayList<String>());
 	}
 
 	private void initialiseAutomation(ModelMap model, boolean automationEnabled, List<String> postResponse) {
 		// Filter the mappings with supported period types
-		List<DHISMapping> supportedMappings = Context.getService(DHISConnectorService.class).getMappings()
-				.stream()
+		List<DHISMapping> supportedMappings = Context.getService(DHISConnectorService.class).getMappings().stream()
 				.filter(mapping -> SUPPORTED_AUTOMATION_PERIOD_TYPES.contains(mapping.getPeriodType()))
 				.collect(Collectors.toList());
 		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
 
 		model.addAttribute("mappings", supportedMappings);
-		model.addAttribute("reportToDataSetMappings", Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
+		model.addAttribute("reportToDataSetMappings",
+				Context.getService(DHISConnectorService.class).getAllReportToDataSetMappings());
 		model.addAttribute("automationEnabled", automationEnabled);
 		model.addAttribute("postResponse", postResponse);
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", params = "run", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation.form", params = "run", method = RequestMethod.POST)
 	public void postAutomationPage(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		Configurations configs = new Configurations();
@@ -521,7 +680,7 @@ public class DHISConnectorController {
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", params = "saveAutomationToggle", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation.form", params = "saveAutomationToggle", method = RequestMethod.POST)
 	public void toggleAutomation(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		Configurations configs = new Configurations();
@@ -539,7 +698,7 @@ public class DHISConnectorController {
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", params = "delete", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation.form", params = "delete", method = RequestMethod.POST)
 	public void deleteSelectedMappings(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		Configurations configs = new Configurations();
@@ -557,7 +716,7 @@ public class DHISConnectorController {
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/automation", params = "addMapping", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/automation.form", params = "addMapping", method = RequestMethod.POST)
 	public void addMappingToAutomation(ModelMap model, HttpServletRequest request) {
 		String response = "";
 		String mapping = request.getParameter("mapping");
@@ -565,7 +724,8 @@ public class DHISConnectorController {
 		List<String> postResponse = new ArrayList<String>();
 
 		if (StringUtils.isNotBlank(mapping)) {
-			Context.getService(DHISConnectorService.class).saveReportToDataSetMapping(new ReportToDataSetMapping(mapping));
+			Context.getService(DHISConnectorService.class)
+					.saveReportToDataSetMapping(new ReportToDataSetMapping(mapping));
 			response += " -> Mapping added successfully";
 		}
 
@@ -574,36 +734,85 @@ public class DHISConnectorController {
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/locationMapping.form", method = RequestMethod.GET)
 	public void showLocationMappings(ModelMap model) {
 		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class).getDHISOrgUnits();
 
+		List<LocationToOrgUnitMapping> locationToOrgUnitMappings = Context.getService(DHISConnectorService.class)
+				.getAllLocationToOrgUnitMappings();
+
+		List<DHISLocationToOrgUnitMapping> dhisLocationToOrgUnitMappings = new ArrayList<>();
+
+		for (LocationToOrgUnitMapping locationToOrgUnitMapping : locationToOrgUnitMappings) {
+
+			DHISServerConfiguration server = Context.getService(DHISConnectorService.class)
+					.getDHISServerByUuid(locationToOrgUnitMapping.getServerUuid());
+
+			DHISLocationToOrgUnitMapping dhisLocationToOrgUnitMapping = new DHISLocationToOrgUnitMapping();
+
+			dhisLocationToOrgUnitMapping.setLocation(locationToOrgUnitMapping.getLocation());
+			dhisLocationToOrgUnitMapping.setServerUrl(server.getUrl());
+			dhisLocationToOrgUnitMapping.setServerUuid(server.getUuid());
+
+			for (DHISOrganisationUnit orgUnit : orgUnits) {
+				if (orgUnit.getId().equals(locationToOrgUnitMapping.getOrgUnitUid())) {
+					dhisLocationToOrgUnitMapping.setOrgUnitName(orgUnit.getName());
+					dhisLocationToOrgUnitMapping.setOrgUnitUid(orgUnit.getId());
+				}
+			}
+			dhisLocationToOrgUnitMappings.add(dhisLocationToOrgUnitMapping);
+		}
 		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
+		model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
 		model.addAttribute("orgUnits", orgUnits);
-		model.addAttribute("locationToOrgUnitMappings", Context.getService(DHISConnectorService.class).getAllLocationToOrgUnitMappings());
+		model.addAttribute("locationToOrgUnitMappings", locationToOrgUnitMappings);
+		model.addAttribute("dhisLocationToOrgUnitMappings", dhisLocationToOrgUnitMappings);
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
+	@RequestMapping(value = "/module/dhisconnector/orgUnitsByServer", method = RequestMethod.GET)
+	public @ResponseBody List<DHISOrganisationUnit> getOrgUnitsByServer(ModelMap model,
+			@RequestParam(value = "serverUuid") String serverUuid) {
+
+		DHISServerConfiguration server = Context.getService(DHISConnectorService.class).getDHISServerByUuid(serverUuid);
+
+		List<DHISOrganisationUnit> orgUnits = Context.getService(DHISConnectorService.class)
+				.getDHISOrgUnitsByServer(server);
+
+		return orgUnits;
+	}
+
 	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
-	public void postLocationMappings(ModelMap model, HttpServletRequest request) {
+	public void postLocationOrgUnitsMappings(ModelMap model, HttpServletRequest request, WebRequest req) {
 		String response = "";
 
-		if (!request.getParameter("locationMappings").isEmpty()) {
-			String[] locationMappings = request.getParameter("locationMappings").split(",");
-			for (String pair : locationMappings) {
-				String locationUuid = pair.split("=")[0];
-				String orgUnitUId = pair.split("=")[1];
-				if (StringUtils.isNotBlank(locationUuid)) {
-					Location location = Context.getLocationService().getLocationByUuid(locationUuid);
-					Context.getService(DHISConnectorService.class).deleteLocationToOrgUnitMappingsByLocation(location);
-					if (StringUtils.isNotBlank(orgUnitUId)) {
-						Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
-								new LocationToOrgUnitMapping(location, orgUnitUId)
-						);
-					}
+		if (!request.getParameter("locationOrgUnitsMappings").isEmpty()) {
+			String[] locationMappings = request.getParameter("locationOrgUnitsMappings").split(",");
+
+			String serverUuid = locationMappings[0];
+			String orgUnitUId = locationMappings[1];
+			String locationUuid = locationMappings[2];
+			String orgUnitName = locationMappings[3];
+
+			if (StringUtils.isNotBlank(serverUuid) && StringUtils.isNotBlank(orgUnitUId)
+					&& StringUtils.isNotBlank(locationUuid)) {
+				Location location = Context.getLocationService().getLocationByUuid(locationUuid);
+				LocationToOrgUnitMapping locationToOrg = Context.getService(DHISConnectorService.class)
+						.getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(location, orgUnitUId,
+								serverUuid);
+				if (locationToOrg != null) {
+					req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR, Context.getMessageSourceService()
+							.getMessage("dhisconnector.locationMapping.per.server.exist"), WebRequest.SCOPE_SESSION);
+				} else {
+					Context.getService(DHISConnectorService.class).saveLocationToOrgUnitMapping(
+							new LocationToOrgUnitMapping(location, orgUnitUId, serverUuid, orgUnitName));
+					response += Context.getMessageSourceService()
+							.getMessage("dhisconnector.locationMapping.per.server.saved");
 				}
+			} else {
+				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR, Context.getMessageSourceService().getMessage(
+						"dhisconnector.locationMapping.per.server.value.notfilled"), WebRequest.SCOPE_SESSION);
 			}
-			response += " -> Save was successful";
 		}
 
 		model.addAttribute(response);
@@ -612,4 +821,53 @@ public class DHISConnectorController {
 		if (StringUtils.isNotBlank(response))
 			request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, response);
 	}
+
+	@ResponseStatus(value = HttpStatus.OK)
+	@RequestMapping(value = "/module/dhisconnector/deleteLocationMapping", method = RequestMethod.POST)
+	public void deleteLocationOrgUnitsMappings(ModelMap model,
+			@RequestParam(value = "mapping", required = true) String mapping, WebRequest req) throws ParseException {
+
+		String[] locationMappings = mapping.split(",");
+
+		String serverUuid = locationMappings[0];
+		String orgUnitUId = locationMappings[1];
+		String locationUuid = locationMappings[2];
+
+		Location location = Context.getLocationService().getLocationByUuid(locationUuid);
+
+		Context.getService(DHISConnectorService.class)
+				.deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(location, serverUuid, orgUnitUId);
+
+		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+				Context.getMessageSourceService()
+						.getMessage(Context.getMessageSourceService()
+								.getMessage("dhisconnector.locationMapping.per.server.deleted")),
+				WebRequest.SCOPE_SESSION);
+	}
+
+	@RequestMapping(value = "/module/dhisconnector/deleteServer", method = RequestMethod.POST)
+	public void deleteConfig(ModelMap model, @RequestParam(value = "url", required = true) String url,
+			@RequestParam(value = "location", required = true) String locationUuid, WebRequest req)
+			throws ParseException {
+
+		DHISServerConfiguration server = new DHISServerConfiguration(url, null, null);
+
+		Context.getService(DHISConnectorService.class).permanentlyDHISServerConfiguration(server);
+
+		req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
+				Context.getMessageSourceService().getMessage(
+						Context.getMessageSourceService().getMessage("dhisconnector.server.configuration.removed")),
+				WebRequest.SCOPE_SESSION);
+
+	}
+	
+	  public static boolean hasCSVFormat(MultipartFile file) {
+		    if (TYPE.equals(file.getContentType())
+		    		|| file.getContentType().equals("application/vnd.ms-excel")) {
+		      return true;
+		    }
+
+		    return false;
+		  }
+
 }

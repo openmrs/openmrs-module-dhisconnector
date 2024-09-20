@@ -11,18 +11,25 @@
  */
 package org.openmrs.module.dhisconnector.web.resource;
 
+import java.util.List;
+
 import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.web.controller.DHISConnectorRestController;
+import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.openmrs.module.webservices.rest.web.RequestContext;
 import org.openmrs.module.webservices.rest.web.RestConstants;
 import org.openmrs.module.webservices.rest.web.annotation.Resource;
 import org.openmrs.module.webservices.rest.web.representation.Representation;
+import org.openmrs.module.webservices.rest.web.resource.api.PageableResult;
 import org.openmrs.module.webservices.rest.web.resource.api.Retrievable;
+import org.openmrs.module.webservices.rest.web.resource.impl.AlreadyPaged;
 import org.openmrs.module.webservices.rest.web.resource.impl.DataDelegatingCrudResource;
 import org.openmrs.module.webservices.rest.web.resource.impl.DelegatingResourceDescription;
+import org.openmrs.module.webservices.rest.web.resource.impl.EmptySearchResult;
+import org.openmrs.module.webservices.rest.web.resource.impl.NeedsPaging;
 import org.openmrs.module.webservices.rest.web.response.ResponseException;
 
 @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -30,29 +37,46 @@ import org.openmrs.module.webservices.rest.web.response.ResponseException;
 		+ "/locationmappings", supportedClass = LocationToOrgUnitMapping.class, supportedOpenmrsVersions = { "1.8.*",
 		"1.9.*, 1.10.*, 1.11.*", "1.12.*", "2.*" })
 public class LocationMappingResource extends DataDelegatingCrudResource implements Retrievable {
-	@Override
-	public SimpleObject search(RequestContext context) throws ResponseException {
-		String query = context.getParameter("orgUnitUid");
-		if (query == null) {
-			return new SimpleObject();
-		}
-		try {
-			LocationToOrgUnitMapping locationToOrgUnitMapping = Context.getService(DHISConnectorService.class)
-					.getLocationToOrgUnitMappingByOrgUnitUid(query);
-			SimpleObject simpleObject = new SimpleObject();
-			simpleObject.add("locationId", locationToOrgUnitMapping.getLocation().getLocationId());
-			simpleObject.add("locationName", locationToOrgUnitMapping.getLocation().getName());
-			simpleObject.add("orgUnitUid", locationToOrgUnitMapping.getOrgUnitUid());
-			simpleObject.add("locationUid", locationToOrgUnitMapping.getLocation().getUuid());
-			return simpleObject;
-		} catch (Exception exception) {
-			return new SimpleObject();
-		}
-	}
+	
+	/*
+	 * @Override public SimpleObject search(RequestContext context) throws
+	 * ResponseException { String orgUnitUid = context.getParameter("orgUnitUid");
+	 * String serverUuid = context.getParameter("serverUuid"); if (orgUnitUid ==
+	 * null || serverUuid == null) { return new SimpleObject(); } try {
+	 * LocationToOrgUnitMapping locationToOrgUnitMapping =
+	 * Context.getService(DHISConnectorService.class)
+	 * .getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(orgUnitUid,serverUuid);
+	 * SimpleObject simpleObject = new SimpleObject();
+	 * simpleObject.add("locationId",
+	 * locationToOrgUnitMapping.getLocation().getLocationId());
+	 * simpleObject.add("locationName",
+	 * locationToOrgUnitMapping.getLocation().getName());
+	 * simpleObject.add("orgUnitUid", locationToOrgUnitMapping.getOrgUnitUid());
+	 * simpleObject.add("locationUid",
+	 * locationToOrgUnitMapping.getLocation().getUuid());
+	 * simpleObject.add("serverUuid", locationToOrgUnitMapping.getServerUuid());
+	 * return simpleObject; } catch (Exception exception) { return new
+	 * SimpleObject(); } }
+	 */
+	 
 
 	@Override
 	public LocationToOrgUnitMapping getByUniqueId(String s) {
 		return Context.getService(DHISConnectorService.class).getLocationToOrgUnitMappingByUuid(s);
+	}
+	
+	@Override
+	protected PageableResult doSearch(RequestContext context) {
+		String serverUuid = context.getParameter("serverUuid");
+		if (serverUuid == null) {
+			return new EmptySearchResult();
+		}
+
+		DHISConnectorService dcs = Context.getService(DHISConnectorService.class);
+
+		List<LocationToOrgUnitMapping> reports = dcs.getLocationsToOrgUnitMappingByServerUuid(serverUuid);
+
+		return new AlreadyPaged<LocationToOrgUnitMapping>(context, reports, false);
 	}
 
 	/**
@@ -82,6 +106,10 @@ public class LocationMappingResource extends DataDelegatingCrudResource implemen
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
 		description.addProperty("id");
 		description.addProperty("uuid");
+		description.addProperty("orgUnitUid");
+		description.addProperty("location");
+		description.addProperty("serverUuid");
+		description.addProperty("orgUnitName");
 
 		return description;
 	}

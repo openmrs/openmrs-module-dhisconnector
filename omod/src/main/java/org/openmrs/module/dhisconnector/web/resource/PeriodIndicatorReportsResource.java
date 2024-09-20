@@ -105,7 +105,8 @@ public class PeriodIndicatorReportsResource extends DataDelegatingCrudResource i
 	public SimpleObject getSimpleColumns(PeriodIndicatorReportDefinition pird) {
 		SimpleObject simpleColumns = new SimpleObject();
 
-		if (pird.getDataSetDefinitions().get("defaultDataSet") != null) {
+		if (pird.getDataSetDefinitions().get("defaultDataSet") != null && (pird
+				.getDataSetDefinitions().get("defaultDataSet")).getParameterizable() != null) {
 
 			List<CohortIndicatorDataSetDefinition.CohortIndicatorAndDimensionColumn> cols = ((CohortIndicatorDataSetDefinition) (pird
 					.getDataSetDefinitions().get("defaultDataSet")).getParameterizable()).getColumns();

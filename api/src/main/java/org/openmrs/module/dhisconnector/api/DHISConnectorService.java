@@ -18,12 +18,16 @@ import java.util.List;
 
 import org.openmrs.Location;
 import org.openmrs.api.OpenmrsService;
+import org.openmrs.module.dhisconnector.DHISServerConfiguration;
+import org.openmrs.module.dhisconnector.DHISServerReportsToReceive;
 import org.openmrs.module.dhisconnector.LocationToOrgUnitMapping;
 import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISDataSet;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
 import org.openmrs.module.dhisconnector.api.model.DHISMapping;
 import org.openmrs.module.dhisconnector.api.model.DHISOrganisationUnit;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
+import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
 import org.openmrs.module.reporting.report.definition.PeriodIndicatorReportDefinition;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -70,6 +74,8 @@ public interface DHISConnectorService extends OpenmrsService {
 	public List<PeriodIndicatorReportDefinition> getReportWithMappings(List<DHISMapping> mappings);
 
 	public List<DHISOrganisationUnit> getDHISOrgUnits();
+	
+	public List<DHISOrganisationUnit> getDHISOrgUnitsByServer(DHISServerConfiguration server);
 
 	public DHISDataSet getDHISDataSetById(String id);
 
@@ -122,6 +128,8 @@ public interface DHISConnectorService extends OpenmrsService {
 	LocationToOrgUnitMapping getLocationToOrgUnitMappingByUuid(String uuid);
 
 	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUid(String orgUnitUid);
+	
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByLocationAndOrgUnitIdAndServerUuid(Location location, String orgUnitId, String serverUuid);
 
 	void saveLocationToOrgUnitMapping(LocationToOrgUnitMapping locationToOrgUnitMapping);
 
@@ -133,5 +141,41 @@ public interface DHISConnectorService extends OpenmrsService {
 
 	boolean isDHISMonthOpenToSendReport(String dhisDatasetListName, String periodType, String periodValue,
 			String datasetid);
+	
+	void saveDHISServerConfiguration(DHISServerConfiguration server);
+	
+	List<DHISServerConfiguration> getDHISServerConfigurations();
+	
+	public void permanentlyDHISServerConfiguration(DHISServerConfiguration server);
+	
+	void saveDHISServerReportsToReceive(String[] reports);
+	
+	List<DHISServerReportsToReceive> getDHISServerReportsToReceive();
+	
+	DHISServerReportsToReceive getDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid, String sespReportUuid);
+	
+	DHISServerConfiguration getDHISServerByUrl(String serverUrl);
+	
+	public String postDataToMultipleDHISEndpoint(String endpoint, String jsonPayload, DHISServerConfigurationDTO dhisServer);
+
+	public List<Object> postDataValueSetToMultiPleDhisServers(DHISDataValueSet dataValueSet);
+	
+	DHISServerConfiguration getDHISServerByUuid(String serverUuid);
+	
+	void deleteLocationToOrgUnitMappingsByLocationAndServerUuidAndOrgUnitUid(Location location, String serverUuid, String orgUnitUid);
+	
+	void deleteDHISServerReportsToReceiveByServerUuidAndReportUuid(String dhisServerUuid, String sespReportUuid);
+	
+	void verifyDHISServerReportsToReceiveToBeDeleted(String[] payload, List<DHISServerReportsToReceive> serversWithReports);
+	
+	List<DHISServerReportsToReceive> getDHISServerReportsToReceiveByServerUuid(String dhisServerUuid);
+	
+	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid);
+	
+	List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid);
+
+	public String exportServerConfigurations();
+	
+	public String uploadDHISServerConfigurations(MultipartFile mapping);
 
 }

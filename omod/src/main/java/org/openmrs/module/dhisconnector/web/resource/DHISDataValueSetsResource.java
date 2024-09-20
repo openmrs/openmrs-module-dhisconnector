@@ -14,6 +14,7 @@ package org.openmrs.module.dhisconnector.web.resource;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
@@ -21,6 +22,9 @@ import org.openmrs.api.context.Context;
 import org.openmrs.module.dhisconnector.api.DHISConnectorService;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValue;
 import org.openmrs.module.dhisconnector.api.model.DHISDataValueSet;
+import org.openmrs.module.dhisconnector.api.model.DHISImportErrorSummary;
+import org.openmrs.module.dhisconnector.api.model.DHISImportSummary;
+import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 import org.openmrs.module.dhisconnector.web.controller.DHISConnectorRestController;
 import org.openmrs.module.webservices.rest.SimpleObject;
 import org.openmrs.module.webservices.rest.web.RequestContext;
@@ -55,18 +59,32 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 
 	@Override
 	public Object save(Object o) {
-		Object summary = Context.getService(DHISConnectorService.class).postDataValueSet((DHISDataValueSet) o);
+		//Object summary = Context.getService(DHISConnectorService.class).postDataValueSet((DHISDataValueSet) o);
+		List<Object> summary = Context.getService(DHISConnectorService.class).postDataValueSetToMultiPleDhisServers((DHISDataValueSet) o);
 
 		ObjectMapper mapper = new ObjectMapper();
-		SimpleObject ret = null;
-
+//		SimpleObject ret = null;
+//
+//		try {
+//			ret = SimpleObject.parseJson(mapper.writeValueAsString(summary));
+//		} catch (Exception e) {
+//			return null;
+//		}
+		
+		SimpleObject reportSendResponse = null;
+		
 		try {
-			ret = SimpleObject.parseJson(mapper.writeValueAsString(summary));
-		} catch (Exception e) {
-			return null;
+		reportSendResponse = new SimpleObject();
+		
+		for (int i = 0; i < summary.size(); i++) {
+			reportSendResponse.add(Integer.toString(i), SimpleObject.parseJson(mapper.writeValueAsString(summary.get(i))));
+		}
+		}catch(Exception e) {
+			
 		}
 
-		return ret;
+		return reportSendResponse;
+
 	}
 
 	@PropertySetter("dataValues")
@@ -95,6 +113,31 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 			dvs.addDataValue(dv);
 		}
 	}
+	
+	@PropertySetter("dhisServers")
+	public static void setDhisServers(DHISDataValueSet dvs, Object value) {
+		ArrayList<LinkedHashMap<String, String>> dataServers = (ArrayList<LinkedHashMap<String, String>>) value;
+
+		for (LinkedHashMap<String, String> serverElement : dataServers) {
+			Iterator it = serverElement.entrySet().iterator();
+
+			DHISServerConfigurationDTO server = new DHISServerConfigurationDTO();
+
+			while (it.hasNext()) {
+				Map.Entry pair = (Map.Entry) it.next();
+
+				if (pair.getKey().equals("url")) {
+					server.setUrl((String) pair.getValue());
+				} else if (pair.getKey().equals("user")) {
+					server.setUser((String) pair.getValue());
+				} else if (pair.getKey().equals("password")) {
+					server.setPassword((String) pair.getValue());
+				} 
+			}
+
+			dvs.addDhisServer(server);
+		}
+	}
 
 	public DelegatingResourceDescription getCreatableProperties() {
 		DelegatingResourceDescription description = new DelegatingResourceDescription();
@@ -103,6 +146,7 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 		description.addProperty("orgUnit");
 		description.addProperty("reportName");
 		description.addProperty("dataValues");
+		description.addProperty("dhisServers");
 		return description;
 	}
 
@@ -119,6 +163,7 @@ public class DHISDataValueSetsResource extends DataDelegatingCrudResource implem
 		description.addProperty("orgUnit");
 		description.addProperty("reportName");
 		description.addProperty("dataValues");
+		description.addProperty("dhisServers");
 		return description;
 	}
 }

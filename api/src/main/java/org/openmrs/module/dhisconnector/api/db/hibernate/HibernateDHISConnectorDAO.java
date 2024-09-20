@@ -13,14 +13,18 @@
  */
 package org.openmrs.module.dhisconnector.api.db.hibernate;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.hibernate.internal.SessionImpl;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.SerializedObject;
@@ -32,6 +36,8 @@ import org.openmrs.module.dhisconnector.ReportToDataSetMapping;
 import org.openmrs.module.dhisconnector.api.db.DHISConnectorDAO;
 import org.openmrs.module.dhisconnector.api.model.DHISServerConfigurationDTO;
 import org.springframework.util.ReflectionUtils;
+
+import  java.sql.Statement;
 
 /**
  * It is a default implementation of {@link DHISConnectorDAO}.
@@ -280,5 +286,57 @@ public class HibernateDHISConnectorDAO implements DHISConnectorDAO {
 				.setParameter("serverUuid", serverUuid)
 				.list();
 	}
+	
+	@Override
+	public void exportServerConfigurations(String filename) {
+		
+		SessionImpl sessionImpl = (SessionImpl) sessionFactory.getHibernateSessionFactory().openSession();
+		Connection conn = sessionImpl.connection();
+
+        try {
+            FileWriter fw = new FileWriter(filename);
+            String servers = "SELECT * FROM dhisconnector_dhis_server";
+            String serversAndReports = "SELECT * FROM dhisconnector_dhis_server_reports_to_receive";
+            Statement stmt = conn.createStatement();
+
+            ResultSet rs = stmt.executeQuery(servers);
+            fw.append('\n');
+            while (rs.next()) {
+                fw.append(rs.getString(2));
+                fw.append(',');
+                fw.append(rs.getString(3));
+                fw.append(',');
+                fw.append(rs.getString(4));
+                fw.append(',');
+                fw.append(rs.getString(5));
+                fw.append(',');
+                fw.append(rs.getString(6));
+                fw.append(',');
+                fw.append(rs.getString(7));
+                fw.append('\n');
+            }
+            
+            rs = stmt.executeQuery(serversAndReports);
+            while (rs.next()) {
+                fw.append(rs.getString(2));
+                fw.append(',');
+                fw.append(rs.getString(3));
+                fw.append(',');
+                fw.append(rs.getString(4));
+                fw.append(',');
+                fw.append(rs.getString(5));
+                fw.append(',');
+                fw.append(rs.getString(6));
+                fw.append('\n');
+            }
+            
+            fw.flush();
+            fw.close();
+            this.getConnection().close();
+            System.out.println("CSV File is created successfully.");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 }

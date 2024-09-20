@@ -216,7 +216,3 @@ function saveReportsOfTheSelectedServer(elm) {
 function toggler(divId) {
   $j("#" + divId).toggleClass("hidden");
 }
-
-
-
-

@@ -13,13 +13,17 @@ package org.openmrs.module.dhisconnector.api.impl;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.io.StringReader;
 import java.io.StringWriter;
@@ -46,6 +50,7 @@ import java.util.zip.ZipFile;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import javax.mail.Session;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -83,6 +88,7 @@ import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.map.SerializationConfig;
+import org.openmrs.Allergies;
 import org.openmrs.Location;
 import org.openmrs.api.context.Context;
 import org.openmrs.api.db.SerializedObject;
@@ -2337,6 +2343,110 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	@Override
 	public List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid) {
 		return getDao().getLocationsToOrgUnitMappingByServerUuid(serverUuid);
+	}
+
+	@Override
+	public String exportServerConfigurations() {
+
+			String sourceDirectory = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_MAPPINGS_FOLDER
+					+ File.separator;
+			String tempFolderName = OpenmrsUtil.getApplicationDataDirectory() + DHISCONNECTOR_TEMP_FOLDER
+					+ File.separator;
+			String suffix = ".csv";
+			String csvFile = tempFolderName + "server-configurations_" + (new Date()).getTime() + suffix;
+
+			(new File(tempFolderName)).mkdirs();
+
+			File dir = new File(sourceDirectory);
+
+			if (!dir.isDirectory()) {
+				System.out.println(sourceDirectory + " is not a directory");
+			} else {
+				getDao().exportServerConfigurations(csvFile);
+			}
+			
+		return csvFile;
+	}
+
+	@Override
+	public String uploadDHISServerConfigurations(MultipartFile configurationFile) {
+		
+		List<DHISServerConfiguration> dhisServers = new ArrayList<>();
+		List<DHISServerReportsToReceive> reportsPerServer = new ArrayList<>();
+		
+		String msg = "";
+		
+        try {
+		
+        BufferedReader lineReader = new BufferedReader(new InputStreamReader(configurationFile.getInputStream(), "UTF-8"));
+        String lineText = null;
+
+        lineReader.readLine();
+
+        while ((lineText = lineReader.readLine()) != null) {
+            String[] data = lineText.split(",");
+            
+            if(data.length == 6) {
+            	
+            String uuid = data[0];
+            String server_url = data[3];
+            String server_username = data[4];
+            String server_password = data[5];
+            
+            if(this.getDHISServerByUrl(server_url) == null) {
+            
+            DHISServerConfiguration server = new DHISServerConfiguration();
+            server.setUuid(uuid);
+            server.setUrl(server_url);
+            server.setUser(server_username);
+            server.setPassword(server_password);
+            
+            dhisServers.add(server);
+            
+            }
+            
+            } else if(data.length == 5){
+            	
+            String uuid = data[0];
+            String dhis_server_uuid = data[3];
+            String sesp_report_uuid = data[4];
+            
+            if(this.getDHISServerReportsToReceiveByServerUuidAndReportUuid(dhis_server_uuid, sesp_report_uuid) == null) {
+            
+            DHISServerReportsToReceive serverReport = new DHISServerReportsToReceive();
+            serverReport.setDhisServerUuid(dhis_server_uuid);
+            serverReport.setSespReportUuid(sesp_report_uuid);
+            serverReport.setUuid(uuid);
+            
+            reportsPerServer.add(serverReport);
+            
+            }
+            
+            }
+        }
+
+			lineReader.close();
+			
+	        for (DHISServerConfiguration server : dhisServers) {
+	        	this.saveDHISServerConfiguration(server);
+			}
+	        
+			this.saveDHISServerReportsToReceive(reportsPerServer);
+			
+			msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.configurations");
+			
+		} catch (Exception e1) {
+			
+			e1.printStackTrace();
+			msg = Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.configurations.failed");
+		}
+        
+        return msg;
+
+	}
+
+	private void saveDHISServerReportsToReceive(List<DHISServerReportsToReceive> dhisServerReportsToReceive) {
+		getDao().saveDHISServerReportsToReceive(dhisServerReportsToReceive);
 	}
 
 }

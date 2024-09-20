@@ -173,4 +173,9 @@ public interface DHISConnectorService extends OpenmrsService {
 	LocationToOrgUnitMapping getLocationToOrgUnitMappingByOrgUnitUidAndServerUuid(String orgUnitUid, String serverUuid);
 	
 	List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid);
+
+	public String exportServerConfigurations();
+	
+	public String uploadDHISServerConfigurations(MultipartFile mapping);
+
 }

@@ -84,4 +84,6 @@ public interface DHISConnectorDAO {
 	
 	List<LocationToOrgUnitMapping> getLocationsToOrgUnitMappingByServerUuid(String serverUuid);
 	
+	void exportServerConfigurations(String filename);
+	
 }

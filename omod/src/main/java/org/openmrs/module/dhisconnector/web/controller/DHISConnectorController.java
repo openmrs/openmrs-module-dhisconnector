@@ -81,7 +81,7 @@ public class DHISConnectorController {
 	public static final String GLOBAL_PROPERTY_START_DATE = "dhisconnector.startDate";
 
 	public static final String GLOBAL_PROPERTY_END_DATE = "dhisconnector.endDate";
-	
+
 	public static String TYPE = "text/csv";
 
 	static final List<String> SUPPORTED_AUTOMATION_PERIOD_TYPES = Arrays.asList("Daily", "Weekly", "WeeklySunday",
@@ -110,7 +110,7 @@ public class DHISConnectorController {
 		model.addAttribute("servers", Context.getService(DHISConnectorService.class).getDHISServerConfigurations());
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/getServers", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/getServers.form", method = RequestMethod.GET)
 	public @ResponseBody List<String> getServersList(ModelMap model) {
 		List<String> serversUuid = new ArrayList<>();
 		List<DHISServerConfiguration> servers = Context.getService(DHISConnectorService.class)
@@ -121,7 +121,7 @@ public class DHISConnectorController {
 		return serversUuid;
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/getServersByReportSelected", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/getServersByReportSelected.form", method = RequestMethod.GET)
 	public @ResponseBody List<DHISServerConfigurationDTO> getServersListByReportSelected(
 			@RequestParam(value = "sespReportUuid") String sespReportUuid) {
 
@@ -151,7 +151,7 @@ public class DHISConnectorController {
 		return serversForTheSelectedReport;
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/getServersAndReportsToReceive", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/getServersAndReportsToReceive.form", method = RequestMethod.GET)
 	public @ResponseBody List<String> getServersAndReportsToReceiveList(ModelMap model) {
 
 		List<DHISServerReportsToReceive> serversWithReports = Context.getService(DHISConnectorService.class)
@@ -210,7 +210,7 @@ public class DHISConnectorController {
 		}
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/saveDHISServerSespReportsToReceive", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/saveDHISServerSespReportsToReceive.form", method = RequestMethod.POST)
 	public @ResponseBody List<String> saveDHISServerSespReportsToReceive(ModelMap model, @RequestBody String[] payload,
 			WebRequest req) throws ParseException {
 
@@ -240,7 +240,7 @@ public class DHISConnectorController {
 
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "savePeriod", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", params = "savePeriod", method = RequestMethod.POST)
 	public void savePeriod(ModelMap model, @RequestParam(value = "startDate", required = true) String startDate,
 			@RequestParam(value = "endDate", required = true) String endDate, WebRequest req) throws ParseException {
 
@@ -409,19 +409,19 @@ public class DHISConnectorController {
 			(new File(fullPath)).delete();
 		}
 	}
-	
-	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "export", method = RequestMethod.POST)
+
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", params = "export", method = RequestMethod.POST)
 	public void exportServerConfigurations(ModelMap model, HttpServletRequest request, HttpServletResponse response) {
 
-			try {
-				String filePath = Context.getService(DHISConnectorService.class).exportServerConfigurations();
-				int BUFFER_SIZE = 4096;
-					exportZipFile(response, BUFFER_SIZE, filePath);
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		try {
+			String filePath = Context.getService(DHISConnectorService.class).exportServerConfigurations();
+			int BUFFER_SIZE = 4096;
+			exportZipFile(response, BUFFER_SIZE, filePath);
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 
 		try {
 			response.sendRedirect("/module/dhisconnector/configureServer");
@@ -513,43 +513,41 @@ public class DHISConnectorController {
 		}
 		passOnUploadingFeedback(model, successMessage, failedMessage);
 	}
-	
-	@RequestMapping(value = "/module/dhisconnector/configureServer", params = "import", method = RequestMethod.POST)
-	public void importDHISConfigurationsServer(ModelMap model, @RequestParam(value = "configuration", required = false) MultipartFile configuration, WebRequest req)
+
+	@RequestMapping(value = "/module/dhisconnector/configureServer.form", params = "import", method = RequestMethod.POST)
+	public void importDHISConfigurationsServer(ModelMap model,
+			@RequestParam(value = "configuration", required = false) MultipartFile configuration, WebRequest req)
 			throws IOException {
-		
+
 		String url = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_URL);
 		String user = Context.getAdministrationService().getGlobalProperty(GLOBAL_PROPERTY_USER);
 
 		String msg = "";
 
 		if (!configuration.isEmpty()) {
-			
-			if(hasCSVFormat(configuration)) {
 
-			msg = Context.getService(DHISConnectorService.class).uploadDHISServerConfigurations(configuration);
+			if (hasCSVFormat(configuration)) {
 
-			if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
-				req.setAttribute(WebConstants.OPENMRS_MSG_ATTR,
-						Context.getMessageSourceService().getMessage(msg),
-						WebRequest.SCOPE_SESSION);
+				msg = Context.getService(DHISConnectorService.class).uploadDHISServerConfigurations(configuration);
+
+				if (msg.startsWith("Successfully") || msg.startsWith("Carregado")) {
+					req.setAttribute(WebConstants.OPENMRS_MSG_ATTR, Context.getMessageSourceService().getMessage(msg),
+							WebRequest.SCOPE_SESSION);
+				} else {
+					req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR, Context.getMessageSourceService().getMessage(msg),
+							WebRequest.SCOPE_SESSION);
+				}
 			} else {
 				req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
-						Context.getMessageSourceService().getMessage(msg),
+						Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.format"),
 						WebRequest.SCOPE_SESSION);
 			}
+
 		} else {
-			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
-					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.format"),
-					WebRequest.SCOPE_SESSION);
+			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR, Context.getMessageSourceService()
+					.getMessage("dhisconnector.uploadMapping.server.file.not.selected"), WebRequest.SCOPE_SESSION);
 		}
-		
-		} else {
-			req.setAttribute(WebConstants.OPENMRS_ERROR_ATTR,
-					Context.getMessageSourceService().getMessage("dhisconnector.uploadMapping.server.file.not.selected"),
-					WebRequest.SCOPE_SESSION);
-		}
-		
+
 		model.addAttribute("locations", Context.getLocationService().getAllLocations(true));
 		model.addAttribute("url", url);
 		model.addAttribute("user", user);
@@ -579,14 +577,14 @@ public class DHISConnectorController {
 		return adx;
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/failedData", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/failedData.form", method = RequestMethod.GET)
 	public void failedDataRender(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 		model.addAttribute("nunmberOfFailedPostAttempts",
 				Context.getService(DHISConnectorService.class).getNumberOfFailedDataPosts());
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/failedReportDataRender", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/failedReportDataRender.form", method = RequestMethod.GET)
 	public @ResponseBody List<String> failedReportDataRender(ModelMap model) {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 		List<String> failedReportDataNames = Context.getService(DHISConnectorService.class)
@@ -603,7 +601,7 @@ public class DHISConnectorController {
 		request.getSession().setAttribute(WebConstants.OPENMRS_MSG_ATTR, "Completed successfully!");
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/resendReportData", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/resendReportData.form", method = RequestMethod.POST)
 	public @ResponseBody Object resendReportDataToDHIS(ModelMap model, @RequestBody Map<String, String> payload,
 			HttpServletRequest request) {
 		String reportNameToResend = DHISConnectorUtil.putUnderScoreInReportName(payload.get("selectedReportName"));
@@ -612,7 +610,7 @@ public class DHISConnectorController {
 		return Context.getService(DHISConnectorService.class).reSendReportToDHIS(finalReportName);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/resendFailedReportData", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/resendFailedReportData.form", method = RequestMethod.POST)
 	public @ResponseBody Object resendFailedReportData(ModelMap model, @RequestBody Map<String, String> payload,
 			HttpServletRequest request) {
 		String reportName = payload.get("selectedReportName");
@@ -770,7 +768,7 @@ public class DHISConnectorController {
 		model.addAttribute("showLogin", (Context.getAuthenticatedUser() == null) ? true : false);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/orgUnitsByServer", method = RequestMethod.GET)
+	@RequestMapping(value = "/module/dhisconnector/orgUnitsByServer.form", method = RequestMethod.GET)
 	public @ResponseBody List<DHISOrganisationUnit> getOrgUnitsByServer(ModelMap model,
 			@RequestParam(value = "serverUuid") String serverUuid) {
 
@@ -782,7 +780,7 @@ public class DHISConnectorController {
 		return orgUnits;
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/locationMapping", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/locationMapping.form", method = RequestMethod.POST)
 	public void postLocationOrgUnitsMappings(ModelMap model, HttpServletRequest request, WebRequest req) {
 		String response = "";
 
@@ -823,7 +821,7 @@ public class DHISConnectorController {
 	}
 
 	@ResponseStatus(value = HttpStatus.OK)
-	@RequestMapping(value = "/module/dhisconnector/deleteLocationMapping", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/deleteLocationMapping.form", method = RequestMethod.POST)
 	public void deleteLocationOrgUnitsMappings(ModelMap model,
 			@RequestParam(value = "mapping", required = true) String mapping, WebRequest req) throws ParseException {
 
@@ -845,7 +843,7 @@ public class DHISConnectorController {
 				WebRequest.SCOPE_SESSION);
 	}
 
-	@RequestMapping(value = "/module/dhisconnector/deleteServer", method = RequestMethod.POST)
+	@RequestMapping(value = "/module/dhisconnector/deleteServer.form", method = RequestMethod.POST)
 	public void deleteConfig(ModelMap model, @RequestParam(value = "url", required = true) String url,
 			@RequestParam(value = "location", required = true) String locationUuid, WebRequest req)
 			throws ParseException {
@@ -860,14 +858,13 @@ public class DHISConnectorController {
 				WebRequest.SCOPE_SESSION);
 
 	}
-	
-	  public static boolean hasCSVFormat(MultipartFile file) {
-		    if (TYPE.equals(file.getContentType())
-		    		|| file.getContentType().equals("application/vnd.ms-excel")) {
-		      return true;
-		    }
 
-		    return false;
-		  }
+	public static boolean hasCSVFormat(MultipartFile file) {
+		if (TYPE.equals(file.getContentType()) || file.getContentType().equals("application/vnd.ms-excel")) {
+			return true;
+		}
+
+		return false;
+	}
 
 }

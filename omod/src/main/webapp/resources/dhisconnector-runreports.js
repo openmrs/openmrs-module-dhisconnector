@@ -705,8 +705,6 @@ function sendDataToDHIS() {
         selectedLocations.push(availableLocations[this.id])
     })
     
-    if(selectedMapping.periodType === 'Daily'){
-	
 		let locationsToSendNames = '';
 		
 		for (let i = 0; i < selectedLocations.length ; i++) {
@@ -716,35 +714,6 @@ function sendDataToDHIS() {
 		
 	if(locationsToSend.length > 0){
 		alert('O relatório será enviado para a(s) localização(ões) : '+locationsToSendNames+' \n .');
-	}
-	
-	}else{
-
-	let locationsToNotSend = '';
-	for (let i = 0; i < selectedLocations.length ; i++) {
-		jQuery.ajax({
-			url: OMRS_WEBSERVICES_BASE_URL + "/ws/rest/v1/dhisconnector/dhismonthcheck?dhisreportdataset="+selectedMapping.dataSetUID+"&periodtype="+selectedMapping.periodType+"&reportperiod="+selectedPeriod.toString()+"&organicunit="+ selectedLocations[i].orgUnitUid,
-		  	type: 'GET',
-		  	async: false,
-		  	success: function(data) {
-		  		if(data){
-					if(data.monthOpen == false){
-						locationsToNotSend = locationsToNotSend+ ' '+selectedLocations[i].location.name +'\n'
-					}
-					else{
-						locationsToSend.push(selectedLocations[i]);
-					}
-				}
-		  },
-		  error: function(xhr, status, error) {
-			displayPostReponseError(xhr, status, error);
-		  }
-		});
-	}
-
-	if(locationsToNotSend.length > 0){
-		alert('O relatório não será enviado para a(s) localização(ões) : '+locationsToNotSend+' \n porque o mês selecionado não está aberto para envio dos dados.');
-	}
 	}
 		
 	if(locationsToSend.length > 0){

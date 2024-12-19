@@ -2207,7 +2207,6 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 	public List<Object> postDataValueSetToMultiPleDhisServers(DHISDataValueSet dataValueSet) {
 		ObjectMapper mapper = new ObjectMapper();
 		String jsonOrXmlString;
-		String responseString;
 		List<Object> responses = new ArrayList<>();
 		mapper.configure(DeserializationConfig.Feature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -2218,7 +2217,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 						? factory.translateAdxDataValueSetIntoString(
 								convertDHISDataValueSetToAdxDataValueSet(dataValueSet))
 						: mapper.writeValueAsString(dataValueSet);
-				responseString = postDataToMultipleDHISEndpoint(DATAVALUESETS_PATH, jsonOrXmlString, dhisServer);
+				String responseString = postDataToMultipleDHISEndpoint(DATAVALUESETS_PATH, jsonOrXmlString, dhisServer);
 
 				if (StringUtils.isNotBlank(responseString)) {
 					if (configs.useAdxInsteadOfDxf()) {
@@ -2227,23 +2226,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 						responses.add((ImportSummaries) importSummaryUnMarshaller
 								.unmarshal(new StringReader(responseString)));
 					} else {
-						try {
-							DHISImportSummary summary = mapper.readValue(responseString, DHISImportSummary.class);
-							URL url = new URL(dhisServer.getUrl());
-							summary.setDescription("Relatório enviado com sucesso para o servidor DHIS2 : "
-									+ url.getAuthority() + url.getPath() + "");
-							responses.add(summary);
-							
-							DHISImportSummaryImportCount p = mapper.readValue(responseString, DHISImportSummaryImportCount.class);
-							
-						} catch (Exception e) {
-							DHISImportSummary error = new DHISImportSummary();
-							URL url = new URL(dhisServer.getUrl());
-							error.setStatus("ERROR");
-							error.setDescription("Falha no envio de relatório para o servidor DHIS2 : "
-									+ url.getAuthority() + url.getPath() + "");
-							responses.add(error);
-						}
+						responses.add(responseString);
 					}
 				}
 
@@ -2256,7 +2239,7 @@ public class DHISConnectorServiceImpl extends BaseOpenmrsService implements DHIS
 		}
 		return null;
 	}
-
+	
 	@Override
 	public DHISServerConfiguration getDHISServerByUuid(String serverUuid) {
 		return getDao().getDHISServerByUuid(serverUuid);

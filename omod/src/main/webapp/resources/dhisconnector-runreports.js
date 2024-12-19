@@ -737,19 +737,17 @@ function sendDataToDHIS() {
 	                    contentType: "application/json;charset=utf-8",
 	                    dataType: "json",
 	                    success: function (data) {
+						console.log(data);
 		
-							console.log(data);
-							
 							for (const [key, value] of Object.entries(data)) {
 							  	let response = value;
-								let responseDescription = response.description;
-								if(response.status == 'OK'){
-									displayPostReponseSuccessPerServer(responseDescription, i, locationsToSend.length);
+								if(response.status == 'SUCCESS' || response.status == 'OK'){
+									displayPostReponseSuccessPerServer(i, locationsToSend.length);
 								}else{
-									displayPostReponseErrorPerServer(responseDescription, i,locationsToSend.length);
+									displayPostReponseErrorPerServer(i,locationsToSend.length);
 								}
+								document.getElementById("jsonResponse").innerHTML = JSON.stringify(data, undefined, 2);
 							}
-	                        //displayPostReponse(data);
 	                    },
 	                    error: function (xhr, status, error) {
 							displayPostReponseError(xhr, status, error);					
@@ -766,15 +764,16 @@ function sendDataToDHIS() {
 
 }
 
-function displayPostReponseSuccessPerServer(error, mappingIndex, mappingsToBeExecuted) {
+function displayPostReponseSuccessPerServer(mappingIndex, mappingsToBeExecuted) {
+
+	let titleMessage = 'Relatório enviado com sucesso para o servidor DHIS2';
 	
 	mappingsToBeExecuted = mappingsToBeExecuted - 1;
 	if(mappingIndex == mappingsToBeExecuted){
 		jQuery('#loadingRow').remove();
 	}
 	
-	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white;">'+error+'</th></tr></table></code></pre></td></tr>');
-    jQuery('#tableBody').append(responseRow);
+	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #04AA6D; color: white;">'+titleMessage+'</th></tr><tr><td colspan=2 ><textarea cols="100" rows="35" id="jsonResponse">'+""+'</textarea></td></tr></table></code></pre></td></tr>');    jQuery('#tableBody').append(responseRow);
     responseRow.hide().fadeIn("slow");	
 	jQuery('#send').prop('disabled', false);
     jQuery('#reSend').prop('disabled', false);
@@ -784,15 +783,16 @@ function displayPostReponseSuccessPerServer(error, mappingIndex, mappingsToBeExe
 }
 
 
-function displayPostReponseErrorPerServer(error, mappingIndex, mappingsToBeExecuted) {
+function displayPostReponseErrorPerServer(mappingIndex, mappingsToBeExecuted) {
+	
+	let titleMessage = 'Falha de envio de relatório para o servidor DHIS2';
 	
 	mappingsToBeExecuted = mappingsToBeExecuted - 1;
 	if(mappingIndex == mappingsToBeExecuted){
 		jQuery('#loadingRow').remove();
 	}
 	
-	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #cb2e0c; color: white;">'+error+'</th></tr></table></code></pre></td></tr>');
-    jQuery('#tableBody').append(responseRow);
+	var responseRow = jQuery('<tr id="responseRow"><th class="runHeader">Response</th><td><pre><code className="JSON"><table style="font-family: Arial, Helvetica, sans-serif; border-collapse: collapse; width: 100%;"><tr><th colspan=2 style="border: 1px solid #ddd; padding: 8px; padding-top: 12px; padding-bottom: 12px; text-align: left; background-color: #FF0000; color: white;">'+titleMessage+'</th></tr><tr><td colspan=2 ><textarea cols="100" rows="20" id="jsonResponse">'+""+'</textarea></td></tr></table></code></pre></td></tr>');    jQuery('#tableBody').append(responseRow);
     responseRow.hide().fadeIn("slow");	
 	jQuery('#send').prop('disabled', false);
     jQuery('#reSend').prop('disabled', false);

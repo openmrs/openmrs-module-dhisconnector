@@ -43,15 +43,15 @@ public class AdminList extends AdministrationSectionExt {
 	public Map<String, String> getLinks() {
 		LinkedHashMap<String, String> map = new LinkedHashMap<String, String>();
 
-		map.put("/module/dhisconnector/configureServer/", "dhisconnector.configureServer");
-		map.put("/module/dhisconnector/locationMapping/", "dhisconnector.locationMapping");
-		map.put("/module/dhisconnector/automation/", "dhisconnector.automation");
-		map.put("/module/dhisconnector/dhis2BackupImport/", "dhisconnector.dhis2Backup.import");
-		map.put("/module/dhisconnector/dhis2BackupExport/", "dhisconnector.dhis2Backup.export");
-		map.put("/module/dhisconnector/createMapping/", "dhisconnector.createMapping");
-		map.put("/module/dhisconnector/manageMappings/", "dhisconnector.manageMappings");
-		map.put("/module/dhisconnector/runReports/", "dhisconnector.runReports");
-		map.put("/module/dhisconnector/failedData/", "dhisconnector.failedData");
+		map.put("/module/dhisconnector/configureServer.form", "dhisconnector.configureServer");
+		map.put("/module/dhisconnector/locationMapping.form", "dhisconnector.locationMapping");
+		map.put("/module/dhisconnector/automation.form", "dhisconnector.automation");
+		map.put("/module/dhisconnector/dhis2BackupImport.form", "dhisconnector.dhis2Backup.import");
+		map.put("/module/dhisconnector/dhis2BackupExport.form", "dhisconnector.dhis2Backup.export");
+		map.put("/module/dhisconnector/createMapping.form", "dhisconnector.createMapping");
+		map.put("/module/dhisconnector/manageMappings.form", "dhisconnector.manageMappings");
+		map.put("/module/dhisconnector/runReports.form", "dhisconnector.runReports");
+		map.put("/module/dhisconnector/failedData.form", "dhisconnector.failedData");
 
 		return map;
 	}

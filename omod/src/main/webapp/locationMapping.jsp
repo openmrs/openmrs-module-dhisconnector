@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require anyPrivilege="View Location Mappings,Manage Location Mappings" otherwise="/login.htm"
-                 redirect="/module/dhisconnector/locationMapping/"/>
+                 redirect="/module/dhisconnector/locationMapping.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/flexboxgrid.min.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>

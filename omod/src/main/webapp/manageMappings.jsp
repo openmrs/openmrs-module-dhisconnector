@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require privilege="Manage Mappings" otherwise="/login.htm"
-				 redirect="/module/dhisconnector/manageMappings/"/>
+				 redirect="/module/dhisconnector/manageMappings.form"/>
 
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/dhisconnector.css"/>
 <openmrs:htmlInclude file="/moduleResources/dhisconnector/jquery-2.2.0.min.js"/>

@@ -1,7 +1,7 @@
 <%@ include file="/WEB-INF/template/include.jsp" %>
 <%@ include file="/WEB-INF/template/header.jsp" %>
 <openmrs:require anyPrivilege="View Connection,Manage Connection" otherwise="/login.htm"
-                 redirect="/module/dhisconnector/configureServer/"/>
+                 redirect="/module/dhisconnector/configureServer.form"/>
 
 <%@ include file="template/localHeader.jsp" %>
 
